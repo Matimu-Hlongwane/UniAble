@@ -1,0 +1,34 @@
+UniAble Mobile - Requested Changes Implemented
+
+1. Removed the Accessibility Dashboard route and page completely.
+2. Kept Accessibility Settings available so accessibility preferences can still be selected and managed.
+3. Restored Peer Assistance as a functional mobile page.
+4. Added Peer Assistance to the mobile bottom navigation.
+5. Added Peer Assistance request creation, request listing, request status actions and volunteer availability controls using the existing API service.
+6. Added a mobile-friendly Peer Assistance safety section that links to Emergency SOS.
+7. Added voice navigation for Peer Assistance using commands such as "peer assistance", "peer help" and "get peer help".
+8. Fixed voice command handling so completed speech is captured, displayed, stopped and processed once instead of only showing "Listening".
+9. Prevented duplicate command execution when browser recognition returns a final result and the user also presses Stop.
+10. Made text-size settings use rem-based sizing so Small, Medium and Large apply throughout the mobile application and Settings page.
+11. Improved text wrapping and responsive reflow for translated text, buttons, navigation labels, cards, forms and settings controls.
+12. Updated Peer Assistance translations for all 11 South African language options used by the app.
+13. Kept the existing mobile-first shell, Campus Navigation, Schedule, Emergency SOS, Firebase/API functionality and other existing pages.
+14. Kept the Accessibility Settings page but removed its old link to the deleted Accessibility Dashboard.
+15. Updated the Settings accessibility shortcut so it opens Accessibility Settings directly.
+16. Removed unused Accessibility Dashboard styling.
+
+Validation:
+- The translation module was successfully loaded with Node and confirmed to contain all 11 language entries.
+- npm dependency installation could not be completed in this environment because required packages were not available in the local npm cache and registry installation timed out.
+- The final project should be built on the user's development machine with `npm run build` before syncing to Android.
+
+
+UNIPAL INTEGRATION
+- Added UniPal — "Your UniAble Companion" as a dedicated mobile page at /unipal.
+- Added UniPal access from the mobile top bar and student dashboard.
+- Added text chat, suggested prompts, voice input and spoken assistant replies where device speech synthesis is available.
+- Added profile/accessibility/display-preference context for personalised replies.
+- Added Express /api/unipal/chat gateway.
+- Added FastAPI /unipal/chat with strict topic boundaries and OpenAI Responses API integration.
+- Added a local demo fallback when the live AI provider is not configured.
+- Kept API credentials server-side; no AI key is stored in the frontend.
