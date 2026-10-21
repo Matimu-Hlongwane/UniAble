@@ -1,0 +1,14 @@
+{
+  "name": "uniable-backend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {"dev":"node --watch src/server.js","start":"node src/server.js"},
+  "dependencies": {
+    "cors":"^2.8.5",
+    "dotenv":"^17.2.1",
+    "express":"^5.1.0",
+    "firebase-admin":"^13.4.0",
+    "morgan":"^1.10.0"
+  }
+}

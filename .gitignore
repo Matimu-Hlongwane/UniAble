@@ -1,0 +1,50 @@
+# Dependencies
+node_modules/
+
+# Build outputs and generated assets
+dist/
+build/
+coverage/
+.next/
+frontend/android/app/src/main/assets/public/
+
+# Python virtual environments and cache
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+backend/.env
+frontend/.env
+ai-service/.env
+
+# Firebase / cloud service credentials
+firebase-service-account.json
+serviceAccountKey.json
+*service-account*.json
+*serviceAccountKey*.json
+
+# Android / Gradle generated files and local machine settings
+.gradle/
+**/.gradle/
+**/build/
+**/.idea/
+**/local.properties
+*.iml
+.cxx/
+captures/
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Local API test output containing tokens
+/api-check.txt
