@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>UniAble - Login</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Segoe UI,sans-serif}
+body{background:#f3f4f6}
+#loginPage{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#0f0e2a}
+.login-wrap{background:#fff;border-radius:16px;width:100%;max-width:860px;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.left{background:#1a1742;padding:36px;color:#fff;display:flex;flex-direction:column;justify-content:center}
+.left h1{font-size:32px;margin-bottom:10px} .left p{font-size:13px;color:#a5b4fc;line-height:1.6}
+.left ul{margin-top:20px;list-style:none} .left li{font-size:12px;color:#a5b4fc;margin-bottom:10px;padding-left:14px;position:relative} .left li:before{content:"—";position:absolute;left:0;color:#4f46e5}
+.right{padding:32px} .right h2{font-size:20px;margin-bottom:4px} .right p.sub{font-size:11px;color:#6b7280;margin-bottom:18px}
+label{font-size:11px;font-weight:700;display:block;margin-top:14px;margin-bottom:5px}
+input,select{width:100%;padding:11px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;outline:none}
+input:focus{border-color:#4f46e5}
+.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.role-card{border:2px solid #e5e7eb;border-radius:10px;padding:12px;cursor:pointer;text-align:center;transition:.2s}
+.role-card:hover{border-color:#4f46e5} .role-card.active{border-color:#4f46e5;background:#4f46e5;color:#fff} .role-card b{font-size:13px} .role-card small{font-size:10px;color:#6b7280;display:block;margin-top:3px} .role-card.active small{color:#c7d2fe}
+.btn{width:100%;border:none;padding:12px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;margin-top:18px}
+.btn-primary{background:#4f46e5;color:#fff} .btn-admin{background:#dc2626;color:#fff}
+.pass-hint{font-size:10px;color:#9ca3af;margin-top:4px}
+.error{font-size:11px;color:#dc2626;margin-top:8px;display:none;background:#fee2e2;padding:6px 10px;border-radius:6px}
+#app{display:none} .top{position:fixed;top:0;left:0;right:0;height:46px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;padding:0 12px;z-index:10}
+.app2{display:flex;margin-top:46px} .side{width:210px;background:#1a1742;color:#a5b4fc;padding:10px;position:fixed;height:calc(100vh - 46px)} .side b{color:#fff;display:block;margin-bottom:10px;font-size:13px} .side button{width:100%;text-align:left;padding:9px;border:none;background:transparent;color:#a5b4fc;border-radius:7px;cursor:pointer;font-size:12px;margin-bottom:2px} .side button.active,.side button:hover{background:#4f46e5;color:#fff} .main{margin-left:210px;flex:1;padding:12px} .card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin-bottom:10px} .badge{padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700} .green{background:#dcfce7;color:#166534} .yellow{background:#fef3c7;color:#92400e} .red{background:#fee2e2;color:#dc2626} .btn2{border:none;padding:5px 10px;border-radius:6px;color:#fff;font-size:11px;font-weight:700;cursor:pointer} .blue{background:#4f46e5} .redbtn{background:#dc2626} .greenbtn{background:#16a34a} .gray{background:#6b7280} table{width:100%;font-size:12px;border-collapse:collapse} th{color:#94a3b8;font-size:10px;text-align:left;padding:5px;border-bottom:1px solid #e5e7eb} td{padding:7px 5px;border-bottom:1px solid #e5e7eb} .sub{display:none} .sub.active{display:block} .role{display:none} .role.active{display:block} .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px} .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px} .gridGraph{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px} .toast{position:fixed;bottom:18px;right:18px;background:#111827;color:#fff;padding:10px 14px;border-radius:8px;font-size:12px;display:none;z-index:99}
+canvas{width:100%!important;max-height:180px} .stat-big{font-size:22px;font-weight:800}
+@media(max-width:700px){.login-wrap{grid-template-columns:1fr} .left{display:none}}
+</style>
+</head>
+<body>
+
+<div id="loginPage">
+<div class="login-wrap">
+<div class="left">
+<h1>UniAble</h1>
+<p>Inclusive campus platform for students with disabilities. Each personnel has their own dashboard, but all data is interconnected and visible to Admin in real time.</p>
+<ul>
+<li>Single file system — run only login page, dashboard opens based on role</li>
+<li>Each role stands alone — Volunteer cannot see Disability data</li>
+<li>Admin sees live analytics, graphs, emergencies, verifications</li>
+<li>Persistent storage — names remain even after closing laptop for days</li>
+<li>Designed for real campus use — security, disability office, lecturers, volunteers</li>
+</ul>
+<div style="margin-top:24px;padding:12px;background:#2a2772;border-radius:8px;font-size:11px;line-height:1.5">
+<b style="color:#fff">Demo Passwords for Project:</b><br>
+<span style="color:#a5b4fc">
+Admin: admin123<br>
+Volunteer: volunteer123<br>
+Disability: disability123<br>
+Security: security123<br>
+Lecturer: lecturer123
+</span>
+</div>
+</div>
+
+<div class="right">
+<h2>Welcome back</h2>
+<p class="sub">Choose your role, enter your credentials. Clean login, no icons.</p>
+
+<label>Full Name</label>
+<input id="nameInput" placeholder="e.g. Thabo M." value="Demo User">
+
+<label>Select Role</label>
+<div class="role-grid">
+<div class="role-card active" onclick="sel('admin',this)"><b>Admin</b><small>Sees all + graphs</small></div>
+<div class="role-card" onclick="sel('volunteer',this)"><b>Volunteer</b><small>Own dashboard</small></div>
+<div class="role-card" onclick="sel('disability',this)"><b>Disability</b><small>Easy Access Portal</small></div>
+<div class="role-card" onclick="sel('security',this)"><b>Security</b><small>Live SOS</small></div>
+<div class="role-card" onclick="sel('lecturer',this)"><b>Lecturer</b><small>Materials</small></div>
+</div>
+
+<label>Password</label>
+<input id="passInput" type="password" placeholder="Enter role password">
+<div class="pass-hint" id="passHint">Admin password is: admin123</div>
+
+<div class="error" id="errorBox">Incorrect password for this role.</div>
+
+<button class="btn btn-admin" id="loginBtn" onclick="login()">Login as Admin</button>
+<p style="font-size:10px;color:#9ca3af;text-align:center;margin-top:10px">Names are saved in browser storage and persist for days</p>
+</div>
+</div>
+</div>
+
+<div id="app">
+<div class="top"><b id="topTitle">UniAble</b><div><span id="userInfo" style="font-size:11px;margin-right:8px"></span><button onclick="logout()" style="padding:5px 10px;border-radius:6px;border:1px solid #e5e7eb;background:#f9fafb;font-size:11px;cursor:pointer">Logout</button></div></div>
+<div class="app2">
+<div class="side" id="side"></div>
+<div class="main">
+
+<div id="role-admin" class="role">
+<div id="a-overview" class="sub active">
+<h2>Admin - Analytics Dashboard</h2><p style="font-size:11px;color:gray;margin-bottom:8px">Live connected view + statistical graphs from all personnel</p>
+<div class="grid4"><div class="card"><div class="stat-big" id="aAct">1</div><div style="font-size:11px;color:#6b7280">Active Emergency</div></div><div class="card"><div class="stat-big" id="aPend">2</div><div style="font-size:11px;color:#6b7280">Pending Verifications</div></div><div class="card"><div class="stat-big" id="aVol">3</div><div style="font-size:11px;color:#6b7280">Volunteer Requests</div></div><div class="card"><div class="stat-big">3.1 min</div><div style="font-size:11px;color:#6b7280">Avg Response Time</div></div></div>
+<div class="gridGraph"><div class="card"><b>Emergency Incidents by Type</b><canvas id="c1" width="320" height="180"></canvas></div><div class="card"><b>Disability Verification Status</b><canvas id="c2" width="320" height="180"></canvas></div></div>
+<div class="gridGraph"><div class="card"><b>Volunteer Activity</b><canvas id="c3" width="320" height="180"></canvas></div><div class="card"><b>Lecturer Accessibility Scores</b><canvas id="c4" width="320" height="180"></canvas></div></div>
+<div class="grid2"><div class="card"><b>Live Emergency</b><table id="aEmerg"></table><button class="btn2 greenbtn" style="width:100%;margin-top:6px" onclick="resolveAll()">Resolve as Admin</button></div><div class="card"><b>Pending Verifications</b><table id="aDis"></table><button class="btn2 blue" style="width:100%;margin-top:6px" onclick="approveAll()">Approve as Admin</button></div></div>
+</div>
+<div id="a-stats" class="sub"><h3>Detailed Statistics</h3><div class="grid2"><div class="card"><b>Overall Inclusion Rate</b><canvas id="c5" width="320" height="180"></canvas></div><div class="card"><b>Response Time Trend</b><canvas id="c6" width="320" height="180"></canvas></div></div></div>
+<div id="a-log" class="sub"><h3>Emergency Log</h3><div class="card"><table id="aLog"></table></div></div>
+</div>
+
+<div id="role-volunteer" class="role"><div id="v-req" class="sub active"><h3>Volunteer Dashboard</h3><div class="card" style="border-left:4px solid #dc2626"><b>Active: Relebohile Piet - Library 2nd Floor</b><br><br><button class="btn2 redbtn" onclick="toastMsg('Navigating 60m...')">Navigate</button><button class="btn2 greenbtn" onclick="completeV()">Complete - Admin sees</button></div><div class="card"><b>Requests</b> <button class="btn2 blue" style="float:right" onclick="addV()">+ Add</button><table id="tVol"></table></div></div></div>
+<div id="role-disability" class="role"><div id="d-portal" class="sub active"><h3>Disability Office</h3><div class="card"><b>Recent Submissions</b> <button class="btn2 blue" style="float:right" onclick="addSub()">+ Add Student</button><table id="tSub"></table></div></div><div id="d-verif" class="sub"><h3>Verifications</h3><div class="card"><table id="tVerif"></table></div></div></div>
+<div id="role-lecturer" class="role"><div id="l-mod" class="sub active"><h3>Lecturer - My Modules</h3><div class="card"><table id="tMod"></table></div></div><div id="l-up" class="sub"><h3>Upload Materials</h3><div class="card"><input type="file" id="fIn"><button class="btn2 blue" onclick="upFile()">Upload</button><table id="tFile"></table></div></div></div>
+<div id="role-security" class="role"><div id="s-live" class="sub active"><h3>Security Control Room</h3><div class="card"><b>Live Location — Relebohile Piet</b><div style="height:50px;background:#eef2ff;display:flex;align-items:center;justify-content:center;margin:6px 0;border-radius:8px"><div style="width:14px;height:14px;background:#dc2626;border-radius:50%"></div></div></div><div class="card"><table id="tInc"></table><button class="btn2 blue" onclick="addInc()">+ Log Incident</button> <button class="btn2 blue" onclick="dispatch()">Dispatch</button></div></div></div>
+
+</div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script>
+let S=JSON.parse(localStorage.getItem('uniableFinal'))||{vol:[{s:'Naledi K.',t:'Lecture explanation',st:'Completed'},{s:'Karabo M.',t:'Navigation help',st:'Completed'},{s:'Relebohile P.',t:'Wellbeing check',st:'In progress'}],subs:[{s:'Lindiwe S.',c:'Hearing Impairment',d:'Audiologist report.pdf',st:'Pending review'},{s:'Karabo M.',c:'Mobility',d:'Medical cert.pdf',st:'Approved'},{s:'Sipho D.',c:'Neurodiverse',d:'Assessment letter.pdf',st:'Pending review'}],accom:[{s:'Bongani T.',t:'Extra Time'}],files:[{n:'Lecture 6.pptx',f:'Captioned • Audio',v:212},{n:'Lecture 7.pdf',f:'Audio pending',v:184}],mods:[{n:'Database Systems',l:3,a:'87%'},{n:'Web Dev',l:2,a:'92%'}],incs:[{ti:'09:14',s:'Relebohile Piet',t:'Voice SOS',st:'Active'},{ti:'Yesterday',s:'Karabo M.',t:'Navigation assistance',st:'Resolved'},{ti:'08:20',s:'Lerato M.',t:'Wellbeing check',st:'Active'}],offs:[{n:'Officer Thabo',l:'Library entrance',st:'On patrol'}],rates:[45,60,30,70,50,85,40]};
+const save=()=>localStorage.setItem('uniableFinal',JSON.stringify(S));
+const toastMsg=m=>{let t=document.getElementById('toast');t.innerText=m;t.style.display='block';setTimeout(()=>t.style.display='none',2500)};
+
+// PASSWORDS FOR EACH ROLE - your group can change these
+const PASSWORDS={
+  admin:'admin123',
+  volunteer:'volunteer123',
+  disability:'disability123',
+  security:'security123',
+  lecturer:'lecturer123'
+};
+
+let currentRole='admin';
+function sel(role,el){
+ currentRole=role;
+ document.querySelectorAll('.role-card').forEach(c=>c.classList.remove('active'));
+ el.classList.add('active');
+ let btn=document.getElementById('loginBtn');
+ let hint=document.getElementById('passHint');
+ if(role==='admin'){btn.innerText='Login as Admin';btn.className='btn btn-admin';hint.innerText='Admin password is: admin123';}
+ else{btn.innerText='Login as '+role.charAt(0).toUpperCase()+role.slice(1);btn.className='btn btn-primary';hint.innerText=role.charAt(0).toUpperCase()+role.slice(1)+' password is: '+PASSWORDS[role];}
+ document.getElementById('errorBox').style.display='none';
+ document.getElementById('passInput').value='';
+}
+function login(){
+ let name=document.getElementById('nameInput').value||'User';
+ let pass=document.getElementById('passInput').value;
+ let error=document.getElementById('errorBox');
+ if(pass!==PASSWORDS[currentRole]){
+   error.innerText='Incorrect password for '+currentRole+'. Expected: '+PASSWORDS[currentRole];
+   error.style.display='block';
+   return;
+ }
+ error.style.display='none';
+ document.getElementById('loginPage').style.display='none';
+ document.getElementById('app').style.display='block';
+ document.getElementById('topTitle').innerText='UniAble - '+currentRole.toUpperCase()+' ('+name+')';
+ document.getElementById('userInfo').innerText=name+' - '+currentRole;
+ document.querySelectorAll('.role').forEach(r=>r.classList.remove('active'));
+ document.getElementById('role-'+currentRole).classList.add('active');
+ buildSide(currentRole);
+ render();
+}
+function logout(){document.getElementById('app').style.display='none';document.getElementById('loginPage').style.display='flex';document.getElementById('passInput').value='';document.getElementById('errorBox').style.display='none';}
+function buildSide(r){
+ let h='';
+ if(r==='admin') h='<b>Admin - Analytics</b><button class="active" onclick="openSub(\'a-overview\',this)">Overview + Graphs</button><button onclick="openSub(\'a-stats\',this)">Detailed Stats</button><button onclick="openSub(\'a-log\',this)">Emergency Log</button>';
+ if(r==='volunteer') h='<b>Volunteer</b><button class="active" onclick="openSub(\'v-req\',this)">My Requests</button>';
+ if(r==='disability') h='<b>Disability</b><button class="active" onclick="openSub(\'d-portal\',this)">Easy Access Portal</button><button onclick="openSub(\'d-verif\',this)">Verifications</button>';
+ if(r==='lecturer') h='<b>Lecturer</b><button class="active" onclick="openSub(\'l-mod\',this)">My Modules</button><button onclick="openSub(\'l-up\',this)">Upload</button>';
+ if(r==='security') h='<b>Security</b><button class="active" onclick="openSub(\'s-live\',this)">Live Alerts</button>';
+ document.getElementById('side').innerHTML=h;
+}
+function openSub(id,btn){let active=document.querySelector('.role.active');if(!active)return;active.querySelectorAll('.sub').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.side button').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');if(id.includes('a-')) setTimeout(drawAllCharts,100);}
+function barChart(id, labels, values, colors){let c=document.getElementById(id);if(!c)return;let ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);let max=Math.max(...values,1);let barW=(c.width-60)/values.length-10;values.forEach((v,i)=>{let h=(v/max)*(c.height-50);let x=40+i*(barW+10);let y=c.height-30-h;ctx.fillStyle=colors[i%colors.length];ctx.fillRect(x,y,barW,h);ctx.fillStyle='#111827';ctx.font='10px Segoe UI';ctx.fillText(v,x+barW/2-4,y-4);ctx.fillStyle='#6b7280';ctx.fillText(labels[i].substring(0,8),x,c.height-8);});}
+function pieChart(id, values, colors){let c=document.getElementById(id);if(!c)return;let ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);let total=values.reduce((a,b)=>a+b,0)||1;let cx=c.width/2,cy=c.height/2-10,r=Math.min(cx,cy)-20;let start=0;values.forEach((v,i)=>{let ang=(v/total)*2*Math.PI;ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,start,start+ang);ctx.closePath();ctx.fillStyle=colors[i];ctx.fill();start+=ang;});ctx.fillStyle='#111827';ctx.font='bold 16px Segoe UI';ctx.textAlign='center';ctx.fillText(total+' Total',cx,cy);ctx.font='10px Segoe UI';ctx.fillText('submissions',cx,cy+12);ctx.textAlign='left';}
+function lineChart(id, values, color){let c=document.getElementById(id);if(!c)return;let ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);let max=Math.max(...values,1);let min=Math.min(...values,0);let range=max-min||1;ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=2;values.forEach((v,i)=>{let x=30+i*((c.width-50)/ (values.length-1||1));let y=c.height-30-((v-min)/range)*(c.height-60);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});ctx.stroke();values.forEach((v,i)=>{let x=30+i*((c.width-50)/ (values.length-1||1));let y=c.height-30-((v-min)/range)*(c.height-60);ctx.beginPath();ctx.arc(x,y,3,0,2*Math.PI);ctx.fillStyle=color;ctx.fill();});}
+function drawAllCharts(){let voice=S.incs.filter(x=>x.t.includes('Voice')).length;let nav=S.incs.filter(x=>x.t.includes('Navigation')).length;let well=S.incs.filter(x=>x.t.includes('Wellbeing')).length;barChart('c1',['Voice SOS','Navigation','Wellbeing'],[voice,nav,well],['#dc2626','#4f46e5','#0d9488']);let appr=S.subs.filter(x=>x.st==='Approved').length;let pend=S.subs.filter(x=>x.st!=='Approved').length;pieChart('c2',[appr||1,pend||1],['#16a34a','#eab308']);let volC=S.vol.filter(x=>x.st==='Completed').length;let volP=S.vol.filter(x=>x.st==='In progress').length;lineChart('c3',[2,3,1,4,2,volC+volP,volC], '#4f46e5');barChart('c4',['Speech','Readability','Pacing','Captions'],[4.2,3.6,3.9,4.35],['#4f46e5','#dc2626','#eab308','#16a34a']);barChart('c5',['Registered','Verified','Active Help','Resolved'],[238,appr+pend,S.vol.length,S.incs.filter(x=>x.st!=='Active').length],['#1a1742','#4f46e5','#16a34a','#0d9488']);lineChart('c6',[5.2,4.8,4.1,3.8,3.5,3.3,3.1], '#16a34a');}
+function render(){S=JSON.parse(localStorage.getItem('uniableFinal'))||S;document.getElementById('aAct').innerText=S.incs.filter(x=>x.st==='Active').length;document.getElementById('aPend').innerText=S.subs.filter(x=>x.st!=='Approved').length;document.getElementById('aVol').innerText=S.vol.length;document.getElementById('aEmerg').innerHTML='<tr><th>Student</th><th>Type</th></tr>'+S.incs.filter(x=>x.st==='Active').map(x=>`<tr><td>${x.s}</td><td>${x.t}</td></tr>`).join('')||'<tr><td colspan=2>All clear</td></tr>';document.getElementById('aDis').innerHTML='<tr><th>Student</th><th>Doc</th></tr>'+S.subs.filter(x=>x.st!=='Approved').map(x=>`<tr><td>${x.s}</td><td>${x.d}</td></tr>`).join('')||'<tr><td colspan=2>All verified</td></tr>';document.getElementById('aLog').innerHTML='<tr><th>Time</th><th>Student</th><th>Status</th></tr>'+S.incs.map(x=>`<tr><td>${x.ti}</td><td>${x.s}</td><td><span class="badge ${x.st==='Active'?'red':'green'}">${x.st}</span></td></tr>`).join('');document.getElementById('tVol').innerHTML='<tr><th>Student</th><th>Request</th><th>Status</th><th>Action</th></tr>'+S.vol.map((x,i)=>`<tr><td>${x.s}</td><td>${x.t}</td><td><span class="badge ${x.st==='Completed'?'green':'yellow'}">${x.st}</span></td><td><button class="btn2 blue" onclick="S.vol[${i}].st=S.vol[${i}].st==='Completed'?'In progress':'Completed';save();render();drawAllCharts();toastMsg('Updated - Graphs updated')">Toggle</button></td></tr>`).join('');document.getElementById('tSub').innerHTML='<tr><th>Student</th><th>Status</th><th>Action</th></tr>'+S.subs.map((x,i)=>`<tr><td>${x.s}</td><td><span class="badge ${x.st==='Approved'?'green':'yellow'}">${x.st}</span></td><td><button class="btn2 blue" onclick="S.subs[${i}].st='Approved';save();render();drawAllCharts();toastMsg('Verified')">Verify</button></td></tr>`).join('');document.getElementById('tVerif').innerHTML='<tr><th>Student</th><th>Doc</th></tr>'+S.subs.filter(x=>x.st!=='Approved').map(x=>`<tr><td>${x.s}</td><td>${x.d}</td></tr>`).join('')||'<tr><td colspan=2>All verified</td></tr>';document.getElementById('tMod').innerHTML='<tr><th>Module</th><th>Access</th></tr>'+S.mods.map(m=>`<tr><td>${m.n}</td><td>${m.a}</td></tr>`).join('');document.getElementById('tFile').innerHTML='<tr><th>File</th><th>Formats</th></tr>'+S.files.map(f=>`<tr><td>${f.n}</td><td>${f.f}</td></tr>`).join('');document.getElementById('tInc').innerHTML='<tr><th>Time</th><th>Student</th><th>Status</th><th>Action</th></tr>'+S.incs.map((x,i)=>`<tr><td>${x.ti}</td><td>${x.s}</td><td><span class="badge ${x.st==='Active'?'red':'green'}">${x.st}</span></td><td><button class="btn2 blue" onclick="S.incs[${i}].st='Resolved';save();render();drawAllCharts();toastMsg('Resolved')">Resolve</button></td></tr>`).join('');drawAllCharts();}
+function addV(){let s=prompt('Student name?'),t=prompt('Request type?');if(s&&t){S.vol.push({s:s,t:t,st:'In progress'});save();render();}}
+function completeV(){S.vol[2].st='Completed';S.incs[0].st='Resolved by volunteer';save();render();}
+function addSub(){let s=prompt('Student name?');if(s){S.subs.push({s:s,c:'Hearing Impairment',d:'doc.pdf',st:'Pending review'});save();render();}}
+function upFile(){let f=document.getElementById('fIn').files[0];let name=f?f.name:'Demo.pdf';S.files.push({n:name,f:'Audio pending',v:0});save();render();}
+function addInc(){let s=prompt('Student name?');if(s){S.incs.unshift({ti:new Date().toLocaleTimeString(),s:s,t:'Voice SOS',st:'Active'});save();render();}}
+function dispatch(){S.incs[0].st='Security en route';save();render();}
+function resolveAll(){S.incs.forEach(x=>x.st='Resolved by Admin');save();render();}
+function approveAll(){S.subs.forEach(x=>x.st='Approved');save();render();}
+</script>
+</body>
+</html>
