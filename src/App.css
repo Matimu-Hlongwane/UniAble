@@ -1,5 +1,13 @@
+/* =========================================================
+   UNI​ABLE ACCESSIBILITY STYLES
+   ========================================================= */
+
 * {
   box-sizing: border-box;
+}
+
+html {
+  font-size: 100%;
 }
 
 body {
@@ -7,17 +15,24 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   background: #eef0f8;
   color: #17172b;
+  transition: background 0.25s ease, color 0.25s ease;
 }
 
-button {
+button,
+select {
   font-family: inherit;
 }
+
+/* =========================================================
+   APP
+   ========================================================= */
 
 .app {
   min-height: 100vh;
   display: flex;
   justify-content: center;
   background: #eef0f8;
+  transition: background 0.25s ease;
 }
 
 .screen {
@@ -26,9 +41,12 @@ button {
   min-height: 100vh;
   background: #ffffff;
   overflow-x: hidden;
+  transition: background 0.25s ease, color 0.25s ease;
 }
 
-/* HEADER */
+/* =========================================================
+   HEADER
+   ========================================================= */
 
 .header {
   background: linear-gradient(135deg, #5a45df, #684ee8);
@@ -49,7 +67,9 @@ button {
   opacity: 0.95;
 }
 
-/* PROFILE CARDS */
+/* =========================================================
+   PROFILE CARDS
+   ========================================================= */
 
 .profile-grid {
   display: grid;
@@ -61,6 +81,7 @@ button {
 .profile-card {
   border: 2px solid transparent;
   background: #ffffff;
+  color: #17172b;
   border-radius: 20px;
   padding: 18px 8px;
   min-height: 125px;
@@ -84,6 +105,19 @@ button {
   transform: translateY(-2px);
 }
 
+.profile-card:focus-visible,
+.settings-profile:focus-visible,
+.primary-button:focus-visible,
+.secondary-button:focus-visible,
+.back-button:focus-visible,
+.danger-button:focus-visible,
+.toggle:focus-visible,
+.font-size-control button:focus-visible,
+select:focus-visible {
+  outline: 3px solid #ffbf00;
+  outline-offset: 3px;
+}
+
 .profile-card.selected {
   border-color: #5a45df;
   background: #f0edff;
@@ -104,7 +138,9 @@ button {
   font-size: 25px;
 }
 
-/* PERSONALISING */
+/* =========================================================
+   PERSONALISING
+   ========================================================= */
 
 .personalising {
   margin: 4px 20px 24px;
@@ -126,12 +162,14 @@ button {
   line-height: 1.5;
 }
 
-/* BUTTON */
+/* =========================================================
+   PRIMARY BUTTON
+   ========================================================= */
 
 .primary-button {
   display: block;
   width: calc(100% - 40px);
-  margin: 0 20px 30px;
+  margin: 0 20px 20px;
 
   padding: 17px;
 
@@ -145,6 +183,7 @@ button {
   font-weight: 700;
 
   cursor: pointer;
+  transition: 0.2s ease;
 }
 
 .primary-button:hover {
@@ -156,7 +195,37 @@ button {
   cursor: not-allowed;
 }
 
-/* SETTINGS */
+/* =========================================================
+   SECONDARY BUTTON
+   ========================================================= */
+
+.secondary-button {
+  display: block;
+  width: calc(100% - 40px);
+  margin: 0 20px 15px;
+
+  padding: 15px;
+
+  border: 2px solid #5140d7;
+  border-radius: 17px;
+
+  background: white;
+  color: #5140d7;
+
+  font-size: 16px;
+  font-weight: 700;
+
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.secondary-button:hover {
+  background: #f2efff;
+}
+
+/* =========================================================
+   SETTINGS
+   ========================================================= */
 
 .settings-section {
   padding: 25px 20px 0;
@@ -170,7 +239,9 @@ button {
   color: #8a8da0;
 }
 
-/* SETTINGS PROFILE CARDS */
+/* =========================================================
+   SETTINGS PROFILE CARDS
+   ========================================================= */
 
 .settings-profile-grid {
   display: grid;
@@ -185,6 +256,7 @@ button {
   border-radius: 18px;
 
   background: white;
+  color: #17172b;
 
   display: flex;
   flex-direction: column;
@@ -197,6 +269,7 @@ button {
   font-weight: 700;
 
   cursor: pointer;
+  transition: 0.2s ease;
 }
 
 .settings-profile.selected {
@@ -220,7 +293,9 @@ button {
   font-size: 25px;
 }
 
-/* SETTING ROWS */
+/* =========================================================
+   SETTING ROWS
+   ========================================================= */
 
 .setting-row {
   display: flex;
@@ -250,7 +325,9 @@ button {
   line-height: 1.4;
 }
 
-/* TOGGLE */
+/* =========================================================
+   TOGGLE
+   ========================================================= */
 
 .toggle {
   width: 54px;
@@ -291,16 +368,134 @@ button {
   transform: translateX(23px);
 }
 
-/* SAVE */
+/* =========================================================
+   TEXT SIZE
+   ========================================================= */
+
+.font-size-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 15px;
+
+  padding: 15px;
+
+  background: #f5f4ff;
+  border-radius: 16px;
+}
+
+.font-size-control button {
+  min-width: 60px;
+  min-height: 48px;
+
+  border: 2px solid #5140d7;
+  border-radius: 12px;
+
+  background: white;
+  color: #5140d7;
+
+  font-size: 18px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.font-size-control button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.font-size-control span {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+/* =========================================================
+   LANGUAGE
+   ========================================================= */
+
+.language-label {
+  display: block;
+  margin-bottom: 8px;
+
+  font-size: 15px;
+  font-weight: 700;
+}
+
+select {
+  width: 100%;
+  padding: 14px;
+
+  border: 2px solid #dddded;
+  border-radius: 14px;
+
+  background: white;
+  color: #17172b;
+
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* =========================================================
+   TEXT-TO-SPEECH
+   ========================================================= */
+
+.tts-description {
+  margin: 0 0 15px;
+
+  color: #6b6b7d;
+  line-height: 1.5;
+}
+
+.tts-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.tts-buttons .secondary-button {
+  width: auto;
+  flex: 1;
+  margin: 0;
+}
+
+/* =========================================================
+   SAVE / RESET / BACK
+   ========================================================= */
 
 .save-button {
-  margin-top: 28px;
+  margin-top: 30px;
+}
+
+.danger-button {
+  display: block;
+
+  width: calc(100% - 40px);
+
+  margin: 0 20px 20px;
+
+  padding: 14px;
+
+  border: 2px solid #b3261e;
+  border-radius: 16px;
+
+  background: white;
+  color: #b3261e;
+
+  font-size: 15px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.danger-button:hover {
+  background: #fff1f0;
 }
 
 .back-button {
   display: block;
 
-  margin: -15px auto 30px;
+  margin: 0 auto 30px;
 
   border: none;
   background: transparent;
@@ -313,7 +508,178 @@ button {
   cursor: pointer;
 }
 
-/* MOBILE */
+/* =========================================================
+   HIGH CONTRAST MODE
+   ========================================================= */
+
+html[data-high-contrast='true'] body {
+  background: #ffffff;
+  color: #000000;
+}
+
+html[data-high-contrast='true'] .app {
+  background: #ffffff;
+}
+
+html[data-high-contrast='true'] .screen {
+  background: #ffffff;
+  color: #000000;
+}
+
+html[data-high-contrast='true'] .profile-card,
+html[data-high-contrast='true'] .settings-profile {
+  border-color: #000000;
+  box-shadow: none;
+}
+
+html[data-high-contrast='true'] .profile-card.selected,
+html[data-high-contrast='true'] .settings-profile.selected {
+  background: #fff200;
+  color: #000000;
+  border-color: #000000;
+}
+
+html[data-high-contrast='true'] .setting-row {
+  border-bottom: 2px solid #000000;
+}
+
+html[data-high-contrast='true'] .setting-text span,
+html[data-high-contrast='true'] .personalising p,
+html[data-high-contrast='true'] .tts-description {
+  color: #000000;
+}
+
+html[data-high-contrast='true'] .personalising {
+  background: #fff200;
+  color: #000000;
+}
+
+html[data-high-contrast='true'] .primary-button {
+  background: #000000;
+  color: #ffffff;
+}
+
+html[data-high-contrast='true'] .secondary-button {
+  border-color: #000000;
+  color: #000000;
+}
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+html[data-dark-mode='true'] body {
+  background: #111111;
+  color: #f5f5f5;
+}
+
+html[data-dark-mode='true'] .app {
+  background: #111111;
+}
+
+html[data-dark-mode='true'] .screen {
+  background: #181818;
+  color: #f5f5f5;
+}
+
+html[data-dark-mode='true'] .profile-card,
+html[data-dark-mode='true'] .settings-profile {
+  background: #242424;
+  color: #f5f5f5;
+  border-color: #444444;
+}
+
+html[data-dark-mode='true'] .profile-card.selected,
+html[data-dark-mode='true'] .settings-profile.selected {
+  background: #30286b;
+  border-color: #9d8cff;
+}
+
+html[data-dark-mode='true'] .personalising {
+  background: #29245a;
+}
+
+html[data-dark-mode='true'] .personalising p,
+html[data-dark-mode='true'] .setting-text span,
+html[data-dark-mode='true'] .tts-description {
+  color: #d0d0d0;
+}
+
+html[data-dark-mode='true'] .setting-row {
+  border-bottom-color: #444444;
+}
+
+html[data-dark-mode='true'] .font-size-control {
+  background: #242424;
+}
+
+html[data-dark-mode='true'] .font-size-control button,
+html[data-dark-mode='true'] select,
+html[data-dark-mode='true'] .secondary-button,
+html[data-dark-mode='true'] .danger-button {
+  background: #242424;
+  color: #f5f5f5;
+}
+
+html[data-dark-mode='true'] select {
+  border-color: #555555;
+}
+
+html[data-dark-mode='true'] .back-button {
+  color: #b8adff;
+}
+
+/* =========================================================
+   DYSLEXIA-FRIENDLY MODE
+   ========================================================= */
+
+html[data-dyslexic-font='true'] body,
+html[data-dyslexic-font='true'] button,
+html[data-dyslexic-font='true'] select {
+  font-family: 'OpenDyslexic', Arial, Helvetica, sans-serif;
+  letter-spacing: 0.04em;
+  word-spacing: 0.12em;
+}
+
+html[data-dyslexic-font='true'] .header p,
+html[data-dyslexic-font='true'] .setting-text span,
+html[data-dyslexic-font='true'] .personalising p,
+html[data-dyslexic-font='true'] .tts-description {
+  line-height: 1.8;
+}
+
+/* =========================================================
+   COLOUR ACCESSIBILITY MODE
+   ========================================================= */
+
+html[data-colour-display='true'] .profile-icon,
+html[data-colour-display='true'] .settings-icon {
+  filter: saturate(0.75);
+}
+
+html[data-colour-display='true'] .profile-card.selected,
+html[data-colour-display='true'] .settings-profile.selected {
+  outline: 2px solid #000000;
+  outline-offset: 2px;
+}
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
 
 @media (max-width: 380px) {
   .header h1 {
@@ -334,5 +700,430 @@ button {
   .settings-section {
     padding-left: 15px;
     padding-right: 15px;
+  }
+
+  .tts-buttons {
+    flex-direction: column;
+  }
+
+  .tts-buttons .secondary-button {
+    width: 100%;
+  }
+}
+
+/* =========================================================
+   OCR DOCUMENT READER
+   ========================================================= */
+
+.ocr-screen {
+  width: 100%;
+}
+
+.ocr-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 24px 0;
+}
+
+.ocr-preview {
+  margin-top: 20px;
+  padding: 20px;
+  border-radius: 16px;
+  background: var(--card-background, #ffffff);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.ocr-preview h2 {
+  margin-top: 0;
+}
+
+.ocr-image {
+  display: block;
+  width: 100%;
+  max-height: 450px;
+  object-fit: contain;
+  border-radius: 12px;
+  margin: 16px 0;
+}
+
+.ocr-progress {
+  margin: 20px 0;
+  text-align: center;
+}
+
+.ocr-progress p {
+  margin-bottom: 10px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 12px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  transition: width 0.2s ease;
+}
+
+.ocr-error {
+  margin: 20px 0;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #dc2626;
+  background: #fef2f2;
+  color: #991b1b;
+  font-weight: 600;
+}
+
+.ocr-result {
+  margin-top: 24px;
+  padding: 20px;
+  border-radius: 16px;
+  background: var(--card-background, #ffffff);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.ocr-result-header h2 {
+  margin-bottom: 6px;
+}
+
+.ocr-result-header p {
+  margin-top: 0;
+}
+
+.ocr-text {
+  width: 100%;
+  min-height: 250px;
+  box-sizing: border-box;
+  resize: vertical;
+  padding: 16px;
+  margin: 16px 0;
+  border-radius: 12px;
+  border: 2px solid #d1d5db;
+  font-size: 1rem;
+  line-height: 1.6;
+  font-family: inherit;
+  background: inherit;
+  color: inherit;
+}
+
+.ocr-text:focus {
+  outline: 3px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.ocr-result-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ocr-screen .danger-button {
+  margin-top: 16px;
+}
+
+@media (min-width: 700px) {
+  .ocr-actions {
+    flex-direction: row;
+  }
+
+  .ocr-result-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .ocr-result-actions button {
+    flex: 1;
+  }
+}
+
+/* =========================================
+   SMART INDOOR NAVIGATION
+   ========================================= */
+
+.navigation-container {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.navigation-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.navigation-header h1 {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 700;
+}
+
+.navigation-header p {
+  margin: 5px 0 0;
+  opacity: 0.7;
+}
+
+/* Back button */
+
+.secondary-button {
+  border: 2px solid currentColor;
+  background: transparent;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.secondary-button:hover {
+  transform: translateY(-1px);
+  opacity: 0.85;
+}
+
+/* Accessibility banner */
+
+.navigation-accessibility {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  font-weight: 600;
+}
+
+/* Main cards */
+
+.navigation-card {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 22px;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+.navigation-card h2 {
+  margin-top: 0;
+  margin-bottom: 18px;
+  font-size: 20px;
+}
+
+/* Location selectors */
+
+.navigation-select-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.navigation-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.navigation-field label {
+  font-weight: 700;
+}
+
+.navigation-field select {
+  width: 100%;
+  padding: 13px 14px;
+  border-radius: 10px;
+  border: 2px solid #d0d0d0;
+  background: #ffffff;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.navigation-field select:focus {
+  outline: 3px solid rgba(0, 100, 255, 0.2);
+  border-color: #0066ff;
+}
+
+/* Accessible toggle */
+
+.toggle-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 14px 16px;
+  margin-top: 18px;
+  border: 2px solid #d0d0d0;
+  background: #ffffff;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.toggle-button.active {
+  border-color: #0066ff;
+}
+
+/* Navigation start */
+
+.navigation-start-button {
+  width: 100%;
+  padding: 15px 20px;
+  margin-top: 18px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.navigation-start-button:hover {
+  transform: translateY(-2px);
+}
+
+/* Messages */
+
+.navigation-message {
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+/* Route */
+
+.route-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.route-location {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 14px;
+  border: 2px solid #e3e3e3;
+  background: #fafafa;
+}
+
+.route-location.current {
+  border-color: #0066ff;
+}
+
+.route-number {
+  min-width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: 700;
+}
+
+/* Direction steps */
+
+.direction-item {
+  display: flex;
+  gap: 14px;
+  padding: 16px 0;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.direction-item:last-child {
+  border-bottom: none;
+}
+
+.direction-item strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* Controls */
+
+.navigation-controls {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.navigation-controls button {
+  flex: 1;
+  padding: 13px;
+  border-radius: 10px;
+  border: 2px solid #d0d0d0;
+  background: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Voice guidance */
+
+.voice-guidance {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 16px;
+  margin-top: 20px;
+  border-radius: 14px;
+  background: #f5f7fa;
+}
+
+.voice-guidance button {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 9px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Reset */
+
+.reset-navigation-button {
+  width: 100%;
+  margin-top: 16px;
+  padding: 13px;
+  border: 2px solid #d0d0d0;
+  background: transparent;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Mobile */
+
+@media (max-width: 650px) {
+  .navigation-container {
+    padding: 16px;
+  }
+
+  .navigation-header {
+    align-items: flex-start;
+  }
+
+  .navigation-header h1 {
+    font-size: 24px;
+  }
+
+  .navigation-select-group {
+    grid-template-columns: 1fr;
+  }
+
+  .navigation-card {
+    padding: 18px;
+    border-radius: 15px;
+  }
+
+  .navigation-controls {
+    flex-direction: column;
   }
 }
