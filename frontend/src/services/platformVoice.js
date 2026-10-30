@@ -47,7 +47,7 @@ async function getNativeLanguage(preferredLanguage) {
     if (sameLanguage) return sameLanguage;
 
     return supported.find((item) => item.toLowerCase() === fallback.toLowerCase()) || supported[0];
-  } catch (_) {
+  } catch {
     return preferredLanguage || fallback;
   }
 }
@@ -73,7 +73,9 @@ export async function startNativeVoiceRecognition({
   try {
     const state = await SpeechRecognition.isListening();
     if (state.listening) await SpeechRecognition.stop();
-  } catch (_) {}
+  } catch {
+    // No active native recognition session needs stopping.
+  }
 
 
   const recognitionLanguage = await getNativeLanguage(language);

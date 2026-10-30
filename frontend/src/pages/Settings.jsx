@@ -3,12 +3,12 @@ import { useNavigate } from "react-router-dom";
 import {
   User, Bell, Shield, Palette, Globe, MapPin, Lock, LogOut, ChevronRight,
   Check, Moon, Sun, Mail, Smartphone, Trash2, Save, Settings as SettingsIcon,
-  Camera, KeyRound, Mic, PhoneCall, X, Volume2
+  Camera, KeyRound, Mic, PhoneCall, Volume2
 } from "lucide-react";
 import { useSettings } from "../context/settingsContext/SettingsContext";
 import {
   firebaseConfigured, getCurrentUser, subscribeToAuth, sendVerificationEmail,
-  refreshCurrentUser, saveFirebaseProfile, sendPhoneOtp, verifyPhoneOtp,
+  saveFirebaseProfile, sendPhoneOtp, verifyPhoneOtp,
   changeAccountPassword, signOutAccount, deleteAccount,
   getVoiceAuthenticationState, setVoiceAuthenticationState
 } from "../services/firebaseAuth";
@@ -16,9 +16,9 @@ import { getSpeechSupport } from "../services/speechService";
 import "../styles/Settings.css";
 
 const DEFAULT_PROFILE = {
-  firstName: "Gundo",
-  lastName: "Dzivhani",
-  email: "student@uniable.co.za",
+  firstName: "",
+  lastName: "",
+  email: "",
   phone: "",
   photo: "",
   emailVerified: false,

@@ -1,7 +1,10 @@
-import React from "react";
+﻿import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
-import Landing from "./pages/Landing";
+import LandingEntry from "./pages/LandingEntry";
+import Login from "./pages/Login";
+import VoiceLogin from "./pages/VoiceLogin";
+import SignUp from "./auth-signup/pages/SignUp";
 import StudentDashboard from "./pages/StudentDashboard";
 import Emergency from "./pages/Emergency";
 import AccessibilitySettings from "./pages/AccessibilitySettings";
@@ -16,7 +19,10 @@ import UniPal from "./pages/UniPal";
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Landing />} />
+      <Route path="/" element={<LandingEntry />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/voice-login" element={<VoiceLogin />} />
+      <Route path="/signup" element={<SignUp />} />
       <Route element={<Layout />}>
         <Route path="/dashboard" element={<StudentDashboard />} />
         <Route path="/campus" element={<CampusNavigation />} />
@@ -32,3 +38,4 @@ export default function App() {
     </Routes>
   );
 }
+

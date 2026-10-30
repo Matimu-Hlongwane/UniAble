@@ -1300,3 +1300,106 @@
         transition-duration: 0.01ms !important;
     }
 }
+
+/* Accessible sign-up password controls */
+.signup-password-field {
+    display: grid;
+    gap: 9px;
+    min-width: 0;
+}
+
+.signup-password-field input {
+    width: 100%;
+    min-width: 0;
+}
+
+.signup-password-toggle {
+    justify-self: start;
+    min-height: 44px;
+    padding: 9px 13px;
+    border: 1px solid #7129bf;
+    border-radius: 9px;
+    background: #fff;
+    color: #48008f;
+    font: inherit;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.signup-password-help {
+    margin: 8px 0 0;
+    color: #625b70;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.signup-screen .signup-password-toggle:focus-visible {
+    outline: 3px solid #a987f1;
+    outline-offset: 3px;
+}
+/* =========================================
+   ACCESSIBLE MICROPHONE BUTTON
+   ========================================= */
+
+.signup-screen .microphone-button {
+  width: 150px;
+  min-height: 130px;
+  height: auto;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  color: #ffffff;
+  background: #48008f;
+  border: 4px solid #ffffff;
+  border-radius: 22px;
+
+  box-shadow: 0 0 0 3px #48008f;
+  cursor: pointer;
+  touch-action: manipulation;
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.signup-screen .microphone-button:hover:not(:disabled) {
+  background: #31005f;
+  transform: translateY(-2px);
+}
+
+.signup-screen .microphone-button:focus-visible {
+  outline: 4px solid #171717;
+  outline-offset: 6px;
+}
+
+.signup-screen .microphone-button:disabled {
+  opacity: 1;
+  cursor: default;
+  background: #31005f;
+}
+
+.microphone-icon {
+  display: block;
+  font-size: 38px;
+  line-height: 1;
+}
+
+.microphone-button-label {
+  display: block;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.signup-screen .voice-question {
+  color: #31005f;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+}

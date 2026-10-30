@@ -2,12 +2,13 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Bot, Copy, Mic, Send, Square, Volume2, VolumeX } from "lucide-react";
 import { useSettings } from "../context/settingsContext/SettingsContext";
 import { api } from "../services/api";
+import { getUserAccessibilityProfile } from "../services/firebaseAuth";
 import { startNativeVoiceRecognition } from "../services/platformVoice";
 import { speak, stopSpeaking, resolveReplyLocale } from "../services/speechService";
 
 const DEFAULT_PROFILE = {
-  firstName: "Gundo",
-  lastName: "Dzivhani",
+  firstName: "",
+  lastName: "",
   email: "",
   phone: "",
   photo: "",
@@ -28,7 +29,7 @@ function loadProfile() {
   }
 }
 
-function loadAccessibilityProfile() {
+function loadLocalAccessibilityProfile() {
   try {
     return JSON.parse(localStorage.getItem("uniableAccessibilityProfile") || "null") || {};
   } catch {
@@ -149,7 +150,9 @@ export default function UniPal() {
         locale,
         profile: {
           firstName: profile.firstName || "",
-          accessibility: loadAccessibilityProfile(),
+          accessibility: await getUserAccessibilityProfile()
+            .then((saved) => saved?.accessibilityProfile || loadLocalAccessibilityProfile())
+            .catch(() => loadLocalAccessibilityProfile()),
           preferences: { theme, fontSize },
         },
         messages: conversation.map(({ role, text: messageText }) => ({

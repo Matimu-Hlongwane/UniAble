@@ -48,7 +48,7 @@ export function cleanForSpeech(text) {
   out = out.replace(/[*_~>|]+/g, " ");
   try {
     out = out.replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu, " ");
-  } catch (_) { /* very old engines: leave emoji in place */ }
+  } catch { /* very old engines: leave emoji in place */ }
   // Make line breaks sound like sentence breaks.
   out = out.replace(/([^.!?…:;\s])\s*\n+\s*/g, "$1. ");
   out = out.replace(/\s*\n+\s*/g, " ");
@@ -128,7 +128,7 @@ export function findBestLanguageTag(tags, locale) {
   );
 }
 
-function loadWebVoices(timeoutMs = 1500) {
+function loadWebVoices(timeoutMs = 4000) {
   return new Promise((resolve) => {
     const synth = typeof window !== "undefined" ? window.speechSynthesis : null;
     if (!synth) return resolve([]);
@@ -227,6 +227,7 @@ export function getSpeechDiagnostics() {
 /* ---------- playback ---------- */
 
 let session = null;
+let speechRequestId = 0;
 
 function endSession(target, error) {
   if (!target || target.ended) return;
@@ -238,14 +239,21 @@ function endSession(target, error) {
 
 /** Stops any speech that is currently playing. Safe to call at any time. */
 export function stopSpeaking() {
+  // Invalidate any support lookup still awaiting voices/plugin readiness. Without
+  // this guard, an older page can begin speaking after a newer route has loaded.
+  speechRequestId += 1;
   const current = session;
   session = null;
   if (current) {
     current.cancelled = true;
     endSession(current);
   }
-  try { window.speechSynthesis?.cancel?.(); } catch (_) {}
-  if (Capacitor.isNativePlatform() && Capacitor.isPluginAvailable("TextToSpeech")) {
+  try { window.speechSynthesis?.cancel?.(); } catch { /* Speech synthesis may already be stopped. */ }
+
+  // Do not issue a native stop command when the active session is web-based or
+  // absent; some Android TTS engines process stop asynchronously and can cancel
+  // a new utterance that starts immediately afterwards.
+  if (current?.engine === "native" && Capacitor.isNativePlatform() && Capacitor.isPluginAvailable("TextToSpeech")) {
     Promise.resolve(NativeTTS.stop()).catch(() => {});
   }
 }
@@ -258,14 +266,16 @@ export function stopSpeaking() {
  */
 export async function speak(text, { locale = "en-ZA", rate = 0.96, pitch = 1, onStart, onEnd, onError } = {}) {
   stopSpeaking();
+  const requestId = ++speechRequestId;
 
   const clean = cleanForSpeech(text);
   if (!clean) return { started: false, reason: "empty" };
 
   const support = await getSpeechSupport(locale);
+  if (requestId !== speechRequestId) return { started: false, reason: "cancelled" };
   if (!support.supported) return { started: false, reason: support.reason };
 
-  const current = { cancelled: false, ended: false, onEnd, onError };
+  const current = { cancelled: false, ended: false, onEnd, onError, engine: support.engine };
   session = current;
 
   const run = support.engine === "native"
@@ -331,8 +341,10 @@ function playWeb(text, support, locale, { rate, pitch, current, onStart }) {
       }
     };
 
-    try { synth.cancel(); } catch (_) {}
-    next();
+    try { synth.cancel(); } catch { /* Continue the speech queue if cancellation is unavailable. */ }
+    // Edge/Chromium can drop an utterance submitted in the same task as cancel().
+    // Starting on the next task gives the speech queue time to reset.
+    window.setTimeout(next, 60);
   });
 }
 

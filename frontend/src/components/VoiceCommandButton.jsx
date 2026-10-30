@@ -88,7 +88,7 @@ export default function VoiceCommandButton({ onCommand }) {
     return () => {
       try {
         recognition.abort();
-      } catch (_) {
+      } catch {
         // Recognition is already stopped.
       }
     };
@@ -177,7 +177,7 @@ export default function VoiceCommandButton({ onCommand }) {
 
     try {
       recognitionRef.current?.stop();
-    } catch (_) {
+    } catch {
       // Already stopped.
     }
 
