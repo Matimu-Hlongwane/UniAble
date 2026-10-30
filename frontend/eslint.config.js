@@ -1,4 +1,4 @@
-﻿import js from "@eslint/js";
+import js from "@eslint/js";
 import globals from "globals";
 import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
@@ -6,7 +6,7 @@ import reactRefresh from "eslint-plugin-react-refresh";
 
 export default [
   {
-    ignores: ["dist/**", "node_modules/**", "android/**", "ios/**"],
+    ignores: ["dist/**", "node_modules/**", "android/**", "ios/**", "repair-backups/**", "**/*backup*/**", "**/*.backup*", "**/*.before-*.js"],
   },
   {
     files: ["**/*.{js,jsx}"],

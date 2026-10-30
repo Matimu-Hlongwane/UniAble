@@ -157,22 +157,18 @@ export async function sendPhoneOtp(phoneNumber, recaptchaContainerId) {
   }
 }
 
-export async function verifyPhoneOtp(confirmation, code, verifier) {
+export async function verifyPhoneOtp(confirmation, code) {
   if (!confirmation) {
     throw new Error("Please request an OTP first.");
   }
 
-  try {
-    const result = await confirmation.confirm(code);
-    await result.user.getIdToken(true);
+  const result = await confirmation.confirm(code);
+  await result.user.getIdToken(true);
 
-    clearPhoneRecaptchaVerifier();
+  // Clear the verifier only after successful OTP confirmation.
+  clearPhoneRecaptchaVerifier();
 
-    return result.user;
-  } catch (error) {
-    // Keep the verifier available if the user entered an incorrect code.
-    throw error;
-  }
+  return result.user;
 }
 
 export async function changeAccountPassword(newPassword) {
@@ -225,7 +221,7 @@ export async function getVoiceFirstPreference(user = auth?.currentUser) {
           try {
             localStorage.setItem(voiceFirstStorageKey(user.uid), "true");
             localStorage.setItem(`uniableVoiceFirstManual:${user.uid}`, "false");
-          } catch {}
+          } catch { /* Best-effort browser operation; continue without optional state. */ }
           return true;
         }
 
@@ -233,7 +229,7 @@ export async function getVoiceFirstPreference(user = auth?.currentUser) {
           try {
             localStorage.setItem(voiceFirstStorageKey(user.uid), String(data.voiceFirstEnabled));
             if (explicitlySet) localStorage.setItem(`uniableVoiceFirstManual:${user.uid}`, "true");
-          } catch {}
+          } catch { /* Best-effort browser operation; continue without optional state. */ }
           return data.voiceFirstEnabled;
         }
       }
@@ -246,7 +242,7 @@ export async function getVoiceFirstPreference(user = auth?.currentUser) {
     if (user) {
       const accessibility = String(localStorage.getItem(`uniableAccessibility:${user.uid}`) || "");
       let profile = null;
-      try { profile = JSON.parse(localStorage.getItem("uniableAccessibilityProfile") || "null"); } catch {}
+      try { profile = JSON.parse(localStorage.getItem("uniableAccessibilityProfile") || "null"); } catch { /* Best-effort browser operation; continue without optional state. */ }
       const manual = localStorage.getItem(`uniableVoiceFirstManual:${user.uid}`) === "true";
       const cached = localStorage.getItem(voiceFirstStorageKey(user.uid));
 
@@ -256,7 +252,7 @@ export async function getVoiceFirstPreference(user = auth?.currentUser) {
     }
 
     let profile = null;
-    try { profile = JSON.parse(localStorage.getItem("uniableAccessibilityProfile") || "null"); } catch {}
+    try { profile = JSON.parse(localStorage.getItem("uniableAccessibilityProfile") || "null"); } catch { /* Best-effort browser operation; continue without optional state. */ }
     const manual = localStorage.getItem("uniableVoiceFirstManual") === "true";
     if (isBlind(profile, "") && !manual) return true;
     return localStorage.getItem("uniableVoiceFirstEnabled") === "true";
@@ -459,10 +455,10 @@ export async function saveUserAccessibilityProfile(profile) {
       try {
         localStorage.setItem(voiceFirstStorageKey(user.uid), "true");
         localStorage.setItem(`uniableVoiceFirstManual:${user.uid}`, "false");
-      } catch {}
+      } catch { /* Best-effort browser operation; continue without optional state. */ }
       try {
         window.dispatchEvent(new CustomEvent("uniable-voice-first-change", { detail: { enabled: true } }));
-      } catch {}
+      } catch { /* Best-effort browser operation; continue without optional state. */ }
     }
   } catch (error) {
     console.error("Could not sync the accessibility profile to Firebase:", error);

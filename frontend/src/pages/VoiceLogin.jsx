@@ -233,7 +233,7 @@ export default function VoiceLogin() {
           Prefer typing? <Link to="/login">Login with Email and password</Link>
         </p>
         <p className="voice-login-switch">
-          Don't want to enter a password? <Link to="/login?mode=email-link">Use a secure email sign-in link</Link>
+          Don&apos;t want to enter a password? <Link to="/login?mode=email-link">Use a secure email sign-in link</Link>
         </p>
         <p className="voice-login-switch">
           Need an account? <Link to="/signup">Create an account</Link>

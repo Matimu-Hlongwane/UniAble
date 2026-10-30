@@ -49,7 +49,7 @@ function Settings() {
   const [photoFile, setPhotoFile] = useState(null);
   const [phoneOtp, setPhoneOtp] = useState("");
   const [phoneConfirmation, setPhoneConfirmation] = useState(null);
-  const [phoneVerifier, setPhoneVerifier] = useState(null);
+
   const [passwordOpen, setPasswordOpen] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -167,7 +167,7 @@ function Settings() {
       if (!firebaseConfigured || !firebaseUser) throw new Error(t("phoneVerificationRequired"));
       const result = await sendPhoneOtp(`+27${profile.phone.slice(1)}`, "phone-recaptcha");
       setPhoneConfirmation(result.confirmation);
-      setPhoneVerifier(result.verifier);
+
       showStatus(`${t("verificationSent")} ${t("otp")}.`);
     } catch (err) {
       showError(err.message || t("actionFailed"));
@@ -182,12 +182,12 @@ function Settings() {
     }
     setBusy(true);
     try {
-      const user = await verifyPhoneOtp(phoneConfirmation, phoneOtp, phoneVerifier);
+      const user = await verifyPhoneOtp(phoneConfirmation, phoneOtp);
       const next = { ...profile, phoneVerified: true };
       persistProfile(next);
       setFirebaseUser(user);
       setPhoneConfirmation(null);
-      setPhoneVerifier(null);
+
       setPhoneOtp("");
       showStatus(t("phoneVerified"));
     } catch (err) {
