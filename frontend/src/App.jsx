@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import LandingEntry from "./pages/LandingEntry";
@@ -15,6 +15,7 @@ import CampusNavigation from "./pages/CampusNavigation";
 import Schedule from "./pages/Schedule";
 import PeerAssistance from "./pages/PeerAssistance";
 import UniPal from "./pages/UniPal";
+import ScanRead from "./pages/ScanRead";
 
 export default function App() {
   return (
@@ -27,6 +28,7 @@ export default function App() {
         <Route path="/dashboard" element={<StudentDashboard />} />
         <Route path="/campus" element={<CampusNavigation />} />
         <Route path="/schedule" element={<Schedule />} />
+        <Route path="/scan-read" element={<ScanRead />} />
         <Route path="/peer-assistance" element={<PeerAssistance />} />
         <Route path="/unipal" element={<UniPal />} />
         <Route path="/emergency" element={<Emergency />} />
@@ -38,4 +40,3 @@ export default function App() {
     </Routes>
   );
 }
-
