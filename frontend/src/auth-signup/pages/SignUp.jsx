@@ -1,4 +1,5 @@
 ﻿import React, { useEffect, useState } from "react";
+import { api } from "../../services/api";
 import { Link } from "react-router-dom";
 import {
     createAccountWithEmailPassword,
@@ -294,7 +295,30 @@ function SignUp() {
         if (Object.keys(validationErrors).length > 0) { setErrors(validationErrors); return; }
         setErrors({});
         try {
-            await createAccountWithEmailPassword(formData.email, formData.password, formData.fullName, formData.accessibility);
+            const createdUser = await createAccountWithEmailPassword(
+                formData.email,
+                formData.password,
+                formData.fullName,
+                formData.accessibility,
+                formData.accountType
+            );
+
+            if (formData.accountType === "volunteer") {
+                try {
+                    await api.registerVolunteer({
+                        userId: createdUser.uid,
+                        name: formData.fullName
+                    });
+                } catch (volunteerError) {
+                    console.warn(
+                        "Account created, but volunteer registration could not reach the Peer Assistance server:",
+                        volunteerError
+                    );
+                    setVerificationError(
+                        "Your account was created. Volunteer registration could not reach the server yet; please try again later."
+                    );
+                }
+            }
             setVerificationStage("choose");
             setVerificationMethod("email");
             setVerificationError("");
@@ -957,6 +981,7 @@ function SignUp() {
 }
 
 export default SignUp;
+
 
 
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+﻿import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   User, Bell, Shield, Palette, Globe, MapPin, Lock, LogOut, ChevronRight,
@@ -130,6 +130,12 @@ function Settings() {
 
       const next = { ...profile, photo };
       persistProfile(next);
+      window.dispatchEvent(new CustomEvent("uniable-profile-updated", {
+        detail: {
+          photoURL: photo,
+          displayName: `${profile.firstName} ${profile.lastName}`.trim(),
+        },
+      }));
       setPhotoFile(null);
       showStatus(t("profileSaved"));
     } catch (err) {
@@ -197,7 +203,7 @@ function Settings() {
 
   const updatePassword = async () => {
     clearMessages();
-    if (newPassword.length < 8 || !/[^\W_]/.test(newPassword) || !/[^A-Za-z0-9]/.test(newPassword)) {
+    if (newPassword.length < 8 || !/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) || !/[0-9]/.test(newPassword) || !/[^A-Za-z0-9]/.test(newPassword)) {
       showError(t("passwordTooWeak"));
       return;
     }
@@ -400,3 +406,7 @@ function AccessibilityIcon() {
 }
 
 export default Settings;
+
+
+
+

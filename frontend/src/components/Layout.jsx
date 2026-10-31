@@ -1,9 +1,9 @@
-﻿import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { NavLink, Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-import { Home, Settings, Siren, Users, MapPin, CalendarDays, ArrowLeft, Volume2 } from "lucide-react";
+import { Home, Settings, Siren, Users, MapPin, CalendarDays, ArrowLeft, Volume2, LogOut } from "lucide-react";
 import { useSettings } from "../context/settingsContext/SettingsContext";
 import VoiceCommandButton from "./VoiceCommandButton";
-import { getVoiceFirstPreference, subscribeToAuth, getVerificationStatus } from "../services/firebaseAuth";
+import { getVoiceFirstPreference, subscribeToAuth, getVerificationStatus, signOutAccount, getCurrentUser } from "../services/firebaseAuth";
 import { speak, stopSpeaking } from "../services/speechService";
 
 const links = [
@@ -33,6 +33,52 @@ export default function Layout() {
   const [voiceFirstEnabled, setVoiceFirstEnabled] = useState(false);
   const [guidanceStatus, setGuidanceStatus] = useState("");
   const [authChecking, setAuthChecking] = useState(true);
+  const [authUser, setAuthUser] = useState(null);
+  const [profilePhoto, setProfilePhoto] = useState("");
+  const [profileName, setProfileName] = useState("");
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const syncProfile = (user, updatedProfile = null) => {
+      let savedProfile = {};
+      try {
+        savedProfile = JSON.parse(localStorage.getItem("uniableProfile") || "{}");
+      } catch {
+        savedProfile = {};
+      }
+
+      const currentUser = user || null;
+      const name = updatedProfile?.displayName ||
+        [savedProfile.firstName, savedProfile.lastName].filter(Boolean).join(" ") ||
+        currentUser?.displayName ||
+        "";
+
+      setAuthUser(currentUser);
+      setProfilePhoto(updatedProfile?.photoURL || currentUser?.photoURL || savedProfile.photo || "");
+      setProfileName(name);
+    };
+
+    const unsubscribe = subscribeToAuth((user) => syncProfile(user));
+
+    const handleProfileUpdate = (event) => {
+      syncProfile(getCurrentUser(), event.detail || {});
+    };
+
+    const handleStorageUpdate = (event) => {
+      if (event.key === "uniableProfile") {
+        syncProfile(getCurrentUser());
+      }
+    };
+
+    window.addEventListener("uniable-profile-updated", handleProfileUpdate);
+    window.addEventListener("storage", handleStorageUpdate);
+
+    return () => {
+      unsubscribe?.();
+      window.removeEventListener("uniable-profile-updated", handleProfileUpdate);
+      window.removeEventListener("storage", handleStorageUpdate);
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -124,6 +170,23 @@ export default function Layout() {
     if (voiceFirstEnabled) speak("I did not recognise that destination. Try dashboard, campus, schedule, peer assistance, UniPal, emergency, accessibility, or settings.", { locale: locale || "en-ZA" });
   }, [navigate, t, locale, voiceFirstEnabled]);
 
+  const profileInitial =
+    (profileName || authUser?.email || "G").trim().charAt(0).toUpperCase() || "G";
+
+  const handleProfileLogout = async () => {
+    try {
+      await signOutAccount();
+      localStorage.removeItem("uniableProfile");
+      setProfileMenuOpen(false);
+      setAuthUser(null);
+      setProfilePhoto("");
+      setProfileName("");
+      navigate("/login", { replace: true });
+    } catch (error) {
+      console.error("Could not sign out:", error);
+    }
+  };
+
   if (authChecking) {
     return <main className="main-content" role="status" aria-live="polite">Checking your UniAble accountâ€¦</main>;
   }
@@ -131,10 +194,60 @@ export default function Layout() {
   return (
     <div className="app-shell mobile-app-shell">
       <header className="topbar mobile-topbar">
-        <Link to="/dashboard" className="brand" aria-label="UniAble home">UniAble <span>â€¢</span></Link>
+        <Link to="/dashboard" className="brand" aria-label="UniAble home">UniAble <span></span></Link>
         <div className="top-actions">
-          <Link to="/settings" className="icon-btn top-settings" aria-label={t("settings")} title={t("settings")}><Settings size={20} /></Link>
-          <div className="avatar" aria-label="Signed in user">G</div>
+          <div className="profile-menu-container">
+            <button
+              type="button"
+              className="avatar profile-avatar-button"
+              aria-label="Open profile menu"
+              aria-haspopup="menu"
+              aria-expanded={profileMenuOpen}
+              onClick={() => setProfileMenuOpen((open) => !open)}
+            >
+              {profilePhoto ? (
+                <img src={profilePhoto} alt="" className="profile-avatar-image" />
+              ) : (
+                profileInitial
+              )}
+            </button>
+
+            {profileMenuOpen && (
+              <div className="profile-dropdown" role="menu">
+                <div className="profile-dropdown-user">
+                  {profilePhoto ? (
+                    <img src={profilePhoto} alt="" className="profile-dropdown-image" />
+                  ) : (
+                    <span className="profile-dropdown-initial">{profileInitial}</span>
+                  )}
+                  <div className="profile-dropdown-details">
+                    <strong>{profileName || "UniAble user"}</strong>
+                    <span>{authUser?.email || ""}</span>
+                  </div>
+                </div>
+
+                <Link
+                  to="/settings"
+                  className="profile-dropdown-link"
+                  role="menuitem"
+                  onClick={() => setProfileMenuOpen(false)}
+                >
+                  <Settings size={17} />
+                  Profile settings
+                </Link>
+
+                <button
+                  type="button"
+                  className="profile-dropdown-logout"
+                  role="menuitem"
+                  onClick={handleProfileLogout}
+                >
+                  <LogOut size={17} />
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
       <main className="main-content mobile-main-content">
@@ -180,4 +293,6 @@ export default function Layout() {
 function isActivePath(pathname, target) {
   return pathname === target || pathname.startsWith(`${target}/`);
 }
+
+
 

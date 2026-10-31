@@ -1,4 +1,4 @@
-import { Capacitor } from "@capacitor/core";
+﻿import { Capacitor } from "@capacitor/core";
 
 // VITE_API_URL can override this for a deployed HTTPS API or a physical device.
 // In the Android emulator, 10.0.2.2 points back to the development computer.
@@ -34,6 +34,7 @@ export const api = {
   createRequest: (payload) => request("/peer/requests", { method: "POST", body: JSON.stringify(payload) }),
   updateRequest: (id, status) => request(`/peer/requests/${id}`, { method: "PATCH", body: JSON.stringify({ status }) }),
   getVolunteers: () => request("/peer/volunteers"),
+  registerVolunteer: (payload) => request("/peer/volunteers/register", { method: "POST", body: JSON.stringify(payload) }),
   setAvailability: (id, available) => request(`/peer/volunteers/${id}/availability`, { method: "PATCH", body: JSON.stringify({ available }) }),
   createSOS: (payload) => request("/emergency/sos", { method: "POST", body: JSON.stringify(payload) }),
   getAccessibilityProfile: (studentId) => request(`/accessibility/${studentId}`),
@@ -41,3 +42,4 @@ export const api = {
   chatWithUniPal: (payload) => request("/unipal/chat", { method: "POST", body: JSON.stringify(payload) }),
   getUniPalCapabilities: () => request("/unipal/capabilities"),
 };
+

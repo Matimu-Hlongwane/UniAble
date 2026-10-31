@@ -1,7 +1,12 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
+
+import CampusSecurityCall from "../components/CampusSecurityCall";
 import { api } from "../services/api";
+
 import { MapPin, Phone, ShieldAlert, Users } from "lucide-react";
+
 import { useSettings } from "../context/settingsContext/SettingsContext";
+
 
 export default function Emergency() {
   const [sent, setSent] = useState(false);
@@ -21,6 +26,7 @@ export default function Emergency() {
 
   return (
     <section className="page narrow">
+      <CampusSecurityCall />
       <p className="eyebrow">{t("emergencyResponse")}</p>
       <h1>{t("emergencySos")}</h1>
       <p className="muted">{t("emergencyDescription")}</p>

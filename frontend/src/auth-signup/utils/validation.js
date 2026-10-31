@@ -1,4 +1,4 @@
-/* =========================================
+﻿/* =========================================
    UNIABLE FORM VALIDATION
    ========================================= */
 
@@ -68,13 +68,23 @@ export function validateSignUpForm(formData) {
 
     }
 
-    else if (formData.password.length < 6) {
-
-        errors.password =
-            "Password must contain at least 6 characters.";
-
+    else if (formData.password.length < 8) {
+        errors.password = "Password must contain at least 8 characters.";
+    }
+    else if (!/[A-Z]/.test(formData.password)) {
+        errors.password = "Password must contain at least one uppercase letter.";
+    }
+    else if (!/[a-z]/.test(formData.password)) {
+        errors.password = "Password must contain at least one lowercase letter.";
+    }
+    else if (!/[0-9]/.test(formData.password)) {
+        errors.password = "Password must contain at least one number.";
+    }
+    else if (!/[^A-Za-z0-9]/.test(formData.password)) {
+        errors.password = "Password must contain at least one special character.";
     }
 
 
     return errors;
 }
+

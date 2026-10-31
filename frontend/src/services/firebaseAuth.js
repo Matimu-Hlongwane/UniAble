@@ -1,4 +1,4 @@
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink } from "firebase/auth";
+﻿import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink } from "firebase/auth";
 import { initializeApp, getApps } from "firebase/app";
 import { getAuth, onAuthStateChanged, RecaptchaVerifier, signOut, updatePassword, sendEmailVerification, updateProfile, updateEmail, deleteUser, linkWithPhoneNumber, signInWithPhoneNumber } from "firebase/auth";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -348,7 +348,7 @@ async function ensureAccountVerified(user) {
   }
   return user;
 }
-export async function createAccountWithEmailPassword(email, password, displayName, accessibility = "None") {
+export async function createAccountWithEmailPassword(email, password, displayName, accessibility = "None", accountType = "student") {
   if (!firebaseConfigured || !auth) {
     throw new Error("Firebase is not configured. Check the frontend environment variables.");
   }
@@ -575,6 +575,7 @@ export async function completePasswordlessSignIn(email, link = window.location.h
   return ensureAccountVerified(credential.user);
 }
 export { auth };
+
 
 
 

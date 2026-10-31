@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { useState } from "react";
 import accessibilityOptions
   from "../data/accessibilityOptions.json";
@@ -68,6 +68,23 @@ function TypingSignUpForm({
 
         </div>
 
+
+        {/* ACCOUNT TYPE */}
+
+        <div className="form-group">
+          <label htmlFor="accountType">Account Type</label>
+          <select
+            id="accountType"
+            name="accountType"
+            value={formData.accountType || "student"}
+            onChange={onInputChange}
+          >
+            <option value="student">Student</option>
+            
+          </select>
+          <p className="signup-password-help">
+          </p>
+        </div>
 
         {/* ACCESSIBILITY */}
 
@@ -200,7 +217,7 @@ function TypingSignUpForm({
               type={showPassword ? "text" : "password"}
               id="password"
               name="password"
-              placeholder="Minimum 6 characters"
+              placeholder="8+ characters, uppercase, lowercase, number and symbol"
               value={formData.password}
               onChange={onInputChange}
               autoComplete="new-password"
@@ -268,7 +285,7 @@ function TypingSignUpForm({
           }
         >
 
-          🎙 Return to Voice Mode
+          ðŸŽ™ Return to Voice Mode
 
         </button>
 
@@ -280,4 +297,7 @@ function TypingSignUpForm({
 
 
 export default TypingSignUpForm;
+
+
+
 

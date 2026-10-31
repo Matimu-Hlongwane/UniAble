@@ -3680,3 +3680,277 @@ body, button, input, select, textarea {
 h1, h2, h3, h4, h5, h6 {
   font-family: "Bricolage Grotesque", "Atkinson Hyperlegible", sans-serif;
 }
+
+/* =========================================================
+   PROFILE AVATAR AND TOP-RIGHT ACCOUNT MENU
+   ========================================================= */
+
+.profile-menu-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.profile-avatar-button {
+  position: relative;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.profile-avatar-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.profile-avatar-chevron {
+  position: absolute;
+  right: -5px;
+  bottom: -3px;
+  width: 17px;
+  height: 17px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--surface, #ffffff);
+  color: var(--text-secondary, #555555);
+  border: 1px solid var(--border-light, #dddddd);
+}
+
+.profile-dropdown {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  z-index: 1000;
+  width: min(290px, calc(100vw - 24px));
+  padding: 10px;
+  background: var(--surface, #ffffff);
+  color: var(--text-primary, #222222);
+  border: 1px solid var(--border-light, #dddddd);
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16);
+}
+
+.profile-dropdown-user {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 8px 13px;
+  border-bottom: 1px solid var(--border-light, #dddddd);
+  margin-bottom: 7px;
+  min-width: 0;
+}
+
+.profile-dropdown-image,
+.profile-dropdown-initial {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-dropdown-initial {
+  display: grid;
+  place-items: center;
+  background: #e9e7ff;
+  color: #493cc8;
+  font-weight: 800;
+}
+
+.profile-dropdown-details {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 3px;
+}
+
+.profile-dropdown-details strong,
+.profile-dropdown-details span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-dropdown-details strong {
+  font-size: 0.9rem;
+}
+
+.profile-dropdown-details span {
+  color: var(--text-secondary, #666666);
+  font-size: 0.78rem;
+}
+
+.profile-dropdown-link,
+.profile-dropdown-logout {
+  width: 100%;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-primary, #222222);
+  text-decoration: none;
+  text-align: left;
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.profile-dropdown-link:hover {
+  background: var(--hover-bg, #f3f3f3);
+}
+
+.profile-dropdown-logout {
+  color: #c62828;
+}
+
+.profile-dropdown-logout:hover {
+  background: rgba(198, 40, 40, 0.08);
+}
+
+.profile-avatar-button:focus-visible,
+.profile-dropdown-link:focus-visible,
+.profile-dropdown-logout:focus-visible {
+  outline: 2px solid var(--primary, #493cc8);
+  outline-offset: 3px;
+}
+
+/* UniAble topbar avatar: enforce a true circular profile image */
+.mobile-topbar .top-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.profile-menu-container {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-avatar-button.avatar {
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  max-width: 44px !important;
+  max-height: 44px !important;
+  flex: 0 0 44px;
+  aspect-ratio: 1 / 1;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border-radius: 50% !important;
+  line-height: 1;
+}
+
+.profile-avatar-button .profile-avatar-image {
+  display: block;
+  box-sizing: border-box;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 100%;
+  min-height: 100%;
+  max-width: none;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 50% !important;
+}
+
+/* Direct campus security calling */
+.campus-security-call {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  width: 100%;
+  margin: 18px 0;
+  padding: 18px 20px;
+  border: 1px solid var(--border-color, #d9dee7);
+  border-radius: 14px;
+  background: var(--card-background, #fff);
+  color: var(--text-color, #172033);
+  box-sizing: border-box;
+}
+.campus-security-call-copy {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+}
+.campus-security-call-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #eaf2ee;
+  color: #176b45;
+}
+.campus-security-call h2 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+.campus-security-call p {
+  margin: 0;
+  color: var(--muted-text, #647084);
+  font-size: .875rem;
+  line-height: 1.45;
+}
+.campus-security-call-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  min-height: 42px;
+  padding: 10px 15px;
+  border: 1px solid #176b45;
+  border-radius: 9px;
+  background: #176b45;
+  color: #fff;
+  font: inherit;
+  font-weight: 650;
+  text-decoration: none;
+  cursor: pointer;
+}
+.campus-security-call-button:hover {
+  background: #105638;
+  color: #fff;
+}
+.campus-security-call-button:focus-visible {
+  outline: 3px solid #80b9a0;
+  outline-offset: 3px;
+}
+.campus-security-call-button:disabled {
+  border-color: #aab3bf;
+  background: #e8ebef;
+  color: #596579;
+  cursor: not-allowed;
+}
+@media (max-width: 600px) {
+  .campus-security-call {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .campus-security-call-button {
+    width: 100%;
+  }
+}
