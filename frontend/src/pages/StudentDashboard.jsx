@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, CalendarDays, MapPin, ShieldAlert, MessageCircle } from "lucide-react";
 import { useSettings } from "../context/settingsContext/SettingsContext";
@@ -121,7 +121,7 @@ export default function StudentDashboard() {
               year: "numeric",
             })}
           </p>
-          <h1>{signedInFirstName ? `${t("goodMorning")}, ${signedInFirstName}` : t("goodMorning")}</h1>
+          <h1>Dashboard</h1>
           <p className="muted">{t("assistQuestion")}</p>
         </div>
       </div>
@@ -162,7 +162,7 @@ export default function StudentDashboard() {
             >
               <strong>{tool.title}</strong>
               <span>{tool.description}</span>
-              <ArrowRight size={17} />
+              
             </button>
           ))}
         </div>
@@ -221,7 +221,7 @@ export default function StudentDashboard() {
                 <strong>{name}</strong>
                 <small>{room}</small>
               </div>
-              <ArrowRight size={17} />
+              
             </button>
           ))}
         </div>
@@ -244,5 +244,6 @@ export default function StudentDashboard() {
     </section>
   );
 }
+
 
 

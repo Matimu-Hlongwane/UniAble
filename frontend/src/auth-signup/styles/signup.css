@@ -1,3 +1,4 @@
+﻿@import url("https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;500;600;700;800&display=swap");
 /* =========================================
    UNIABLE SIGN-UP PAGE
    ========================================= */
@@ -1114,7 +1115,7 @@
     padding: 24px;
     background: var(--signup-page);
     color: var(--signup-text);
-    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: Aptos, "Segoe UI", Arial, sans-serif;
     line-height: 1.5;
 }
 
@@ -1403,3 +1404,7 @@
   font-weight: 700;
   text-align: center;
 }
+
+
+ h1, h2, h3, h4, h5, h6 { font-family: "Bricolage Grotesque", "Atkinson Hyperlegible", sans-serif; }
+

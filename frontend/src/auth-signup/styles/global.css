@@ -1,3 +1,4 @@
+﻿@import url("https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;500;600;700;800&display=swap");
 * {
     box-sizing: border-box;
     margin: 0;
@@ -15,3 +16,5 @@ body {
     font-family: Arial, Helvetica, sans-serif;
     background-color: #f4f4fa;
 }
+ h1, h2, h3, h4, h5, h6 { font-family: "Bricolage Grotesque", "Atkinson Hyperlegible", sans-serif; }
+

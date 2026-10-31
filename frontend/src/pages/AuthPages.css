@@ -1,3 +1,4 @@
+﻿@import url("https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;500;600;700;800&display=swap");
 .auth-page {
   min-height: 100vh;
   box-sizing: border-box;
@@ -6,7 +7,7 @@
   padding: 24px;
   background: #f5f7fb;
   color: #172033;
-  font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: Aptos, "Segoe UI", Arial, sans-serif;
 }
 .auth-card {
   box-sizing: border-box;
@@ -75,7 +76,7 @@
   padding: 12px 20px;
   background: #fff;
   border-bottom: 1px solid #e0e5ed;
-  font-family: Inter, system-ui, sans-serif;
+  font-family: "Atkinson Hyperlegible", Arial, sans-serif;
 }
 .landing-auth-nav a { color: #2458a6; font-weight: 650; text-decoration: none; }
 .landing-auth-nav .landing-signup-link {
@@ -149,3 +150,6 @@
     grid-template-columns: 1fr;
   }
 }
+
+ h1, h2, h3, h4, h5, h6 { font-family: "Bricolage Grotesque", "Atkinson Hyperlegible", sans-serif; }
+
