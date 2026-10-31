@@ -1,0 +1,1255 @@
+/* =========================================================
+   UNIABLE DISABILITY OFFICE DASHBOARD
+   Main stylesheet: layout, branding, components and responsiveness.
+   ========================================================= */
+
+
+/* ---------- 1. BRAND COLOURS AND GLOBAL SETTINGS ---------- */
+
+/*
+   CSS variables keep the design consistent.
+   Update the purple values here if the brand colours change later.
+*/
+:root {
+    --purple: #7129bf;
+    --purple-dark: #48008f;
+    --purple-light: #8d40db;
+    --purple-soft: #f2eafb;
+
+    --page-bg: #f7f5fb;
+    --surface: #ffffff;
+    --text: #211a2d;
+    --muted: #797287;
+    --border: #e9e3f0;
+
+    --green: #168454;
+    --green-bg: #e8f7ef;
+    --orange: #b96b12;
+    --orange-bg: #fff3df;
+    --red: #b83d4c;
+    --red-bg: #ffedf0;
+    --blue: #2868bc;
+    --blue-bg: #eaf2ff;
+
+    --sidebar-width: 250px;
+    --topbar-height: 76px;
+    --radius: 16px;
+
+    --shadow: 0 5px 24px rgba(42, 20, 69, 0.045);
+}
+
+/* Makes element sizing predictable throughout the application. */
+* {
+    box-sizing: border-box;
+}
+
+/* Smooth scrolling is helpful when navigating long page sections. */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Establishes the default typography and page background. */
+body {
+    margin: 0;
+    background: var(--page-bg);
+    color: var(--text);
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Keeps form controls consistent with the page typography. */
+button,
+input,
+select {
+    font: inherit;
+}
+
+/* Ensures buttons look intentional and respond to pointer input. */
+button {
+    cursor: pointer;
+}
+
+/* Gives links a consistent appearance without browser underlines. */
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* Prevents long words and URLs from breaking the layout. */
+img {
+    max-width: 100%;
+}
+
+/* Accessible helper: available to screen readers but visually hidden. */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+
+/* ---------- 2. MAIN APPLICATION LAYOUT ---------- */
+
+/*
+   The sidebar remains fixed while the workspace scrolls.
+   The main content receives a left margin equal to the sidebar width.
+*/
+.app-layout {
+    min-height: 100vh;
+}
+
+.sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    width: var(--sidebar-width);
+    min-height: 100vh;
+    padding: 25px 17px 18px;
+    overflow-y: auto;
+    background: linear-gradient(180deg, var(--purple-dark), #5b17a0 70%, #6922b4);
+    color: #ffffff;
+}
+
+.main-content {
+    min-width: 0;
+    min-height: 100vh;
+    margin-left: var(--sidebar-width);
+}
+
+/* ---------- 3. SIDEBAR BRANDING ---------- */
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 5px 26px;
+}
+
+.brand-mark {
+    display: grid;
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 13px;
+    background: rgba(255, 255, 255, 0.16);
+    font-size: 23px;
+    font-weight: 800;
+}
+
+.brand-copy {
+    display: flex;
+    flex-direction: column;
+}
+
+.brand-copy strong {
+    font-size: 19px;
+    letter-spacing: -0.5px;
+}
+
+.brand-copy small {
+    margin-top: 2px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 11px;
+}
+
+/* Staff profile area under the brand. */
+.office-profile {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 15px 10px;
+    margin-bottom: 27px;
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    border-radius: 13px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.profile-avatar,
+.topbar-avatar {
+    display: grid;
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.profile-avatar {
+    background: #ffffff;
+    color: var(--purple-dark);
+}
+
+.profile-copy {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+}
+
+.profile-copy strong {
+    font-size: 12px;
+}
+
+.profile-copy span {
+    margin-top: 3px;
+    color: rgba(255, 255, 255, 0.68);
+    font-size: 11px;
+}
+
+/* ---------- 4. SIDEBAR NAVIGATION ---------- */
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.nav-heading {
+    padding: 0 10px;
+    margin: 0 0 8px;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+}
+
+.nav-heading-secondary {
+    margin-top: 27px;
+}
+
+.nav-link {
+    display: flex;
+    width: 100%;
+    min-height: 45px;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.78);
+    text-align: left;
+    transition: background 160ms ease, color 160ms ease;
+}
+
+.nav-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+.nav-link.active {
+    background: #ffffff;
+    color: var(--purple-dark);
+    font-weight: 750;
+}
+
+.nav-icon {
+    display: inline-grid;
+    width: 22px;
+    place-items: center;
+    font-size: 19px;
+    line-height: 1;
+}
+
+.nav-count {
+    display: inline-grid;
+    min-width: 22px;
+    height: 22px;
+    place-items: center;
+    padding: 0 5px;
+    margin-left: auto;
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.17);
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.nav-link.active .nav-count {
+    background: var(--purple-soft);
+    color: var(--purple-dark);
+}
+
+/* Sidebar security reminder stays near the bottom of the navigation. */
+.sidebar-footer {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 16px 9px 0;
+    margin-top: auto;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.security-dot {
+    flex: 0 0 8px;
+    width: 8px;
+    height: 8px;
+    margin-top: 5px;
+    border-radius: 50%;
+    background: #8ce3b0;
+}
+
+.sidebar-footer div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.sidebar-footer strong {
+    font-size: 11px;
+}
+
+.sidebar-footer small {
+    color: rgba(255, 255, 255, 0.66);
+    font-size: 10px;
+}
+
+
+/* ---------- 5. TOP BAR ---------- */
+
+.topbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    min-height: var(--topbar-height);
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 15px 35px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(10px);
+}
+
+.topbar-left,
+.topbar-right,
+.breadcrumb {
+    display: flex;
+    align-items: center;
+}
+
+.topbar-left {
+    gap: 14px;
+}
+
+.breadcrumb {
+    gap: 10px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.breadcrumb strong {
+    color: var(--text);
+    font-weight: 750;
+}
+
+.topbar-right {
+    gap: 17px;
+}
+
+.current-date {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.topbar-avatar {
+    background: var(--purple-soft);
+    color: var(--purple-dark);
+}
+
+.menu-toggle {
+    display: none;
+    width: 40px;
+    height: 40px;
+    place-items: center;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #ffffff;
+    color: var(--purple-dark);
+    font-size: 19px;
+}
+
+
+/* ---------- 6. PAGE CONTENT AND HEADINGS ---------- */
+
+.page-content {
+    width: 100%;
+    max-width: 1800px;
+    padding: 31px 35px 45px;
+    margin: 0 auto;
+}
+
+/*
+   Only the active section is displayed.
+   The HTML hidden attribute also hides inactive sections by default.
+*/
+.page-section {
+    display: none;
+    animation: page-appear 180ms ease-out;
+}
+
+.page-section.active {
+    display: block;
+}
+
+/* Subtle transition when changing between dashboard sections. */
+@keyframes page-appear {
+    from {
+        opacity: 0.65;
+        transform: translateY(4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.page-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.eyebrow {
+    margin: 0 0 7px;
+    color: var(--purple);
+    font-size: 10px;
+    font-weight: 850;
+    letter-spacing: 1.5px;
+}
+
+.page-heading h1 {
+    margin: 0;
+    font-size: clamp(24px, 2.2vw, 31px);
+    font-weight: 800;
+    letter-spacing: -1.1px;
+    line-height: 1.2;
+}
+
+.page-description {
+    max-width: 680px;
+    margin: 9px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+
+/* ---------- 7. BUTTONS ---------- */
+
+.button {
+    display: inline-flex;
+    min-height: 42px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 15px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 750;
+    transition: background 160ms ease, transform 160ms ease;
+}
+
+.button:hover {
+    transform: translateY(-1px);
+}
+
+.button-primary {
+    background: var(--purple);
+    color: #ffffff;
+}
+
+.button-primary:hover {
+    background: var(--purple-dark);
+}
+
+.button-secondary {
+    border-color: var(--border);
+    background: #ffffff;
+    color: var(--text);
+}
+
+.button-secondary:hover {
+    border-color: #cbb4e8;
+    background: var(--purple-soft);
+}
+
+.text-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 0;
+    border: 0;
+    background: transparent;
+    color: var(--purple);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.text-button:hover {
+    color: var(--purple-dark);
+}
+
+
+/* ---------- 8. SUMMARY STATISTIC CARDS ---------- */
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 17px;
+    margin-bottom: 23px;
+}
+
+.stat-card {
+    min-width: 0;
+    padding: 20px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow);
+}
+
+.stat-topline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.stat-label {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 650;
+}
+
+.stat-icon {
+    display: grid;
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    border-radius: 11px;
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.icon-purple {
+    background: var(--purple-soft);
+    color: var(--purple);
+}
+
+.icon-orange {
+    background: var(--orange-bg);
+    color: var(--orange);
+}
+
+.icon-green {
+    background: var(--green-bg);
+    color: var(--green);
+}
+
+.icon-blue {
+    background: var(--blue-bg);
+    color: var(--blue);
+}
+
+.stat-value {
+    margin: 13px 0 4px;
+    font-size: clamp(25px, 2.2vw, 33px);
+    font-weight: 850;
+    letter-spacing: -1.1px;
+    line-height: 1.2;
+}
+
+.stat-unit {
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 650;
+    letter-spacing: 0;
+}
+
+.stat-footnote {
+    margin: 0;
+    color: var(--muted);
+    font-size: 11px;
+}
+
+
+/* ---------- 9. DASHBOARD PANELS AND GRIDS ---------- */
+
+/*
+   The submissions table receives more width than the category chart.
+   minmax(0, ...) allows grid children to shrink without overflowing.
+*/
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.7fr) minmax(270px, 0.9fr);
+    gap: 20px;
+    margin-bottom: 22px;
+}
+
+.panel {
+    min-width: 0;
+    padding: 23px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow);
+}
+
+.panel-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 19px;
+}
+
+.panel-header h2 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: -0.25px;
+}
+
+.panel-header p {
+    margin: 6px 0 0;
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.panel-icon {
+    display: grid;
+    width: 34px;
+    height: 34px;
+    place-items: center;
+    border-radius: 10px;
+    background: var(--purple-soft);
+    color: var(--purple);
+    font-size: 17px;
+}
+
+
+/* ---------- 10. SEARCH AND FILTER CONTROLS ---------- */
+
+.table-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.search-field {
+    display: flex;
+    min-width: 0;
+    min-height: 39px;
+    flex: 1;
+    align-items: center;
+    gap: 8px;
+    padding: 0 11px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: #ffffff;
+    color: var(--muted);
+}
+
+.search-field:focus-within {
+    border-color: var(--purple-light);
+    box-shadow: 0 0 0 3px rgba(113, 41, 191, 0.1);
+}
+
+.search-field > span:not(.visually-hidden) {
+    font-size: 20px;
+}
+
+.search-field input {
+    width: 100%;
+    min-width: 0;
+    padding: 9px 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: var(--text);
+    font-size: 11px;
+}
+
+.search-field input::placeholder {
+    color: #a39bad;
+}
+
+.table-controls select {
+    min-height: 39px;
+    max-width: 160px;
+    padding: 0 10px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: #ffffff;
+    color: var(--text);
+    font-size: 11px;
+}
+
+
+/* ---------- 11. TABLES ---------- */
+
+/* Horizontal scrolling keeps tables usable on narrow screens. */
+.table-scroll {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+th {
+    padding: 12px 10px;
+    border-bottom: 1px solid var(--border);
+    background: #fbfaff;
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+td {
+    padding: 14px 10px;
+    border-bottom: 1px solid #f0ecf5;
+    color: #51495e;
+    font-size: 11px;
+    vertical-align: middle;
+}
+
+tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+tbody tr:hover {
+    background: #fcfaff;
+}
+
+/* Names and reference numbers are visually distinguished from supporting text. */
+.student-cell {
+    min-width: 120px;
+}
+
+.student-cell strong {
+    display: block;
+    color: var(--text);
+    font-size: 11px;
+    font-weight: 750;
+}
+
+.student-cell small {
+    display: block;
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: 9px;
+}
+
+.document-cell {
+    min-width: 145px;
+    max-width: 190px;
+    overflow-wrap: anywhere;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 8px;
+    border-radius: 6px;
+    font-size: 9px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.status-pending {
+    background: var(--orange-bg);
+    color: var(--orange);
+}
+
+.status-approved {
+    background: var(--green-bg);
+    color: var(--green);
+}
+
+.status-rejected {
+    background: var(--red-bg);
+    color: var(--red);
+}
+
+.row-action {
+    padding: 5px 8px;
+    border: 1px solid #e2d2f5;
+    border-radius: 7px;
+    background: #ffffff;
+    color: var(--purple);
+    font-size: 10px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.row-action:hover {
+    background: var(--purple-soft);
+}
+
+.row-action:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.table-footer {
+    padding-top: 13px;
+    margin: 0;
+    color: var(--muted);
+    font-size: 10px;
+}
+
+.empty-state {
+    padding: 25px 12px;
+    color: var(--muted);
+    text-align: center;
+}
+
+
+/* ---------- 12. CATEGORY BAR CHART ---------- */
+
+/*
+   The chart is built from ordinary HTML elements rather than a third-party library.
+   This keeps the prototype lightweight and easy to maintain.
+*/
+.category-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 19px;
+    padding: 5px 0 8px;
+}
+
+.chart-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.chart-row-heading {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    color: #544b62;
+    font-size: 11px;
+}
+
+.chart-row-heading strong {
+    color: var(--text);
+    font-weight: 800;
+}
+
+.chart-track {
+    width: 100%;
+    height: 9px;
+    overflow: hidden;
+    border-radius: 20px;
+    background: #f0ebf7;
+}
+
+.chart-bar {
+    height: 100%;
+    min-width: 3px;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--purple), var(--purple-light));
+    transition: width 250ms ease;
+}
+
+.chart-note {
+    margin: 15px 0 0;
+    color: var(--muted);
+    font-size: 10px;
+    line-height: 1.6;
+}
+
+
+/* ---------- 13. WELLBEING ALERTS ---------- */
+
+.alerts-panel {
+    margin-bottom: 22px;
+}
+
+.alert-counter {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 9px;
+    border-radius: 7px;
+    background: var(--red-bg);
+    color: var(--red);
+    font-size: 10px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.alerts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.alert-card {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 15px;
+    border: 1px solid #f1dfe3;
+    border-radius: 12px;
+    background: #fffafb;
+}
+
+.alert-main {
+    display: flex;
+    min-width: 0;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.alert-symbol {
+    display: grid;
+    flex: 0 0 35px;
+    width: 35px;
+    height: 35px;
+    place-items: center;
+    border-radius: 10px;
+    background: var(--red-bg);
+    color: var(--red);
+    font-size: 17px;
+    font-weight: 800;
+}
+
+.alert-details {
+    min-width: 0;
+}
+
+.alert-details strong {
+    display: block;
+    color: var(--text);
+    font-size: 12px;
+}
+
+.alert-details p {
+    margin: 5px 0;
+    color: #62596d;
+    font-size: 11px;
+}
+
+.alert-details small {
+    color: var(--muted);
+    font-size: 10px;
+}
+
+.alert-assignee {
+    align-self: center;
+    color: var(--muted);
+    font-size: 10px;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.privacy-note {
+    margin: 15px 0 0;
+    color: var(--muted);
+    font-size: 10px;
+    line-height: 1.6;
+}
+
+
+/* ---------- 14. REPORTS PAGE ---------- */
+
+.report-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.report-chart {
+    max-width: 760px;
+}
+
+.report-privacy {
+    margin-top: 18px;
+}
+
+
+/* ---------- 15. TOAST NOTIFICATIONS ---------- */
+
+/*
+   JavaScript adds the visible class when a message should appear.
+   The toast is a status message, not a permanent part of the page.
+*/
+.toast {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 200;
+    max-width: min(380px, calc(100vw - 32px));
+    padding: 13px 17px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 11px;
+    background: #27153b;
+    box-shadow: 0 10px 35px rgba(22, 8, 38, 0.2);
+    color: #ffffff;
+    font-size: 12px;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(8px);
+    transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.toast.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+
+/* ---------- 16. KEYBOARD ACCESSIBILITY ---------- */
+
+/*
+   A visible focus ring helps keyboard users see which control is selected.
+   :focus-visible avoids showing the ring for every ordinary mouse click.
+*/
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible {
+    outline: 3px solid #b99aef;
+    outline-offset: 3px;
+}
+
+/* Avoids forced animation for users who prefer reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+
+/* ---------- 17. LAPTOPS AND SMALL DESKTOPS ---------- */
+
+@media (max-width: 1250px) {
+    .page-content {
+        padding-right: 24px;
+        padding-left: 24px;
+    }
+
+    .topbar {
+        padding-right: 24px;
+        padding-left: 24px;
+    }
+
+    .stats-grid {
+        gap: 12px;
+    }
+
+    .stat-card {
+        padding: 16px;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: minmax(0, 1.4fr) minmax(250px, 0.9fr);
+        gap: 15px;
+    }
+
+    .panel {
+        padding: 18px;
+    }
+}
+
+
+/* ---------- 18. TABLETS AND COLLAPSING SIDEBAR ---------- */
+
+@media (max-width: 1050px) {
+    /*
+       The sidebar becomes an off-canvas panel.
+       dashboard.js adds .sidebar-open when the menu button is pressed.
+    */
+    .sidebar {
+        box-shadow: 12px 0 30px rgba(27, 10, 46, 0.16);
+        transform: translateX(-105%);
+        transition: transform 200ms ease;
+    }
+
+    .sidebar.sidebar-open {
+        transform: translateX(0);
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+
+    .menu-toggle {
+        display: inline-grid;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .category-panel {
+        min-height: auto;
+    }
+
+    .category-chart {
+        max-width: 720px;
+    }
+}
+
+
+/* ---------- 19. MOBILE DEVICES ---------- */
+
+@media (max-width: 760px) {
+    .topbar {
+        min-height: 65px;
+        padding: 12px 16px;
+    }
+
+    .topbar-right {
+        gap: 9px;
+    }
+
+    .current-date {
+        max-width: 120px;
+        font-size: 10px;
+        text-align: right;
+    }
+
+    .breadcrumb {
+        gap: 7px;
+        font-size: 11px;
+    }
+
+    .page-content {
+        padding: 24px 15px 35px;
+    }
+
+    .page-heading {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .page-heading h1 {
+        font-size: 26px;
+    }
+
+    .page-heading .button {
+        width: 100%;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 11px;
+    }
+
+    .stat-card {
+        padding: 15px;
+    }
+
+    .stat-label {
+        font-size: 11px;
+    }
+
+    .stat-icon {
+        flex-basis: 30px;
+        width: 30px;
+        height: 30px;
+        font-size: 15px;
+    }
+
+    .stat-value {
+        font-size: 27px;
+    }
+
+    .stat-footnote {
+        font-size: 10px;
+    }
+
+    .panel {
+        padding: 16px;
+        border-radius: 13px;
+    }
+
+    .table-controls {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .table-controls select {
+        width: 100%;
+        max-width: none;
+    }
+
+    /* Tables keep their minimum readable width and scroll horizontally. */
+    table {
+        min-width: 620px;
+    }
+
+    .alert-card {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .alert-assignee {
+        align-self: flex-start;
+        padding-left: 47px;
+        text-align: left;
+        white-space: normal;
+    }
+
+    .report-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .toast {
+        right: 16px;
+        bottom: 16px;
+    }
+}
+
+
+/* ---------- 20. VERY SMALL MOBILE DEVICES ---------- */
+
+@media (max-width: 380px) {
+    .brand-copy strong {
+        font-size: 17px;
+    }
+
+    .topbar-avatar {
+        display: none;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-card {
+        padding: 17px;
+    }
+}
