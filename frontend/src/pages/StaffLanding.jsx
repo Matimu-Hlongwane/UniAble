@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { Link } from "react-router-dom";
 import {
   Accessibility,
@@ -7,7 +7,6 @@ import {
   HeartHandshake,
   Building2,
   Users,
-  ArrowRight,
 } from "lucide-react";
 import "./StaffLanding.css";
 
@@ -75,7 +74,7 @@ export default function StaffLanding() {
           </p>
 
           <a className="staff-hero-button" href="#staff-departments">
-            Explore staff departments <ArrowRight size={18} />
+            Explore staff departments
           </a>
         </div>
 
@@ -101,7 +100,7 @@ export default function StaffLanding() {
               <h3>{role}</h3>
               <p>{description}</p>
               <Link to={path}>
-                Continue to sign in <ArrowRight size={17} />
+                Continue to sign in
               </Link>
             </article>
           ))}
@@ -109,8 +108,10 @@ export default function StaffLanding() {
       </section>
 
       <footer className="staff-footer">
-        UniAble · Accessible education through inclusive support.
+        UniAble Â· Accessible education through inclusive support.
       </footer>
     </main>
   );
 }
+
+
