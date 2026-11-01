@@ -1,9 +1,10 @@
-﻿import React from "react";
+import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import LandingEntry from "./pages/LandingEntry";
 import StaffLanding from "./pages/StaffLanding";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
 import VoiceLogin from "./pages/VoiceLogin";
 import SignUp from "./auth-signup/pages/SignUp";
 import StudentDashboard from "./pages/StudentDashboard";
@@ -25,6 +26,7 @@ export default function App() {
       <Route path="/" element={<LandingEntry />} />
       <Route path="/staff" element={<StaffLanding />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/voice-login" element={<VoiceLogin />} />
       <Route path="/signup" element={<SignUp />} />
 

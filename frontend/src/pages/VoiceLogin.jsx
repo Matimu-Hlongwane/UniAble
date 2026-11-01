@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Mic, MicOff, Volume2 } from "lucide-react";
+import { Accessibility, Mic, MicOff, Volume2 } from "lucide-react";
 import { SpeechRecognition } from "@capacitor-community/speech-recognition";
 import { signInWithEmailPassword, getCurrentUserRole } from "../services/firebaseAuth";
 import { speak } from "../services/speechService";
@@ -184,7 +184,12 @@ export default function VoiceLogin() {
   return (
     <main className="voice-login-page">
       <section className="voice-login-card" aria-labelledby="voice-login-heading">
-        <Link className="voice-login-brand" to="/">UniAble</Link>
+        <Link className="auth-logo" to="/" aria-label="UniAble home">
+  <span className="auth-logo-icon">
+    <Accessibility size={25} aria-hidden="true" />
+  </span>
+  <span className="auth-logo-word">UniAble</span>
+</Link>
         <p className="voice-login-eyebrow">ACCESSIBLE SIGN-IN</p>
         <h1 id="voice-login-heading">Voice Login</h1>
         <p className="voice-login-description">
@@ -240,16 +245,26 @@ export default function VoiceLogin() {
           </button>
         </form>
 
-        <p className="voice-login-switch">
-          Prefer typing? <Link to="/login">Login with Email and password</Link>
-        </p>
-        <p className="voice-login-switch">
-          Don&apos;t want to enter a password? <Link to="/login?mode=email-link">Use a secure email sign-in link</Link>
-        </p>
-        <p className="voice-login-switch">
-          Need an account? <Link to="/signup">Create an account</Link>
-        </p>
-        <Link className="voice-login-back" to="/">← Back to landing page</Link>
+        <nav className="voice-login-navigation" aria-label="Other sign-in options">
+          <Link className="voice-login-nav-link" to="/login">
+            <span className="voice-login-nav-title">Login with Email and password</span>
+            <span className="voice-login-nav-description">Use your email address and password.</span>
+          </Link>
+
+          <Link className="voice-login-nav-link" to="/login?mode=email-link">
+            <span className="voice-login-nav-title">Don't want to enter a password?</span>
+            <span className="voice-login-nav-description">Use a secure email sign-in link.</span>
+          </Link>
+
+          <Link className="voice-login-nav-link" to="/signup">
+            <span className="voice-login-nav-title">Need an account?</span>
+            <span className="voice-login-nav-description">Create an account.</span>
+          </Link>
+
+          <Link className="voice-login-nav-back" to="/">
+            Back to landing page
+          </Link>
+        </nav>
       </section>
     </main>
   );

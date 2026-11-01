@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Accessibility } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   signInWithEmailPassword,
@@ -32,20 +33,15 @@ export default function Login() {
 
     setMode("email-link");
     setEmailLinkCallback(true);
-    setNotice(
-      "A sign-in link was detected. Enter the email address that received it to finish signing in."
-    );
+    setNotice("A sign-in link was detected. Enter the email address that received it to finish signing in.");
 
     try {
-      const savedEmail = window.sessionStorage.getItem(
-        "uniableEmailForSignIn"
-      );
+      const savedEmail = window.sessionStorage.getItem("uniableEmailForSignIn");
       if (savedEmail) setEmail(savedEmail);
     } catch {
       // The email can be entered manually if session storage is unavailable.
     }
   }, []);
-
 
   useEffect(() => {
     let cancelled = false;
@@ -95,13 +91,13 @@ export default function Login() {
                 ? "Spoken guidance started."
                 : "Spoken guidance could not start on this device. Use your screen reader or the Read this page aloud control.");
             }
-          } catch (error) {
-            console.warn("Sign-in page guidance failed:", error);
+          } catch (speechError) {
+            console.warn("Sign-in page guidance failed:", speechError);
             if (!cancelled) setGuidanceStatus("Spoken guidance is unavailable. Use your screen reader and the visible sign-in instructions.");
           }
         }, 600);
-      } catch (error) {
-        console.warn("Could not determine voice-first preference:", error);
+      } catch (guidanceError) {
+        console.warn("Could not determine voice-first preference:", guidanceError);
       }
     }
 
@@ -112,10 +108,8 @@ export default function Login() {
     };
   }, [mode, emailLinkCallback]);
 
-
   async function redirectAfterSignIn() {
     const role = await getCurrentUserRole();
-
     const destinations = {
       student: "/dashboard",
       admin: "/staff/admin",
@@ -124,9 +118,9 @@ export default function Login() {
       disability_office: "/staff/disability",
       security: "/staff/security",
     };
-
     navigate(destinations[role] || "/dashboard", { replace: true });
   }
+
   async function handleSubmit(event) {
     event.preventDefault();
     setError("");
@@ -140,9 +134,7 @@ export default function Login() {
           await redirectAfterSignIn();
         } else {
           await sendPasswordlessSignInLink(email);
-          setNotice(
-            "If the address can receive a sign-in link, check that inbox and follow the link on this device. Do not share the link with anyone."
-          );
+          setNotice("If the address can receive a sign-in link, check that inbox and follow the link on this device. Do not share the link with anyone.");
         }
       } else {
         await signInWithEmailPassword(email, password);
@@ -150,7 +142,6 @@ export default function Login() {
       }
     } catch (err) {
       console.error("UniAble sign-in failed:", err);
-
       if (
         err.code === "auth/invalid-credential" ||
         err.code === "auth/wrong-password" ||
@@ -165,9 +156,7 @@ export default function Login() {
       ) {
         setError("This sign-in link is invalid or expired. Request a new one.");
       } else {
-        setError(
-          err.message || "Unable to sign in. Please try again."
-        );
+        setError(err.message || "Unable to sign in. Please try again.");
       }
     } finally {
       setBusy(false);
@@ -180,125 +169,164 @@ export default function Login() {
     setNotice("");
   }
 
+  async function readPageAloud() {
+    const guidance = mode === "email-link"
+      ? "UniAble email sign-in. Enter your email address and follow the instructions to request or complete your secure sign-in link. Never share the link."
+      : "UniAble sign-in page. Enter your email address and password, or choose Email sign-in link. You can use Voice Login, create an account, or return to the landing page. Do not speak your password into the microphone.";
+    try {
+      const result = await speak(guidance, { locale: "en-ZA", rate: 0.94 });
+      setGuidanceStatus(result?.started
+        ? "Spoken guidance started."
+        : "Speech could not start. Use your screen reader and the visible instructions.");
+    } catch (speechError) {
+      console.warn("Manual sign-in guidance failed:", speechError);
+      setGuidanceStatus("Speech could not start. Use your screen reader and the visible instructions.");
+    }
+  }
+
   return (
-    <main className="auth-page">
-      <section className="auth-card" aria-labelledby="login-heading">
-        <Link className="auth-brand" to="/">UniAble</Link>
-        <p className="auth-eyebrow">YOUR ACCESSIBLE CAMPUS COMPANION</p>
-        <h1 id="login-heading">Welcome back</h1>
-        <p className="auth-description">
-          Sign in using your password or a secure email link.
-        </p>
-
-        <div className="auth-mode-switch" aria-label="Sign-in method">
-          <button
-            type="button"
-            className={mode === "password" ? "selected" : ""}
-            aria-pressed={mode === "password"}
-            onClick={() => chooseMode("password")}
-          >
-            Password
-          </button>
-          <button
-            type="button"
-            className={mode === "email-link" ? "selected" : ""}
-            aria-pressed={mode === "email-link"}
-            onClick={() => chooseMode("email-link")}
-          >
-            Email sign-in link
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit}>
-          <label htmlFor="login-email">Email address</label>
-          <input
-            id="login-email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            required
-          />
-
-          {mode === "password" ? (
-            <>
-              <label htmlFor="login-password">Password</label>
-              <div className="auth-password-field">
-                <input
-                  id="login-password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  required
-                />
-                <button
-                  type="button"
-                  className="auth-password-toggle"
-                  aria-controls="login-password"
-                  aria-pressed={showPassword}
-                  onClick={() => setShowPassword((visible) => !visible)}
-                >
-                  {showPassword ? "Hide password" : "Show password"}
-                </button>
-              </div>
-              <p className="auth-hint">
-                You can use your screen reader, keyboard, or password manager.
-                Do not speak your password into the microphone.
-              </p>
-            </>
-          ) : (
-            <p className="auth-hint">
-              {emailLinkCallback
-                ? "For your security, enter the email address that received the sign-in link."
-                : "We will email you a one-time sign-in link. Open it on this device and never share it with anyone."}
+    <main className="auth-page auth-page--redesigned">
+      <div className="auth-layout">
+        <aside className="auth-showcase" aria-label="About UniAble">
+          <Link className="auth-logo" to="/" aria-label="UniAble home">
+  <span className="auth-logo-icon">
+    <Accessibility size={25} aria-hidden="true" />
+  </span>
+  <span className="auth-logo-word">UniAble</span>
+</Link>
+          <div className="auth-showcase-copy">
+            <p className="auth-showcase-kicker">YOUR ACCESSIBLE CAMPUS COMPANION</p>
+            <h1>Access without limits.</h1>
+            <p className="auth-showcase-description">
+              Your education, your campus, your way. A more accessible university experience starts here.
             </p>
+          </div>
+          <div className="auth-showcase-note">
+            <span className="auth-showcase-mark" aria-hidden="true">U</span>
+            <div>
+              <strong>Education for everyone.</strong>
+              <p>Designed to help every student participate, connect and thrive.</p>
+            </div>
+          </div>
+          <span className="auth-decoration auth-decoration--one" aria-hidden="true" />
+          <span className="auth-decoration auth-decoration--two" aria-hidden="true" />
+        </aside>
+
+        <section className="auth-card auth-card--redesigned" aria-labelledby="login-heading">
+          <div className="auth-mobile-brand">
+            <Link className="auth-logo" to="/" aria-label="UniAble home">
+  <span className="auth-logo-icon">
+    <Accessibility size={25} aria-hidden="true" />
+  </span>
+  <span className="auth-logo-word">UniAble</span>
+</Link>
+          </div>
+          <p className="auth-eyebrow">YOUR LEARNING JOURNEY CONTINUES</p>
+          <h2 id="login-heading">Welcome back</h2>
+          <p className="auth-description">Sign in to continue to your UniAble account.</p>
+
+          <div className="auth-mode-switch" aria-label="Sign-in method">
+            <button
+              type="button"
+              className={mode === "password" ? "selected" : ""}
+              aria-pressed={mode === "password"}
+              onClick={() => chooseMode("password")}
+            >
+              Password
+            </button>
+            <button
+              type="button"
+              className={mode === "email-link" ? "selected" : ""}
+              aria-pressed={mode === "email-link"}
+              onClick={() => chooseMode("email-link")}
+            >
+              Email sign-in link
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit}>
+            <label htmlFor="login-email">Email address</label>
+            <input
+              id="login-email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              required
+            />
+
+            {mode === "password" ? (
+              <>
+                <div className="auth-label-row">
+                  <label htmlFor="login-password">Password</label>
+                  <Link to="/forgot-password" className="auth-forgot-link">Forgot password?</Link>
+                </div>
+                <div className="auth-password-field">
+                  <input
+                    id="login-password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="current-password"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="auth-password-toggle"
+                    aria-controls="login-password"
+                    aria-pressed={showPassword}
+                    onClick={() => setShowPassword((visible) => !visible)}
+                  >
+                    {showPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
+                <p className="auth-hint">
+                  Use your screen reader, keyboard or password manager. Do not speak your password into the microphone.
+                </p>
+              </>
+            ) : (
+              <p className="auth-hint">
+                {emailLinkCallback
+                  ? "For your security, enter the email address that received the sign-in link."
+                  : "We will email you a one-time sign-in link. Open it on this device and never share it with anyone."}
+              </p>
+            )}
+
+            {error && <p className="auth-error" role="alert">{error}</p>}
+            {notice && <p className="auth-notice" role="status">{notice}</p>}
+
+            <button className="auth-submit" type="submit" disabled={busy}>
+              {busy
+                ? "Please wait…"
+                : mode === "password"
+                  ? "Sign in"
+                  : emailLinkCallback
+                    ? "Complete sign-in"
+                    : "Email me a sign-in link"}
+            </button>
+          </form>
+
+          <div className="auth-divider"><span>OR</span></div>
+          <Link className="auth-secondary-action" to="/voice-login">Continue with Voice Login</Link>
+          <p className="auth-switch">
+            New to UniAble? <Link to="/signup">Create an account</Link>
+          </p>
+          <div className="auth-footer-links auth-footer-links--aligned">
+            <Link className="auth-back" to="/">Back to home</Link>
+            <button type="button" className="auth-read-button" onClick={readPageAloud}>
+              Read this page aloud
+            </button>
+          </div>
+          {guidanceStatus && (
+            <p className="auth-hint" role="status" aria-live="polite">{guidanceStatus}</p>
           )}
-
-          {error && <p className="auth-error" role="alert">{error}</p>}
-          {notice && <p className="auth-notice" role="status">{notice}</p>}
-
-          <button className="auth-submit" type="submit" disabled={busy}>
-            {busy
-              ? "Please wait…"
-              : mode === "password"
-                ? "Sign in"
-                : emailLinkCallback
-                  ? "Complete sign-in"
-                  : "Email me a sign-in link"}
-          </button>
-        </form>
-
-        <p className="auth-switch">
-          Need voice-assisted sign-in? <Link to="/voice-login">Use Voice Login</Link>
-        </p>
-        <p className="auth-switch">
-          New to UniAble? <Link to="/signup">Create an account</Link>
-        </p>
-        <Link className="auth-back" to="/">Back to home</Link>
-        <button
-          type="button"
-          className="auth-back"
-          onClick={async () => {
-            const guidance = mode === "email-link"
-              ? "UniAble email sign-in. Enter your email address and follow the instructions to request or complete your secure sign-in link. Never share the link."
-              : "UniAble sign-in page. Enter your email address and password, or choose Email sign-in link. You can use Voice Login, create an account, or return to the landing page. Do not speak your password into the microphone.";
-            try {
-              const result = await speak(guidance, { locale: "en-ZA", rate: 0.94 });
-              setGuidanceStatus(result?.started ? "Spoken guidance started." : "Speech could not start. Use your screen reader and the visible instructions.");
-            } catch (error) {
-              console.warn("Manual sign-in guidance failed:", error);
-              setGuidanceStatus("Speech could not start. Use your screen reader and the visible instructions.");
-            }
-          }}
-          style={{ display: "inline-flex", marginTop: 12, cursor: "pointer" }}
-        >
-          Read this page aloud
-        </button>
-        {guidanceStatus && <p className="auth-hint" role="status" aria-live="polite">{guidanceStatus}</p>}
-      </section>
+        </section>
+      </div>
     </main>
   );
 }
+

@@ -1,4 +1,4 @@
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink } from "firebase/auth";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink, sendPasswordResetEmail } from "firebase/auth";
 import { initializeApp, getApps } from "firebase/app";
 import { getAuth, onAuthStateChanged, getIdTokenResult, RecaptchaVerifier, signOut, updatePassword, sendEmailVerification, updateProfile, updateEmail, deleteUser, linkWithPhoneNumber, signInWithPhoneNumber } from "firebase/auth";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -189,6 +189,18 @@ export async function verifyPhoneOtp(confirmation, code) {
   return result.user;
 }
 
+export async function sendPasswordResetEmailToUser(email) {
+  if (!auth) {
+    throw new Error("Firebase is not configured. Please try again later.");
+  }
+
+  const normalizedEmail = String(email || "").trim();
+  if (!normalizedEmail) {
+    throw new Error("Enter your email address.");
+  }
+
+  await sendPasswordResetEmail(auth, normalizedEmail);
+}
 export async function changeAccountPassword(newPassword) {
   const user = requireAuth();
   await updatePassword(user, newPassword);
