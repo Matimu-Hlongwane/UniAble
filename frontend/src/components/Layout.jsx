@@ -1,15 +1,16 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState , useRef} from "react";
 import { NavLink, Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-import { Home, Settings, Siren, Users, MapPin, CalendarDays, ArrowLeft, Volume2, LogOut } from "lucide-react";
+import { Home, Settings, Siren, Users, MapPin, CalendarDays, ArrowLeft, Volume2, LogOut, ScanText } from "lucide-react";
 import { useSettings } from "../context/settingsContext/SettingsContext";
 import VoiceCommandButton from "./VoiceCommandButton";
-import { getVoiceFirstPreference, subscribeToAuth, getVerificationStatus, signOutAccount, getCurrentUser } from "../services/firebaseAuth";
+import { getVoiceFirstPreference, subscribeToAuth, getVerificationStatus, signOutAccount, getCurrentUser, getCurrentUserRole } from "../services/firebaseAuth";
 import { speak, stopSpeaking } from "../services/speechService";
 
 const links = [
   { to: "/dashboard", label: "home", icon: Home },
   { to: "/campus", label: "navigateCampus", icon: MapPin },
   { to: "/schedule", label: "mySchedule", icon: CalendarDays },
+  { to: "/scan-read", label: "Scan & Read", icon: ScanText },
   { to: "/peer-assistance", label: "peerAssistance", icon: Users },
   { to: "/emergency", label: "emergency", icon: Siren }
 ];
@@ -22,13 +23,15 @@ const routeGuidance = {
   "/unipal": "UniPal, your UniAble companion. Ask a question or use the available text and spoken-response controls.",
   "/emergency": "Emergency support. Review the available SOS options. Activate an emergency action only when you intend to request help.",
   "/accessibility": "Accessibility settings. Choose your support profile and turn voice-first spoken guidance on or off.",
-  "/settings": "Settings. Manage your language, spoken responses, privacy, and account options."
+  "/settings": "Settings. Manage your language, spoken responses, privacy, and account options.",
 };
 
 export default function Layout() {
+  const intentionalLogoutRef = useRef(false);
   const { t, locale } = useSettings();
   const location = useLocation();
   const navigate = useNavigate();
+  const isAdminPage = location.pathname === "/staff/admin";
   const canGoBack = location.pathname !== "/dashboard";
   const [voiceFirstEnabled, setVoiceFirstEnabled] = useState(false);
   const [guidanceStatus, setGuidanceStatus] = useState("");
@@ -84,9 +87,23 @@ export default function Layout() {
     let active = true;
     const unsubscribe = subscribeToAuth(async (user) => {
       if (!user) {
-        if (active) { setAuthChecking(false); navigate("/login", { replace: true }); }
+        if (active) {
+          setAuthChecking(false);
+          const shouldReturnToStaff =
+            intentionalLogoutRef.current ||
+            sessionStorage.getItem("uniableStaffLogout") === "1";
+
+          sessionStorage.removeItem("uniableStaffLogout");
+
+          navigate(
+            shouldReturnToStaff ? "/staff" : "/login",
+            { replace: true }
+          );
+        }
         return;
       }
+
+      intentionalLogoutRef.current = false;
       try {
         const status = await getVerificationStatus();
         if (!active) return;
@@ -165,9 +182,9 @@ export default function Layout() {
     if (matches("peer assistance", "peer help", "peer support", t("peerAssistance"))) { navigate("/peer-assistance"); return; }
     if (matches("unipal", "uni pal", "companion")) { navigate("/unipal"); return; }
     if (matches("accessibility", "accessibility settings")) { navigate("/accessibility"); return; }
-    if (matches("settings", "setting", t("settings"))) { navigate("/settings"); return; }
+    if (matches("scan and read", "scan read", "scan document", "read document", "ocr")) { navigate("/scan-read"); return; }
     if (matches("home", "dashboard", t("home"))) { navigate("/dashboard"); return; }
-    if (voiceFirstEnabled) speak("I did not recognise that destination. Try dashboard, campus, schedule, peer assistance, UniPal, emergency, accessibility, or settings.", { locale: locale || "en-ZA" });
+    if (voiceFirstEnabled) speak("I did not recognise that destination. Try dashboard, campus, schedule, scan and read, peer assistance, UniPal, emergency, accessibility, or settings.", { locale: locale || "en-ZA" });
   }, [navigate, t, locale, voiceFirstEnabled]);
 
   const profileInitial =
@@ -175,24 +192,29 @@ export default function Layout() {
 
   const handleProfileLogout = async () => {
     try {
-      await signOutAccount();
+      const currentUser = getCurrentUser();
+      const role = currentUser ? await getCurrentUserRole(currentUser) : "student";
+      const isStaff = ["admin", "lecturer", "volunteer", "disability_office", "security"].includes(role);
+
+      intentionalLogoutRef.current = isStaff; if (isStaff) sessionStorage.setItem("uniableStaffLogout", "1");
+    await signOutAccount();
       localStorage.removeItem("uniableProfile");
       setProfileMenuOpen(false);
       setAuthUser(null);
       setProfilePhoto("");
       setProfileName("");
-      navigate("/login", { replace: true });
+      navigate(isStaff ? "/staff" : "/login", { replace: true });
     } catch (error) {
       console.error("Could not sign out:", error);
     }
   };
 
   if (authChecking) {
-    return <main className="main-content" role="status" aria-live="polite">Checking your UniAble accountâ€¦</main>;
+    return <main className="main-content" role="status" aria-live="polite">Checking your UniAble account...</main>;
   }
 
   return (
-    <div className="app-shell mobile-app-shell">
+    <div className={`app-shell mobile-app-shell${isAdminPage ? " admin-route-shell" : ""}`}>
       <header className="topbar mobile-topbar">
         <Link to="/dashboard" className="brand" aria-label="UniAble home">UniAble <span></span></Link>
         <div className="top-actions">
@@ -293,6 +315,3 @@ export default function Layout() {
 function isActivePath(pathname, target) {
   return pathname === target || pathname.startsWith(`${target}/`);
 }
-
-
-

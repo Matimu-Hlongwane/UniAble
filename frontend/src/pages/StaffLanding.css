@@ -1,0 +1,241 @@
+﻿.staff-landing {
+  min-height: 100vh;
+  background: #080a0a;
+  color: #f5f7f6;
+  font-family: inherit;
+}
+
+.staff-hero {
+  min-height: 650px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(5, 9, 8, .96) 0%, rgba(5, 9, 8, .82) 48%, rgba(5, 9, 8, .35) 100%),
+    linear-gradient(0deg, #080a0a 0%, transparent 35%),
+    url("https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=2200&q=85") center 42% / cover;
+}
+
+.staff-header {
+  width: min(1180px, 90%);
+  margin: 0 auto;
+  min-height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255,255,255,.14);
+}
+
+.staff-logo,
+.staff-student-link,
+.staff-hero-button,
+.staff-department-card a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.staff-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 21px;
+  font-weight: 750;
+}
+
+.staff-logo small {
+  display: block;
+  margin-top: 3px;
+  color: #a9cbbd;
+  font-size: 9px;
+  letter-spacing: 2px;
+}
+
+.staff-logo-icon,
+.staff-card-icon {
+  display: grid;
+  place-items: center;
+  color: #a8e0c6;
+  background: rgba(168,224,198,.12);
+  border: 1px solid rgba(168,224,198,.25);
+  border-radius: 13px;
+}
+
+.staff-logo-icon {
+  width: 46px;
+  height: 46px;
+}
+
+.staff-student-link,
+.staff-hero-button,
+.staff-department-card a {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.staff-student-link {
+  color: #e2e9e5;
+  font-size: 14px;
+}
+
+.staff-hero-content {
+  width: min(1180px, 90%);
+  margin: auto;
+  padding: 85px 0 100px;
+}
+
+.staff-eyebrow {
+  color: #a8e0c6;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.staff-hero h1 {
+  margin: 22px 0;
+  max-width: 700px;
+  font-size: clamp(42px, 6vw, 76px);
+  line-height: 1.08;
+  letter-spacing: -2px;
+}
+
+.staff-hero h1 span {
+  color: #a8e0c6;
+}
+
+.staff-hero-content > p {
+  max-width: 570px;
+  color: #d0d8d3;
+  font-size: 17px;
+  line-height: 1.8;
+}
+
+.staff-hero-button {
+  margin-top: 24px;
+  padding: 15px 21px;
+  border-radius: 8px;
+  background: #a8e0c6;
+  color: #07100c;
+  font-weight: 700;
+}
+
+.staff-hero-note {
+  width: min(1180px, 90%);
+  margin: 0 auto 35px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #d5e1da;
+  font-size: 13px;
+}
+
+.staff-departments {
+  width: min(1180px, 90%);
+  margin: 0 auto;
+  padding: 75px 0;
+}
+
+.staff-section-heading h2 {
+  margin: 12px 0 8px;
+  font-size: clamp(28px, 4vw, 40px);
+}
+
+.staff-section-heading p,
+.staff-department-card p {
+  color: #aeb9b2;
+  line-height: 1.7;
+}
+
+.staff-department-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 35px;
+}
+
+.staff-department-card {
+  min-height: 225px;
+  padding: 25px;
+  background: #111615;
+  border: 1px solid #29332e;
+  border-radius: 14px;
+  transition: border-color .2s, transform .2s;
+}
+
+.staff-department-card:hover {
+  transform: translateY(-4px);
+  border-color: #a8e0c6;
+}
+
+.staff-card-icon {
+  width: 46px;
+  height: 46px;
+}
+
+.staff-department-card h3 {
+  margin: 20px 0 8px;
+  font-size: 20px;
+}
+
+.staff-department-card p {
+  min-height: 55px;
+  font-size: 14px;
+}
+
+.staff-department-card a {
+  margin-top: 15px;
+  color: #a8e0c6;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.staff-footer {
+  padding: 25px 5%;
+  border-top: 1px solid #29332e;
+  color: #9ba79f;
+  text-align: center;
+  font-size: 13px;
+}
+
+@media (max-width: 800px) {
+  .staff-department-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .staff-hero {
+    min-height: 600px;
+    background-position: 58% center;
+  }
+}
+
+@media (max-width: 540px) {
+  .staff-header {
+    min-height: 75px;
+  }
+
+  .staff-logo {
+    font-size: 18px;
+  }
+
+  .staff-student-link {
+    font-size: 12px;
+  }
+
+  .staff-hero-content {
+    padding: 75px 0;
+  }
+
+  .staff-hero-content > p {
+    font-size: 15px;
+  }
+
+  .staff-department-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .staff-department-card p {
+    min-height: auto;
+  }
+}

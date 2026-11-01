@@ -1,6 +1,6 @@
-﻿import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink } from "firebase/auth";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink } from "firebase/auth";
 import { initializeApp, getApps } from "firebase/app";
-import { getAuth, onAuthStateChanged, RecaptchaVerifier, signOut, updatePassword, sendEmailVerification, updateProfile, updateEmail, deleteUser, linkWithPhoneNumber, signInWithPhoneNumber } from "firebase/auth";
+import { getAuth, onAuthStateChanged, getIdTokenResult, RecaptchaVerifier, signOut, updatePassword, sendEmailVerification, updateProfile, updateEmail, deleteUser, linkWithPhoneNumber, signInWithPhoneNumber } from "firebase/auth";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
 
@@ -31,6 +31,24 @@ export function getCurrentUser() {
   return auth?.currentUser || null;
 }
 
+
+export async function getCurrentUserRole(user = auth?.currentUser) {
+  if (!user) return null;
+
+  const tokenResult = await getIdTokenResult(user, true);
+  const role = String(tokenResult.claims?.role || "student").toLowerCase();
+
+  const allowedRoles = new Set([
+    "student",
+    "admin",
+    "volunteer",
+    "disability_office",
+    "security",
+    "lecturer"
+  ]);
+
+  return allowedRoles.has(role) ? role : "student";
+}
 export function subscribeToAuth(callback) {
   if (!auth) {
     callback(null);
@@ -575,8 +593,3 @@ export async function completePasswordlessSignIn(email, link = window.location.h
   return ensureAccountVerified(credential.user);
 }
 export { auth };
-
-
-
-
-

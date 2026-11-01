@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 
 export default function AccountVerification({
   stage, method, setMethod, phoneNumber, setPhoneNumber, code, setCode,
@@ -18,18 +18,18 @@ export default function AccountVerification({
           <button type="button" style={{ ...buttonStyle, background: method === "email" ? "#e8eefc" : "transparent" }} aria-pressed={method === "email"} onClick={() => setMethod("email")}>Email OTP</button>
           <button type="button" style={{ ...buttonStyle, background: method === "sms" ? "#e8eefc" : "transparent" }} aria-pressed={method === "sms"} onClick={() => setMethod("sms")}>SMS OTP</button>
         </div>
-        {method === "email" && <button type="button" style={buttonStyle} disabled={busy} onClick={onSendEmail}>{busy ? "Sendingâ€¦" : "Send code to my email"}</button>}
+        {method === "email" && <button type="button" style={buttonStyle} disabled={busy} onClick={onSendEmail}>{busy ? "Sending…" : "Send code to my email"}</button>}
         {method === "sms" && <>
           <label htmlFor="verification-phone">Mobile number (international format)</label>
           <input id="verification-phone" type="tel" autoComplete="tel" placeholder="+27821234567" value={phoneNumber} onChange={(event) => setPhoneNumber(event.target.value)} style={inputStyle} />
-          <button type="button" style={buttonStyle} disabled={busy} onClick={onSendPhone}>{busy ? "Sendingâ€¦" : "Send SMS code"}</button>
+          <button type="button" style={buttonStyle} disabled={busy} onClick={onSendPhone}>{busy ? "Sending…" : "Send SMS code"}</button>
           <p>Enter your number with the country code, for example +27 for South Africa.</p>
         </>}
       </> : <>
         <p>Enter the six-digit code sent to {method === "email" ? email : phoneNumber}. The code expires after 10 minutes.</p>
         <label htmlFor="verification-code">Six-digit verification code</label>
         <input id="verification-code" type="text" inputMode="numeric" autoComplete="one-time-code" maxLength={6} pattern="[0-9]{6}" value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))} style={inputStyle} />
-        <button type="button" style={buttonStyle} disabled={busy || code.length !== 6} onClick={onVerify}>{busy ? "Verifyingâ€¦" : "Verify code"}</button>
+        <button type="button" style={buttonStyle} disabled={busy || code.length !== 6} onClick={onVerify}>{busy ? "Verifying…" : "Verify code"}</button>
         <button type="button" style={buttonStyle} disabled={busy} onClick={onResend}>Send another code</button>
         <button type="button" style={buttonStyle} disabled={busy} onClick={onBack}>Choose another method</button>
       </>}

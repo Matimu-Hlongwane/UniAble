@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Accessibility,
@@ -22,11 +22,7 @@ import { useSettings } from "../context/settingsContext/SettingsContext";
 import { getUserAccessibilityProfile, subscribeToAuth } from "../services/firebaseAuth";
 import "./Dashboards.css";
 
-const classes = [
-  ["09:00", "Data Structures", "Room 101"],
-  ["11:00", "Mathematics Tutorial", "Room 204"],
-  ["14:00", "Computer Lab", "Lab 3"],
-];
+const classes = [];
 
 const profileViews = {
   "Visual Impairment": {
@@ -177,6 +173,34 @@ export default function StudentDashboard() {
   }, []);
 
   const selectedAccessibility = accessibilityProfile?.accessibility || "None";
+  const accessibilityProfileId = String(
+    accessibilityProfile?.accessibilityProfile?.id || ""
+  ).toLowerCase();
+
+  const neuroProfileContent = {
+    dyslexia: {
+      title: "Reading and learning support",
+      description: "Use clear study steps, accessible reading tools and organised learning resources.",
+      tips: ["Break reading into manageable sections", "Use read-aloud tools where available", "Keep instructions and study tasks clearly organised"],
+    },
+    adhd: {
+      title: "Focus and study organisation",
+      description: "Use structured routines and manageable tasks to support planning and concentration.",
+      tips: ["Break larger tasks into smaller steps", "Use your schedule to plan study periods", "Keep important tasks visible"],
+    },
+    autism: {
+      title: "Structured and predictable study support",
+      description: "Use clear information, consistent routines and accessible campus guidance.",
+      tips: ["Review your schedule before travelling", "Use clear written instructions", "Keep useful support options easy to find"],
+    },
+    down: {
+      title: "Accessible learning and daily support",
+      description: "Use clear instructions, organised activities and accessible student support.",
+      tips: ["Follow activities one step at a time", "Use visual and written guidance", "Reach out to student support when needed"],
+    },
+  };
+
+  const neuroProfile = neuroProfileContent[accessibilityProfileId];
   const view = useMemo(
     () => profileViews[selectedAccessibility] || profileViews.Other,
     [selectedAccessibility]
@@ -184,7 +208,7 @@ export default function StudentDashboard() {
   const ViewIcon = view.icon;
 
   return (
-    <section className="page dashboard-page student-dashboard">
+    <section className={`page dashboard-page student-dashboard student-dashboard-${String(selectedAccessibility).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")} student-dashboard-detail-${accessibilityProfileId || "standard"}`}>
 <div className="dashboard-page-heading">
         <div>
           <p className="dashboard-eyebrow">STUDENT PORTAL</p>
@@ -225,7 +249,7 @@ export default function StudentDashboard() {
           <span className="dashboard-summary-icon"><CalendarDays size={20} /></span>
           <span className="dashboard-summary-label">Today&apos;s classes</span>
           <strong>{classes.length}</strong>
-          <span className="dashboard-summary-foot">Scheduled in your sample timetable</span>
+          <span className="dashboard-summary-foot">Scheduled classes</span>
         </button>
         <button type="button" className="dashboard-summary-item" onClick={() => navigate("/campus")}>
           <span className="dashboard-summary-icon"><MapPin size={20} /></span>
@@ -259,7 +283,9 @@ export default function StudentDashboard() {
             </button>
           </div>
           <div className="dashboard-class-list">
-            {classes.map(([time, name, room]) => (
+            {classes.length === 0 ? (
+      <p className="dashboard-data-note">Your timetable will appear here when class information is available.</p>
+    ) : classes.map(([time, name, room]) => (
               <button
                 type="button"
                 className="dashboard-class-row"
@@ -276,9 +302,51 @@ export default function StudentDashboard() {
               </button>
             ))}
           </div>
-          <p className="dashboard-data-note">Sample timetable entries are shown here. Your connected timetable can replace these entries when available.</p>
+
         </section>
 
+        {selectedAccessibility === "Hearing Impairment" && (
+          <section className="dashboard-section-panel hearing-support-panel" aria-labelledby="hearing-support-title">
+            <div className="dashboard-section-heading">
+              <div>
+                <p className="dashboard-eyebrow">HEARING ACCESSIBILITY</p>
+                <h2 id="hearing-support-title">Visual communication tools</h2>
+              </div>
+              <span className="dashboard-profile-tag">Hearing support</span>
+            </div>
+
+            <div className="hearing-support-grid">
+
+              <article className="hearing-support-card">
+                <h3>Text Chat</h3>
+                <p>Communicate with available peer assistance using written messages.</p>
+                <button type="button" className="hearing-support-action" onClick={() => navigate("/peer-assistance")}>
+                  Open text assistance
+                </button>
+              </article>
+            </div>
+          </section>
+        )}
+
+        {neuroProfile && (
+          <section className="dashboard-section-panel neuro-profile-panel" aria-labelledby="neuro-profile-title">
+            <div className="dashboard-section-heading">
+              <div>
+                <p className="dashboard-eyebrow">PERSONALISED STUDY GUIDANCE</p>
+                <h2 id="neuro-profile-title">{neuroProfile.title}</h2>
+              </div>
+              <span className="dashboard-profile-tag">{selectedAccessibility}</span>
+            </div>
+
+            <p className="dashboard-support-guidance">{neuroProfile.description}</p>
+
+            <ul className="neuro-profile-tips">
+              {neuroProfile.tips.map((tip) => (
+                <li key={tip}>{tip}</li>
+              ))}
+            </ul>
+          </section>
+        )}
         <section className="dashboard-section-panel" aria-labelledby="dashboard-support-title">
           <div className="dashboard-section-heading">
             <div>
@@ -325,5 +393,3 @@ export default function StudentDashboard() {
     </section>
   );
 }
-
-

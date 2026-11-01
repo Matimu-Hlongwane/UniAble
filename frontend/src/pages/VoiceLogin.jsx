@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Mic, MicOff, Volume2 } from "lucide-react";
 import { SpeechRecognition } from "@capacitor-community/speech-recognition";
-import { signInWithEmailPassword } from "../services/firebaseAuth";
+import { signInWithEmailPassword, getCurrentUserRole } from "../services/firebaseAuth";
 import { speak } from "../services/speechService";
 import "./VoiceLogin.css";
 
@@ -138,7 +138,18 @@ export default function VoiceLogin() {
 
     try {
       await signInWithEmailPassword(email.trim(), password);
-      navigate("/dashboard", { replace: true });
+      const role = await getCurrentUserRole();
+
+      const destinations = {
+        student: "/dashboard",
+        admin: "/staff/admin",
+        lecturer: "/staff/lecturer",
+        volunteer: "/staff/volunteer",
+        disability_office: "/staff/disability",
+        security: "/staff/security",
+      };
+
+      navigate(destinations[role] || "/dashboard", { replace: true });
     } catch (err) {
       console.error("UniAble voice-assisted login failed:", err);
 

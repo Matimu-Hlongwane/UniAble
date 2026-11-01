@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { useState } from "react";
 import accessibilityOptions
   from "../data/accessibilityOptions.json";
@@ -285,7 +285,7 @@ function TypingSignUpForm({
           }
         >
 
-          ðŸŽ™ Return to Voice Mode
+          ?? Return to Voice Mode
 
         </button>
 

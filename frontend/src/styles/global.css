@@ -1,4 +1,4 @@
-﻿@import url("https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;500;600;700;800&display=swap");
 :root {
   font-family: "Atkinson Hyperlegible", Arial, sans-serif;
 
@@ -2734,7 +2734,7 @@ html[data-theme="dark"] .student-badge {
   min-height: 68px;
   padding: 7px 8px calc(7px + env(safe-area-inset-bottom));
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 2px;
   background: color-mix(in srgb, var(--bg-card) 96%, transparent);
   border-top: 1px solid var(--border-color);
@@ -3198,7 +3198,7 @@ html[data-theme="dark"] .hero-status svg { color: #6EE7B7; }
 
 
 /* =========================================================
-   UNIPAL â€” Your UniAble Companion
+   UNIPAL — Your UniAble Companion
    ========================================================= */
 
 .top-unipal {
@@ -3601,7 +3601,7 @@ html[data-theme="dark"] .hero-status svg { color: #6EE7B7; }
 
 
 /* =========================================================
-   DARK MODE â€” pure black surfaces, readable accents
+   DARK MODE — pure black surfaces, readable accents
    Light pastel chips/panels that had no dark override are
    turned black with a neutral border and bright text.
    ========================================================= */
@@ -3636,7 +3636,7 @@ html[data-theme="dark"] .toggle {
 }
 
 /* =========================================================
-   UNIPAL SPOKEN RESPONSES â€” informational notice
+   UNIPAL SPOKEN RESPONSES — informational notice
    Neutral (not an error) so it reads clearly in both themes.
    ========================================================= */
 .unipal-notice {

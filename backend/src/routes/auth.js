@@ -1,24 +1,12 @@
 import { Router } from "express";
 import { createHmac, randomInt, timingSafeEqual } from "node:crypto";
 import { getAdminAuth, getAdminDb } from "../services/firebase.js";
+import { requireFirebaseUser, requireRole } from "../middleware/authMiddleware.js";
 
 const router = Router();
 const OTP_LIFETIME_MS = 10 * 60 * 1000;
 const EMAIL_OTP_COOLDOWN_MS = 60 * 1000;
 const MAX_ATTEMPTS = 5;
-
-async function requireFirebaseUser(req, res, next) {
-  try {
-    const header = req.headers.authorization || "";
-    const token = header.startsWith("Bearer ") ? header.slice(7) : "";
-    if (!token) return res.status(401).json({ error: "Sign in is required." });
-    req.firebaseToken = await getAdminAuth().verifyIdToken(token, true);
-    return next();
-  } catch (error) {
-    console.error("Firebase token verification failed:", error.message);
-    return res.status(401).json({ error: "Your session is invalid or expired. Please sign in again." });
-  }
-}
 
 function otpDigest(uid, code) {
   const secret = process.env.OTP_SECRET;
@@ -194,5 +182,237 @@ router.post("/phone/verified", async (req, res) => {
     return res.status(500).json({ error: error.message || "Could not confirm phone verification." });
   }
 });
+
+
+router.post("/staff/provision", requireRole("admin"), async (req, res) => {
+  try {
+    const email = String(req.body?.email || "").trim().toLowerCase();
+    const role = String(req.body?.role || "").trim().toLowerCase();
+
+    const allowedRoles = new Set([
+      "volunteer",
+      "disability_office",
+      "security",
+      "lecturer"
+    ]);
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: "Enter a valid staff email address." });
+    }
+
+    if (!allowedRoles.has(role)) {
+      return res.status(400).json({
+        error: "Invalid staff role. Administrator assignment requires the secure bootstrap process."
+      });
+    }
+
+    const auth = getAdminAuth();
+    const db = getAdminDb();
+    const staffUser = await auth.getUserByEmail(email);
+
+    const existingClaims = staffUser.customClaims || {};
+
+    await db.collection("users").doc(staffUser.uid).set({
+      role,
+      roleAssignedAt: new Date().toISOString(),
+      roleAssignedBy: req.firebaseToken.uid,
+      email: staffUser.email,
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+
+    await auth.setCustomUserClaims(staffUser.uid, {
+      ...existingClaims,
+      role
+    });
+
+    return res.json({
+      success: true,
+      message: "Staff role assigned successfully.",
+      staff: {
+        uid: staffUser.uid,
+        email: staffUser.email,
+        role
+      }
+    });
+  } catch (error) {
+    if (error.code === "auth/user-not-found") {
+      return res.status(404).json({
+        error: "No Firebase Authentication account exists for that email."
+      });
+    }
+
+    console.error("Staff provisioning failed:", error);
+    return res.status(500).json({
+      error: "Could not provision the staff account."
+    });
+  }
+});
+
+// --------------------------------------------------
+// ADMIN STAFF MANAGEMENT
+// --------------------------------------------------
+
+const MANAGED_STAFF_ROLES = new Set([
+  "lecturer",
+  "volunteer",
+  "disability_office",
+  "security"
+]);
+
+router.get("/staff", requireRole("admin"), async (req, res) => {
+  try {
+    const auth = getAdminAuth();
+    const db = getAdminDb();
+
+    const snapshot = await db.collection("users").get();
+
+    const staff = await Promise.all(
+      snapshot.docs.map(async (document) => {
+        const profile = document.data() || {};
+        const role = String(profile.role || "").toLowerCase();
+
+        if (!MANAGED_STAFF_ROLES.has(role)) {
+          return null;
+        }
+
+        let account = null;
+
+        try {
+          account = await auth.getUser(document.id);
+        } catch (error) {
+          if (error.code !== "auth/user-not-found") {
+            throw error;
+          }
+        }
+
+        const isActive =
+          account?.disabled !== true &&
+          profile.isActive !== false &&
+          profile.accessStatus !== "disabled";
+
+        return {
+          uid: document.id,
+          email: account?.email || profile.email || "",
+          displayName:
+            account?.displayName ||
+            profile.displayName ||
+            profile.fullName ||
+            profile.name ||
+            "",
+          role,
+          isActive,
+          createdAt: account?.metadata?.creationTime || null,
+          roleAssignedAt: profile.roleAssignedAt || null
+        };
+      })
+    );
+
+    const results = staff
+      .filter(Boolean)
+      .sort((a, b) => a.email.localeCompare(b.email));
+
+    return res.json({
+      success: true,
+      total: results.length,
+      staff: results
+    });
+  } catch (error) {
+    console.error("Staff listing failed:", error);
+    return res.status(500).json({
+      error: "Could not retrieve staff accounts."
+    });
+  }
+});
+
+router.patch(
+  "/staff/:uid/access",
+  requireRole("admin"),
+  async (req, res) => {
+    try {
+      const uid = String(req.params.uid || "").trim();
+      const isActive = req.body?.isActive;
+
+      if (!uid || typeof isActive !== "boolean") {
+        return res.status(400).json({
+          error: "A staff account and valid access status are required."
+        });
+      }
+
+      if (uid === req.firebaseToken.uid && !isActive) {
+        return res.status(400).json({
+          error: "You cannot deactivate your own administrator account."
+        });
+      }
+
+      const auth = getAdminAuth();
+      const db = getAdminDb();
+
+      const profileRef = db.collection("users").doc(uid);
+      const profileSnapshot = await profileRef.get();
+
+      if (!profileSnapshot.exists) {
+        return res.status(404).json({
+          error: "Staff profile was not found."
+        });
+      }
+
+      const profile = profileSnapshot.data() || {};
+      const role = String(profile.role || "").toLowerCase();
+
+      if (!MANAGED_STAFF_ROLES.has(role)) {
+        return res.status(400).json({
+          error: "Only authorised staff accounts can be managed here."
+        });
+      }
+
+      const account = await auth.getUser(uid);
+
+      // Update Firebase Authentication first.
+      await auth.updateUser(uid, {
+        disabled: !isActive
+      });
+
+      try {
+        await profileRef.set({
+          isActive,
+          accessStatus: isActive ? "active" : "disabled",
+          accessUpdatedAt: new Date().toISOString(),
+          accessUpdatedBy: req.firebaseToken.uid,
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+      } catch (databaseError) {
+        // Restore the previous Authentication status if Firestore fails.
+        await auth.updateUser(uid, {
+          disabled: account.disabled === true
+        });
+        throw databaseError;
+      }
+
+      return res.json({
+        success: true,
+        message: isActive
+          ? "Staff access has been enabled."
+          : "Staff access has been disabled.",
+        staff: {
+          uid,
+          email: account.email,
+          role,
+          isActive
+        }
+      });
+    } catch (error) {
+      if (error.code === "auth/user-not-found") {
+        return res.status(404).json({
+          error: "Firebase Authentication account was not found."
+        });
+      }
+
+      console.error("Staff access update failed:", error);
+      return res.status(500).json({
+        error: "Could not update staff account access."
+      });
+    }
+  }
+);
 
 export default router;

@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { api } from "../../services/api";
 import { Link } from "react-router-dom";
 import {
@@ -427,7 +427,7 @@ function SignUp() {
 
 
         /* =====================================
-           STEP 0 â€” FULL NAME
+           STEP 0 — FULL NAME
            ===================================== */
 
         if (voiceStep === 0) {
@@ -471,7 +471,7 @@ function SignUp() {
 
 
         /* =====================================
-           STEP 1 â€” ACCESSIBILITY
+           STEP 1 — ACCESSIBILITY
            ===================================== */
 
         if (voiceStep === 1) {
@@ -526,7 +526,7 @@ function SignUp() {
 
 
         /* =====================================
-           STEP 2 â€” EMAIL ADDRESS
+           STEP 2 — EMAIL ADDRESS
            ===================================== */
 
         if (voiceStep === 2) {
@@ -636,7 +636,7 @@ function SignUp() {
 
 
         /* =====================================
-           STEP 3 â€” VOICE COMPLETE
+           STEP 3 — VOICE COMPLETE
            ===================================== */
 
         if (voiceStep === 3) {

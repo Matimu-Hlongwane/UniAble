@@ -7,6 +7,7 @@ import {
   completePasswordlessSignIn,
   getCurrentUser,
   getVoiceFirstPreference,
+  getCurrentUserRole,
 } from "../services/firebaseAuth";
 import { speak } from "../services/speechService";
 import "./AuthPages.css";
@@ -111,6 +112,21 @@ export default function Login() {
     };
   }, [mode, emailLinkCallback]);
 
+
+  async function redirectAfterSignIn() {
+    const role = await getCurrentUserRole();
+
+    const destinations = {
+      student: "/dashboard",
+      admin: "/staff/admin",
+      lecturer: "/staff/lecturer",
+      volunteer: "/staff/volunteer",
+      disability_office: "/staff/disability",
+      security: "/staff/security",
+    };
+
+    navigate(destinations[role] || "/dashboard", { replace: true });
+  }
   async function handleSubmit(event) {
     event.preventDefault();
     setError("");
@@ -121,7 +137,7 @@ export default function Login() {
       if (mode === "email-link") {
         if (isPasswordlessSignInLink(window.location.href)) {
           await completePasswordlessSignIn(email, window.location.href);
-          navigate("/dashboard", { replace: true });
+          await redirectAfterSignIn();
         } else {
           await sendPasswordlessSignInLink(email);
           setNotice(
@@ -130,7 +146,7 @@ export default function Login() {
         }
       } else {
         await signInWithEmailPassword(email, password);
-        navigate("/dashboard", { replace: true });
+        await redirectAfterSignIn();
       }
     } catch (err) {
       console.error("UniAble sign-in failed:", err);

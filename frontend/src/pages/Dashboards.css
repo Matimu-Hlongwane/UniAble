@@ -1,5 +1,5 @@
-﻿/* =========================================================
-   UniAble dashboards — restrained university portal styling
+/* =========================================================
+   UniAble dashboards â€” restrained university portal styling
    ========================================================= */
 
 .dashboard-page {
@@ -647,3 +647,995 @@ html[data-theme="dark"] .dashboard-module-status.pending {
   }
 }
 
+
+/* Stage 2: role-specific dashboard arrangements */
+.role-dashboard-admin .dashboard-role-welcome {
+  border-left: 5px solid #64748b;
+}
+.role-dashboard-admin .dashboard-role-module-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.role-dashboard-lecturer .dashboard-role-welcome {
+  border-left: 5px solid #2563eb;
+}
+.role-dashboard-lecturer .dashboard-role-module-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.role-dashboard-disability .dashboard-role-welcome {
+  border-left: 5px solid #0d9488;
+}
+.role-dashboard-disability .dashboard-role-module-grid {
+  grid-template-columns: 1fr;
+}
+.role-dashboard-security .dashboard-role-welcome {
+  border-left: 5px solid #dc2626;
+}
+.role-dashboard-security .dashboard-role-summary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.role-dashboard-security .dashboard-role-module-grid {
+  grid-template-columns: 1fr;
+}
+.role-dashboard-volunteer .dashboard-role-welcome {
+  border-left: 5px solid #16a34a;
+}
+.role-dashboard-volunteer .dashboard-role-module-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Dedicated hearing-support and personalised study panels */
+.hearing-support-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px;
+  margin-top: 16px;
+}
+.hearing-support-card {
+  min-width: 0;
+  padding: 17px;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: var(--bg-card);
+}
+.hearing-support-card h3 {
+  margin: 0 0 8px;
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+.hearing-support-card p {
+  margin: 0 0 12px;
+  color: var(--text-muted);
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+.hearing-feature-status {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.hearing-feature-status.pending {
+  color: var(--text-muted);
+}
+.neuro-profile-tips {
+  margin: 14px 0 0;
+  padding-left: 20px;
+  color: var(--text-muted);
+  line-height: 1.8;
+}
+.neuro-profile-tips li {
+  padding-left: 4px;
+}
+
+@media (max-width: 640px) {
+  .hearing-support-grid {
+    grid-template-columns: 1fr;
+  }
+  .role-dashboard-admin .dashboard-role-module-grid,
+  .role-dashboard-lecturer .dashboard-role-module-grid,
+  .role-dashboard-volunteer .dashboard-role-module-grid,
+  .role-dashboard-security .dashboard-role-summary {
+    grid-template-columns: 1fr;
+  }
+}
+/* Hearing accessibility and personalised study panels */
+.hearing-support-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.hearing-support-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: var(--bg-card);
+}
+
+.hearing-support-card h3 {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.hearing-support-card p {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.hearing-feature-status {
+  display: inline-block;
+  margin-top: auto;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: var(--bg-secondary, #f1f3f5);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.hearing-support-action {
+  margin-top: auto;
+  padding: 9px 13px;
+  border: 1px solid var(--border-color);
+  border-radius: 9px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.hearing-support-action:hover {
+  border-color: var(--text-primary);
+}
+
+.neuro-profile-tips {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0 0;
+  padding-left: 22px;
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+@media (max-width: 700px) {
+  .hearing-support-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Refined role-specific dashboard layouts */
+.hearing-support-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.hearing-support-card {
+  max-width: 100%;
+}
+
+/* Administrator: structured overview and management workspace */
+.role-dashboard-admin .dashboard-role-welcome {
+  border-top: 5px solid #7c3aed;
+  background: linear-gradient(135deg, var(--bg-card), rgba(124, 58, 237, 0.09));
+}
+
+.role-dashboard-admin .dashboard-role-summary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.role-dashboard-admin .dashboard-role-module-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Lecturer: teaching and class-management workspace */
+.role-dashboard-lecturer .dashboard-role-welcome {
+  border-top: 5px solid #2563eb;
+  background: linear-gradient(135deg, var(--bg-card), rgba(37, 99, 235, 0.09));
+}
+
+.role-dashboard-lecturer .dashboard-role-module-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* Disability Office: student support and case-management workspace */
+.role-dashboard-disability .dashboard-role-welcome {
+  border-top: 5px solid #0f766e;
+  background: linear-gradient(135deg, var(--bg-card), rgba(15, 118, 110, 0.10));
+}
+
+.role-dashboard-disability .dashboard-role-module-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.role-dashboard-disability .dashboard-role-module {
+  border-radius: 18px;
+}
+
+/* Campus Security: emergency-focused workspace */
+.role-dashboard-security .dashboard-role-welcome {
+  border-top: 5px solid #dc2626;
+  background: linear-gradient(135deg, var(--bg-card), rgba(220, 38, 38, 0.10));
+}
+
+.role-dashboard-security .dashboard-role-summary {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.role-dashboard-security .dashboard-role-module-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.role-dashboard-security .dashboard-role-module {
+  border-left: 4px solid #dc2626;
+}
+
+/* Volunteer: peer-assistance workspace */
+.role-dashboard-volunteer .dashboard-role-welcome {
+  border-top: 5px solid #d97706;
+  background: linear-gradient(135deg, var(--bg-card), rgba(217, 119, 6, 0.10));
+}
+
+.role-dashboard-volunteer .dashboard-role-module-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.role-dashboard-volunteer .dashboard-role-module {
+  border-radius: 22px;
+}
+
+@media (max-width: 900px) {
+  .role-dashboard-lecturer .dashboard-role-module-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .role-dashboard-admin .dashboard-role-summary,
+  .role-dashboard-admin .dashboard-role-module-grid,
+  .role-dashboard-lecturer .dashboard-role-module-grid,
+  .role-dashboard-disability .dashboard-role-module-grid,
+  .role-dashboard-security .dashboard-role-summary,
+  .role-dashboard-volunteer .dashboard-role-module-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* UniAble: distinct role dashboard visual identities */
+
+/* Shared structure */
+.role-dashboard {
+  min-height: 100vh;
+  padding-bottom: 40px;
+}
+
+.role-dashboard .dashboard-role-welcome {
+  position: relative;
+  overflow: hidden;
+  padding: 34px;
+  border-radius: 24px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.10);
+}
+
+.role-dashboard .dashboard-role-summary {
+  gap: 18px;
+  margin-top: 24px;
+}
+
+.role-dashboard .dashboard-role-summary > * {
+  padding: 22px;
+  border-radius: 18px;
+  box-shadow: 0 7px 22px rgba(15, 23, 42, 0.07);
+}
+
+.role-dashboard .dashboard-role-module-grid {
+  gap: 20px;
+  margin-top: 22px;
+}
+
+.role-dashboard .dashboard-role-module {
+  min-height: 190px;
+  padding: 24px;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.role-dashboard .dashboard-role-module:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.13);
+}
+
+/* 1. ADMINISTRATOR — dark purple management console */
+.role-dashboard-admin {
+  background: #f2effb !important;
+  color: #24153f !important;
+}
+
+.role-dashboard-admin .dashboard-role-welcome {
+  background: linear-gradient(125deg, #24113f 0%, #54258a 58%, #8053bd 100%) !important;
+  color: #ffffff !important;
+  border: 0 !important;
+}
+
+.role-dashboard-admin .dashboard-role-welcome h1,
+.role-dashboard-admin .dashboard-role-welcome h2,
+.role-dashboard-admin .dashboard-role-welcome p {
+  color: #ffffff !important;
+}
+
+.role-dashboard-admin .dashboard-role-summary > * {
+  background: #ffffff !important;
+  border: 1px solid #ded3f2 !important;
+  border-top: 4px solid #7444b5 !important;
+}
+
+.role-dashboard-admin .dashboard-role-module {
+  background: #ffffff !important;
+  border: 1px solid #ded3f2 !important;
+  border-left: 5px solid #7444b5 !important;
+  color: #24153f !important;
+}
+
+/* 2. LECTURER — blue academic workspace */
+.role-dashboard-lecturer {
+  background: #edf4ff !important;
+  color: #102c50 !important;
+}
+
+.role-dashboard-lecturer .dashboard-role-welcome {
+  background: linear-gradient(120deg, #103b70 0%, #1769aa 65%, #3996d2 100%) !important;
+  color: #ffffff !important;
+  border: 0 !important;
+}
+
+.role-dashboard-lecturer .dashboard-role-welcome h1,
+.role-dashboard-lecturer .dashboard-role-welcome h2,
+.role-dashboard-lecturer .dashboard-role-welcome p {
+  color: #ffffff !important;
+}
+
+.role-dashboard-lecturer .dashboard-role-summary > * {
+  background: #ffffff !important;
+  border: 1px solid #c9ddf5 !important;
+  border-radius: 12px !important;
+  border-bottom: 4px solid #287fc1 !important;
+}
+
+.role-dashboard-lecturer .dashboard-role-module-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+.role-dashboard-lecturer .dashboard-role-module {
+  background: #ffffff !important;
+  border: 1px solid #c9ddf5 !important;
+  border-radius: 12px !important;
+  color: #102c50 !important;
+}
+
+/* 3. DISABILITY OFFICE — calm teal support workspace */
+.role-dashboard-disability {
+  background: #eaf6f3 !important;
+  color: #123c38 !important;
+}
+
+.role-dashboard-disability .dashboard-role-welcome {
+  background: linear-gradient(120deg, #124d47 0%, #18796c 60%, #46a99a 100%) !important;
+  color: #ffffff !important;
+  border: 0 !important;
+}
+
+.role-dashboard-disability .dashboard-role-welcome h1,
+.role-dashboard-disability .dashboard-role-welcome h2,
+.role-dashboard-disability .dashboard-role-welcome p {
+  color: #ffffff !important;
+}
+
+.role-dashboard-disability .dashboard-role-summary > * {
+  background: #ffffff !important;
+  border: 1px solid #c7e6de !important;
+  border-radius: 22px !important;
+}
+
+.role-dashboard-disability .dashboard-role-module-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.role-dashboard-disability .dashboard-role-module {
+  background: #ffffff !important;
+  border: 1px solid #c7e6de !important;
+  border-radius: 22px !important;
+  color: #123c38 !important;
+}
+
+/* 4. CAMPUS SECURITY — dark emergency operations console */
+.role-dashboard-security {
+  background: #171b24 !important;
+  color: #f8fafc !important;
+}
+
+.role-dashboard-security .dashboard-role-welcome {
+  background: linear-gradient(120deg, #171b24 0%, #343b49 70%, #642b32 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid #596273 !important;
+  border-left: 6px solid #ef4444 !important;
+}
+
+.role-dashboard-security .dashboard-role-welcome h1,
+.role-dashboard-security .dashboard-role-welcome h2,
+.role-dashboard-security .dashboard-role-welcome p {
+  color: #ffffff !important;
+}
+
+.role-dashboard-security .dashboard-role-summary > * {
+  background: #252c38 !important;
+  color: #ffffff !important;
+  border: 1px solid #424d5e !important;
+  border-top: 4px solid #ef4444 !important;
+}
+
+.role-dashboard-security .dashboard-role-module-grid {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.role-dashboard-security .dashboard-role-module {
+  background: #252c38 !important;
+  color: #ffffff !important;
+  border: 1px solid #424d5e !important;
+  border-left: 5px solid #ef4444 !important;
+}
+
+.role-dashboard-security .dashboard-role-module h2,
+.role-dashboard-security .dashboard-role-module h3,
+.role-dashboard-security .dashboard-role-module p,
+.role-dashboard-security .dashboard-role-module strong {
+  color: #ffffff !important;
+}
+
+/* 5. VOLUNTEER — warm community-support workspace */
+.role-dashboard-volunteer {
+  background: #fff6e9 !important;
+  color: #543313 !important;
+}
+
+.role-dashboard-volunteer .dashboard-role-welcome {
+  background: linear-gradient(120deg, #75420f 0%, #b96a18 60%, #e5a443 100%) !important;
+  color: #ffffff !important;
+  border: 0 !important;
+  border-radius: 30px !important;
+}
+
+.role-dashboard-volunteer .dashboard-role-welcome h1,
+.role-dashboard-volunteer .dashboard-role-welcome h2,
+.role-dashboard-volunteer .dashboard-role-welcome p {
+  color: #ffffff !important;
+}
+
+.role-dashboard-volunteer .dashboard-role-summary > * {
+  background: #ffffff !important;
+  border: 1px solid #f0d7b3 !important;
+  border-radius: 24px !important;
+}
+
+.role-dashboard-volunteer .dashboard-role-module-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.role-dashboard-volunteer .dashboard-role-module {
+  background: #ffffff !important;
+  border: 1px solid #f0d7b3 !important;
+  border-radius: 24px !important;
+  color: #543313 !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+  .role-dashboard-lecturer .dashboard-role-module-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 700px) {
+  .role-dashboard .dashboard-role-welcome {
+    padding: 24px;
+  }
+
+  .role-dashboard-admin .dashboard-role-summary,
+  .role-dashboard-lecturer .dashboard-role-summary,
+  .role-dashboard-disability .dashboard-role-summary,
+  .role-dashboard-security .dashboard-role-summary,
+  .role-dashboard-volunteer .dashboard-role-summary,
+  .role-dashboard-admin .dashboard-role-module-grid,
+  .role-dashboard-lecturer .dashboard-role-module-grid,
+  .role-dashboard-disability .dashboard-role-module-grid,
+  .role-dashboard-security .dashboard-role-module-grid,
+  .role-dashboard-volunteer .dashboard-role-module-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .role-dashboard .dashboard-role-module {
+    transition: none;
+  }
+
+  .role-dashboard .dashboard-role-module:hover {
+    transform: none;
+  }
+}
+
+/* UniAble: disability-specific student dashboard layouts */
+.student-dashboard {
+  --student-profile-accent: #245b78;
+  --student-profile-soft: #edf5f8;
+  --student-profile-line: #b9d1dc;
+}
+.student-dashboard .dashboard-welcome-panel {
+  border-top: 4px solid var(--student-profile-accent);
+}
+.student-dashboard .dashboard-summary-item,
+.student-dashboard .dashboard-section-panel {
+  border-color: var(--student-profile-line);
+}
+.student-dashboard .dashboard-summary-icon,
+.student-dashboard .dashboard-tool-icon {
+  color: var(--student-profile-accent);
+  background: var(--student-profile-soft);
+}
+.student-dashboard .dashboard-profile-tag {
+  border: 1px solid var(--student-profile-line);
+  background: var(--student-profile-soft);
+  color: var(--dash-ink);
+}
+
+/* Visual impairment */
+.student-dashboard-visual-impairment {
+  --student-profile-accent: #174a70;
+  --student-profile-soft: #e8f2fa;
+  --student-profile-line: #7899b2;
+}
+.student-dashboard-visual-impairment .dashboard-welcome-panel {
+  padding: clamp(28px, 4vw, 44px);
+  border: 2px solid var(--student-profile-accent);
+  border-left-width: 8px;
+}
+.student-dashboard-visual-impairment .dashboard-welcome-panel h2 {
+  font-size: clamp(1.8rem, 3vw, 2.5rem);
+}
+.student-dashboard-visual-impairment .dashboard-summary-item {
+  min-height: 158px;
+  border-width: 2px;
+}
+.student-dashboard-visual-impairment .dashboard-content-grid {
+  grid-template-columns: 1fr;
+}
+
+/* Hearing impairment */
+.student-dashboard-hearing-impairment {
+  --student-profile-accent: #087e83;
+  --student-profile-soft: #e8f7f6;
+  --student-profile-line: #83c6c3;
+}
+.student-dashboard-hearing-impairment .dashboard-content-grid {
+  grid-template-columns: 1fr;
+}
+.student-dashboard-hearing-impairment .hearing-support-panel {
+  order: -1;
+  border: 2px solid var(--student-profile-accent);
+  background: var(--student-profile-soft);
+}
+.student-dashboard-hearing-impairment .hearing-support-card {
+  width: 100%;
+  border-width: 2px;
+}
+
+/* Mobility support */
+.student-dashboard-mobility-support {
+  --student-profile-accent: #286347;
+  --student-profile-soft: #edf7f0;
+  --student-profile-line: #9ac6a8;
+}
+.student-dashboard-mobility-support .dashboard-summary-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.student-dashboard-mobility-support .dashboard-summary-emergency {
+  border: 2px solid #a33c35;
+  box-shadow: inset 5px 0 0 #a33c35;
+}
+
+/* Speech support */
+.student-dashboard-speech-support {
+  --student-profile-accent: #6550a2;
+  --student-profile-soft: #f1eefb;
+  --student-profile-line: #b8addd;
+}
+.student-dashboard-speech-support .dashboard-content-grid {
+  grid-template-columns: 1fr;
+}
+.student-dashboard-speech-support [aria-labelledby="dashboard-support-title"] {
+  border: 2px solid var(--student-profile-accent);
+  background: var(--student-profile-soft);
+}
+.student-dashboard-speech-support .dashboard-tool-row {
+  min-height: 76px;
+}
+
+/* Colour vision */
+.student-dashboard-colour-vision {
+  --student-profile-accent: #34495e;
+  --student-profile-soft: #f0f3f5;
+  --student-profile-line: #667887;
+}
+.student-dashboard-colour-vision .dashboard-summary-item,
+.student-dashboard-colour-vision .dashboard-tool-row,
+.student-dashboard-colour-vision .dashboard-primary-button,
+.student-dashboard-colour-vision .dashboard-secondary-button {
+  border: 2px solid var(--student-profile-accent);
+}
+.student-dashboard-colour-vision .dashboard-content-grid {
+  grid-template-columns: 1fr;
+}
+
+/* Neurodiverse support */
+.student-dashboard-neurodiverse-support {
+  --student-profile-accent: #76552c;
+  --student-profile-soft: #fbf4e9;
+  --student-profile-line: #d8bd94;
+}
+.student-dashboard-neurodiverse-support .dashboard-content-grid {
+  grid-template-columns: 1fr;
+}
+.student-dashboard-neurodiverse-support .neuro-profile-panel {
+  border-left: 6px solid var(--student-profile-accent);
+  background: var(--student-profile-soft);
+}
+.student-dashboard-neurodiverse-support .neuro-profile-tips {
+  line-height: 2;
+}
+
+/* Individual study profiles */
+.student-dashboard-detail-dyslexia {
+  --student-profile-accent: #315c68;
+  --student-profile-soft: #eef5f4;
+  --student-profile-line: #a8c4c2;
+}
+.student-dashboard-detail-dyslexia .neuro-profile-panel {
+  line-height: 1.85;
+  letter-spacing: .01em;
+}
+.student-dashboard-detail-adhd {
+  --student-profile-accent: #72551e;
+  --student-profile-soft: #fbf5e8;
+  --student-profile-line: #d7c18f;
+}
+.student-dashboard-detail-adhd .neuro-profile-panel {
+  border-top: 5px solid var(--student-profile-accent);
+}
+.student-dashboard-detail-autism {
+  --student-profile-accent: #385b83;
+  --student-profile-soft: #eef3fa;
+  --student-profile-line: #afc2dc;
+}
+.student-dashboard-detail-autism .neuro-profile-panel {
+  border-left: 6px solid var(--student-profile-accent);
+}
+.student-dashboard-detail-down {
+  --student-profile-accent: #66508b;
+  --student-profile-soft: #f3eff9;
+  --student-profile-line: #c3b4dc;
+}
+.student-dashboard-detail-down .neuro-profile-panel {
+  border: 2px solid var(--student-profile-accent);
+}
+.student-dashboard-detail-down .neuro-profile-tips {
+  font-size: 1.02rem;
+  line-height: 2;
+}
+
+@media (max-width: 700px) {
+  .student-dashboard .dashboard-content-grid,
+  .student-dashboard .dashboard-summary-grid {
+    grid-template-columns: 1fr;
+  }
+  .student-dashboard .dashboard-summary-item {
+    min-height: 112px;
+  }
+  .student-dashboard .dashboard-welcome-panel {
+    padding: 20px;
+  }
+}
+
+/* Disability Office and Campus Security: dedicated full-page staff workspaces */
+.staff-operations-shell {
+  display: flex;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  align-items: stretch;
+  overflow: clip;
+}
+
+.staff-operations-sidebar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex: 0 0 260px;
+  flex-direction: column;
+  width: 260px;
+  height: 100vh;
+  min-height: 100vh;
+  padding: 26px 18px 20px;
+  color: #f8fafc;
+  background: #080b10;
+  border-right: 1px solid #27313d;
+  z-index: 5;
+}
+
+.staff-sidebar-brand,
+.staff-sidebar-profile,
+.staff-sidebar-nav a,
+.staff-logout-button {
+  display: flex;
+  align-items: center;
+}
+
+.staff-sidebar-brand {
+  gap: 12px;
+  padding: 4px 8px 28px;
+  border-bottom: 1px solid #27313d;
+}
+
+.staff-brand-mark {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 12px;
+  color: #07110f;
+  background: #5ee0c0;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.staff-sidebar-brand strong,
+.staff-sidebar-profile strong {
+  display: block;
+  color: #ffffff;
+  font-size: 15px;
+}
+
+.staff-sidebar-brand small,
+.staff-sidebar-profile small {
+  display: block;
+  margin-top: 4px;
+  color: #aab6c5;
+  font-size: 10px;
+  letter-spacing: 1.2px;
+}
+
+.staff-sidebar-profile {
+  gap: 12px;
+  margin: 25px 0 28px;
+  padding: 13px 10px;
+  border-radius: 12px;
+  background: #151c26;
+}
+
+.staff-sidebar-role-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  place-items: center;
+  border-radius: 11px;
+  color: #ffffff;
+  background: #155e59;
+}
+
+.role-dashboard-security .staff-sidebar-role-icon {
+  background: #842f3b;
+}
+
+.staff-sidebar-label {
+  margin: 0 0 12px 10px;
+  color: #8291a3;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+
+.staff-sidebar-nav {
+  display: grid;
+  gap: 8px;
+}
+
+.staff-sidebar-nav a {
+  gap: 12px;
+  min-height: 46px;
+  padding: 12px;
+  border-radius: 9px;
+  color: #cbd5e1;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.staff-sidebar-nav a:hover,
+.staff-sidebar-nav a:focus-visible {
+  color: #ffffff;
+  background: #1d2936;
+  outline: none;
+}
+
+.role-dashboard-disability .staff-sidebar-nav a:hover {
+  background: #155e59;
+}
+
+.role-dashboard-security .staff-sidebar-nav a:hover {
+  background: #842f3b;
+}
+
+.staff-sidebar-bottom {
+  display: grid;
+  gap: 16px;
+  margin-top: auto;
+}
+
+.staff-sidebar-status {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 8px;
+  color: #aab6c5;
+  font-size: 11px;
+  border-top: 1px solid #27313d;
+}
+
+.staff-sidebar-status span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #36d399;
+  box-shadow: 0 0 10px rgba(54, 211, 153, .4);
+}
+
+.staff-logout-button {
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 46px;
+  padding: 12px;
+  border: 1px solid #465363;
+  border-radius: 10px;
+  color: #ffffff;
+  background: #202a36;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.staff-logout-button:hover {
+  background: #344253;
+}
+
+.role-dashboard-security .staff-logout-button {
+  border-color: #7f3b45;
+  background: #3b2028;
+}
+
+.role-dashboard-security .staff-logout-button:hover {
+  background: #632b35;
+}
+
+.staff-operations-main {
+  flex: 1 1 0;
+  width: 0;
+  max-width: none;
+  min-width: 0;
+  min-height: 100vh;
+  margin: 0;
+  padding: 30px clamp(20px, 3vw, 46px) 48px;
+  overflow-x: hidden;
+}
+
+.staff-operations-main .dashboard-page-heading,
+.staff-operations-main .dashboard-role-welcome,
+.staff-operations-main .dashboard-role-summary,
+.staff-operations-main .dashboard-section-heading,
+.staff-operations-main .dashboard-role-module-grid,
+.staff-operations-main > .admin-panel {
+  width: 100%;
+  max-width: none;
+}
+
+.staff-operations-main .dashboard-page-heading h1 {
+  font-size: clamp(27px, 3vw, 38px);
+  line-height: 1.2;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.role-dashboard-security .staff-operations-main .dashboard-page-heading h1 {
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,.35);
+}
+
+.role-dashboard-security .staff-operations-main .dashboard-page-heading .dashboard-date {
+  color: #d4dbe5 !important;
+}
+
+.role-dashboard-security .staff-operations-main .dashboard-eyebrow {
+  color: #fca5a5;
+}
+
+@media (max-width: 760px) {
+  .staff-operations-shell {
+    display: block;
+    overflow: visible;
+  }
+
+  .staff-operations-sidebar {
+    position: relative;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    padding: 14px;
+    border-right: 0;
+    border-bottom: 1px solid #27313d;
+  }
+
+  .staff-sidebar-brand {
+    padding-bottom: 14px;
+  }
+
+  .staff-sidebar-profile {
+    margin: 12px 0;
+  }
+
+  .staff-sidebar-nav {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+
+  .staff-sidebar-nav a {
+    flex: 0 0 auto;
+    min-height: 42px;
+    white-space: nowrap;
+  }
+
+  .staff-sidebar-label {
+    margin-top: 8px;
+  }
+
+  .staff-sidebar-bottom {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .staff-sidebar-status {
+    border-top: 0;
+  }
+
+  .staff-logout-button {
+    width: auto;
+    min-width: 112px;
+  }
+
+  .staff-operations-main {
+    width: 100%;
+    min-height: auto;
+    padding: 20px 14px 36px;
+  }
+}
