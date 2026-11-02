@@ -1,0 +1,64 @@
+rules_version = '2';
+
+// REFERENCE rules showing how this app's role model is enforced on a real
+// back end. Test with the Firebase emulator before use. Roles come from a
+// custom claim (`role`) set only via the Admin SDK in a Cloud Function that
+// runs when an approved role change is applied.
+//
+// Key points:
+//  - `users` documents hold metadata only (name, email, role, status).
+//    Disability data lives in `registrations`, which admins cannot read.
+//  - Role/status/config writes and ALL audit writes happen in Cloud
+//    Functions, never from clients.
+//  - `auditLog` is append-only from the server and readable by admins.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function userRole() { return request.auth.token.role; }
+
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || userRole() == 'admin');
+      allow write: if false;
+    }
+
+    match /registrations/{id} {
+      allow read: if signedIn() && (userRole() == 'disability_office' || resource.data.studentUid == request.auth.uid);
+      allow create: if signedIn() && userRole() == 'student' && request.resource.data.studentUid == request.auth.uid;
+      allow update: if signedIn() && userRole() == 'disability_office';
+      allow delete: if false;
+    }
+
+    match /incidents/{id} {
+      allow read: if signedIn() && (userRole() == 'security' || resource.data.studentUid == request.auth.uid);
+      allow create: if signedIn() && userRole() == 'student' && request.resource.data.studentUid == request.auth.uid;
+      allow update: if signedIn() && userRole() == 'security';
+      allow delete: if false;
+    }
+
+    match /assistanceRequests/{id} {
+      allow read, create: if signedIn() && request.resource.data.studentUid == request.auth.uid;
+      allow update: if signedIn() && resource.data.studentUid == request.auth.uid;
+      allow delete: if false;
+    }
+
+    match /adminConfig/{id} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    match /approvals/{id} {
+      allow read: if signedIn() && userRole() == 'admin';
+      allow write: if false;
+    }
+
+    match /auditLog/{id} {
+      allow read: if signedIn() && userRole() == 'admin';
+      allow write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
