@@ -4,22 +4,97 @@ import { Badge, Notice, Panel, StatGrid, formatDateTime } from "./ui.jsx";
 import { LECTURER_FEEDBACK, MATERIALS } from "../data/sampleData.js";
 
 const NAV = [
+  { id: "modules", label: "My modules", title: "My modules — edit later" },
+  { id: "attendance", label: "Attendance", title: "Student attendance — present / not present" },
+  { id: "materials", label: "Course materials", title: "Course materials & study guides" },
   { id: "feedback", label: "Accessibility feedback", title: `${LECTURER_FEEDBACK.module} — accessibility feedback` },
   { id: "materials", label: "Course materials", title: "Course materials" },
   { id: "announcements", label: "Announcements", title: "Announcements" },
 ];
 
 export default function LecturerDashboard() {
-  const [active, setActive] = useState("feedback");
+  const [active, setActive] = useState("modules");
   return (
     <DashboardShell nav={NAV} active={active} onSelect={setActive}>
+      {active === "modules" && <Modules />}
+      {active === "attendance" && <Attendance />}
       {active === "feedback" && <Feedback />}
       {active === "materials" && <Materials />}
       {active === "announcements" && <Announcements />}
     </DashboardShell>
   );
 }
+function Modules() {
+  const [modules, setModules] = useState([
+    { id: "mod1", code: "CS101", name: "Intro to Computing", desc: "Year 1" },
+    { id: "mod2", code: "CS201", name: "Data Structures", desc: "Year 2" },
+  ]);
+  const [editingId, setEditingId] = useState(null);
 
+  function saveModule(id, newName) {
+    setModules(m => m.map(x => x.id === id ? { ...x, name: newName } : x));
+    setEditingId(null);
+    // TODO: save to Firebase -> updateDoc(doc(db, "modules", id), { name: newName })
+  }
+
+  return (
+    <Panel title="My modules — click Edit to change later" id="modules">
+      <ul className="list">
+        {modules.map(mod => (
+          <li key={mod.id} className="list__item">
+            {editingId === mod.id ? (
+              <div className="field">
+                <input defaultValue={mod.name} id={`edit-${mod.id}`} />
+                <button className="btn btn--primary" onClick={() => saveModule(mod.id, document.getElementById(`edit-${mod.id}`).value)}>Save</button>
+              </div>
+            ) : (
+              <>
+                <strong>{mod.code} — {mod.name}</strong>
+                <span className="muted">{mod.desc}</span>
+                <button className="btn" onClick={() => setEditingId(mod.id)}>Edit module</button>
+              </>
+            )}
+          </li>
+        ))}
+      </ul>
+    </Panel>
+  );
+}
+
+function Attendance() {
+  const [students, setStudents] = useState([
+    { id: "s1", name: "Thabo M.", present: null },
+    { id: "s2", name: "Aisha K.", present: null },
+    { id: "s3", name: "John D.", present: null },
+  ]);
+
+  function mark(id, status) {
+    setStudents(s => s.map(st => st.id === id ? { ...st, present: status } : st));
+    // TODO: Firebase -> setDoc(doc(db, "attendance", `${id}_${new Date().toISOString().slice(0,10)}`), { present: status })
+  }
+
+  return (
+    <Panel title="Attendance — click Present / Not present" subtitle="No typing needed, just click" id="attendance">
+      <div className="table-wrap">
+        <table className="dash-table">
+          <thead><tr><th>Student</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody>
+            {students.map(s => (
+              <tr key={s.id}>
+                <td>{s.name}</td>
+                <td>{s.present === null ? <Badge tone="warning">Not marked</Badge> : s.present ? <Badge tone="success">Present</Badge> : <Badge tone="danger">Not present</Badge>}</td>
+                <td>
+                  <button className="btn btn--primary" onClick={() => mark(s.id, true)}>Present</button>{" "}
+                  <button className="btn" onClick={() => mark(s.id, false)}>Not present</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Panel>
+  );
+}
 function Feedback() {
   const { stats, suggestion, trend } = LECTURER_FEEDBACK;
   const max = 5;
@@ -58,6 +133,7 @@ function Materials() {
       { id: `m-${Date.now()}`, name: file.name, formats: [], pending: true, views: 0 },
       ...current,
     ]);
+    // TODO: const storageRef = ref(storage, `studyGuides/${file.name}`); await uploadBytes(storageRef, file); const url = await getDownloadURL(storageRef);
     event.target.value = "";
   }
 
@@ -67,11 +143,13 @@ function Materials() {
       id="materials"
       subtitle="Demo: file names are listed but files aren’t uploaded anywhere yet."
       actions={
-        <label className="btn btn--primary" style={{ cursor: "pointer" }}>
-          Upload material
-          <input type="file" onChange={onFile} className="sr-only" />
-        </label>
-      }
+  <div style={{display:'flex', gap:8}}>
+    <label className="btn btn--primary" style={{ cursor: "pointer" }}>
+      Upload study guide (attachment)
+      <input type="file" accept=".pdf,.docx" onChange={onFile} className="sr-only" />
+    </label>
+  </div>
+}
     >
       <div className="table-wrap">
         <table className="dash-table">
