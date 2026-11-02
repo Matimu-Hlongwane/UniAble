@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { createHmac, randomInt, timingSafeEqual } from "node:crypto";
+import { Resend } from "resend";
 import { getAdminAuth, getAdminDb } from "../services/firebase.js";
 import { requireFirebaseUser, requireRole } from "../middleware/authMiddleware.js";
 
@@ -70,68 +71,97 @@ router.post("/email-otp/send", async (req, res) => {
   try {
     const uid = req.firebaseToken.uid;
     const user = await getAdminAuth().getUser(uid);
-    if (!user.email) return res.status(400).json({ error: "No email address is associated with this account." });
-    if (
-      !process.env.SMTP_HOST ||
-      !process.env.SMTP_PORT ||
-      !process.env.SMTP_USER ||
-      !process.env.SMTP_APP_PASSWORD ||
-      !process.env.EMAIL_FROM
-    ) {
+
+    if (!user.email) {
+      return res.status(400).json({
+        error: "No email address is associated with this account."
+      });
+    }
+
+    const apiKey = process.env.RESEND_API_KEY;
+    const sender = process.env.RESEND_FROM_EMAIL;
+
+    if (!apiKey || !sender) {
       return res.status(503).json({
-        error: "Email OTP is not configured. Check the Gmail SMTP settings in backend/.env.",
+        error: "Email verification is not configured. Check the Resend settings in backend/.env."
       });
     }
 
     const db = getAdminDb();
     const ref = db.collection("emailOtpChallenges").doc(uid);
     const existing = await ref.get();
-    const lastSentAt = existing.exists ? Number(existing.data().lastSentAt || 0) : 0;
+
+    const lastSentAt = existing.exists
+      ? Number(existing.data().lastSentAt || 0)
+      : 0;
+
     if (Date.now() - lastSentAt < EMAIL_OTP_COOLDOWN_MS) {
-      return res.status(429).json({ error: "Please wait one minute before requesting another code." });
+      return res.status(429).json({
+        error: "Please wait one minute before requesting another code."
+      });
     }
 
     const code = String(randomInt(100000, 1000000));
     const expiresAt = Date.now() + OTP_LIFETIME_MS;
-    await ref.set({ digest: otpDigest(uid, code), expiresAt, attempts: 0, lastSentAt: Date.now(), email: user.email });
+
+    await ref.set({
+      digest: otpDigest(uid, code),
+      expiresAt,
+      attempts: 0,
+      lastSentAt: Date.now(),
+      email: user.email
+    });
 
     try {
-      const nodemailerModule = await import("nodemailer");
-      const nodemailer = nodemailerModule.default || nodemailerModule;
+      const resend = new Resend(apiKey);
 
-      const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: Number(process.env.SMTP_PORT),
-        secure: process.env.SMTP_SECURE === "true",
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_APP_PASSWORD,
-        },
-      });
-
-      await transporter.sendMail({
-        from: process.env.EMAIL_FROM,
+      const { error: resendError } = await resend.emails.send({
+        from: sender,
         to: user.email,
         subject: "Your UniAble verification code",
-        text: `Your UniAble verification code is ${code}. It expires in 10 minutes. If you did not request this code, you can ignore this email.`,
+        text:
+          `Your UniAble verification code is ${code}.\n\n` +
+          "It expires in 10 minutes. If you did not request this code, you can ignore this email.",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; color: #202124;">
+            <h2 style="color: #172554;">Verify your UniAble account</h2>
+            <p>Use the verification code below to complete your UniAble registration.</p>
+            <div style="margin: 24px 0; padding: 18px; background: #f3f4f6; border-radius: 8px; text-align: center;">
+              <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px;">${code}</span>
+            </div>
+            <p>This code expires in <strong>10 minutes</strong>.</p>
+            <p>If you did not request this code, you can safely ignore this email.</p>
+            <p style="margin-top: 28px; color: #6b7280; font-size: 13px;">UniAble — Access without limits. Education for everyone.</p>
+          </div>
+        `
       });
 
-      await transporter.close();
+      if (resendError) {
+        throw new Error(resendError.message || "Resend could not send the email.");
+      }
     } catch (emailError) {
       await ref.delete();
-      console.error("Gmail SMTP email delivery failed:", emailError.message);
+
+      console.error("Resend email delivery failed:", emailError.message);
+
       return res.status(502).json({
-        error: "The verification email could not be sent. Check the Gmail SMTP configuration.",
+        error: "The verification email could not be sent. Please try again shortly."
       });
     }
 
-    return res.json({ sent: true, destination: user.email, expiresInSeconds: 600 });
+    return res.json({
+      sent: true,
+      destination: user.email,
+      expiresInSeconds: 600
+    });
   } catch (error) {
     console.error("Email OTP send failed:", error);
-    return res.status(500).json({ error: error.message || "Could not send the verification code." });
+
+    return res.status(500).json({
+      error: error.message || "Could not send the verification code."
+    });
   }
 });
-
 router.post("/email-otp/verify", async (req, res) => {
   try {
     const uid = req.firebaseToken.uid;

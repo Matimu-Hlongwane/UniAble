@@ -1,3 +1,4 @@
+import { Capacitor } from "@capacitor/core";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink, sendPasswordResetEmail } from "firebase/auth";
 import { initializeApp, getApps } from "firebase/app";
 import { getAuth, onAuthStateChanged, getIdTokenResult, RecaptchaVerifier, signOut, updatePassword, sendEmailVerification, updateProfile, updateEmail, deleteUser, linkWithPhoneNumber, signInWithPhoneNumber } from "firebase/auth";
@@ -323,7 +324,7 @@ export async function setVoiceFirstPreference(enabled, user = auth?.currentUser)
 
 
 
-const UNIABLe_API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
+const UNIABLe_API_BASE = (import.meta.env.VITE_API_BASE_URL || (Capacitor.getPlatform() === "android" ? "http://10.0.2.2:4000" : "http://localhost:4000")).replace(/\/$/, "");
 
 async function verificationApi(path, body) {
   const user = auth?.currentUser;
