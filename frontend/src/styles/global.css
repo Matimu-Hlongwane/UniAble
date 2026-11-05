@@ -1604,6 +1604,56 @@ a {
   color: #687388;
 }
 
+.audio-language-settings {
+  margin-top: 16px;
+}
+
+.audio-language-settings-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.audio-language-support-summary {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--bg-card);
+}
+
+.audio-language-support-summary ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+}
+
+.audio-language-support-summary li {
+  margin-top: 5px;
+  color: #687388;
+  font-size: 0.875rem;
+}
+
+.audio-language-select {
+  display: grid;
+  gap: 7px;
+  margin-top: 14px;
+  font-weight: 600;
+}
+
+.audio-language-select select {
+  width: 100%;
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font: inherit;
+}
+
+.audio-language-settings-content > p:last-child {
+  margin-top: 8px;
+}
+
 .profile-grid {
   display: grid;
 
@@ -3336,6 +3386,13 @@ html[data-theme="dark"] .hero-status svg { color: #6EE7B7; }
 
 .unipal-message-content {
   min-width: 0;
+}
+
+.unipal-response-source {
+  display: block;
+  margin: 4px 2px 0;
+  color: var(--text-muted);
+  font-size: 0.7rem;
 }
 
 .unipal-message p {

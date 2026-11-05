@@ -77,6 +77,4 @@ Architecture:
 
 UniPal is constrained to UniAble, accessibility and student disability-support topics. The AI service also uses the selected language, student first name, accessibility profile and relevant display preferences for personalisation.
 
-For live AI responses, create `ai-service/.env` from `ai-service/.env.example` and provide an OpenAI API key. The key remains on the server-side AI service and is never placed in the mobile frontend.
-
-The current integration uses the OpenAI Responses API. The OpenAI Assistants API was sunset on August 26, 2026, so this project does not build a new integration against the retired Assistants API.
+For live AI responses, start the FastAPI service on port 8000 and create `ai-service/.env` from `ai-service/.env.example` with a Gemini API key in `GEMINI_API_KEY`. The key stays on the server-side AI service and must never be placed in the mobile frontend. Without the service or key, UniPal uses built-in guidance rather than generated AI responses.

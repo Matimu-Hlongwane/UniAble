@@ -109,8 +109,9 @@ export default function RoleDashboard() {
   }, [backendRole]);
 
   useEffect(() => {
+    if (!["volunteer", "security"].includes(normalRole)) return;
     loadDashboard();
-  }, [loadDashboard]);
+  }, [loadDashboard, normalRole]);
 
   useEffect(() => {
     if (
@@ -126,7 +127,10 @@ export default function RoleDashboard() {
     return () => window.clearTimeout(timer);
   }, [locale, normalRole, voiceAssistanceEnabled, workspace]);
 
-  if (normalRole === "admin") return <AdminDashboard />;
+  if (normalRole === "admin") return <AdminDashboard staffRole="admin" />;
+  if (normalRole === "disability") {
+    return <AdminDashboard staffRole="disability_office" />;
+  }
   if (normalRole === "lecturer") {
     return <LecturerDashboard requests={data?.requests || []} onRefreshRequests={loadDashboard} />;
   }
@@ -153,7 +157,7 @@ export default function RoleDashboard() {
       navigate("/dashboard");
       return;
     }
-    if (command.includes("campus") || command.includes("navigation") || command.includes("navigate")) {
+    if (command.includes("campus") || command.includes("navigation") || command.includes("map")) {
       navigate("/campus");
       return;
     }

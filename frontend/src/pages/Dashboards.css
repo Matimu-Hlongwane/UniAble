@@ -384,6 +384,15 @@ html[data-theme="dark"] .dashboard-summary-emergency .dashboard-summary-icon {
   background: var(--dash-surface);
 }
 
+.dashboard-announcement-important {
+  border-color: var(--dash-accent);
+}
+
+.dashboard-announcement-date {
+  margin-top: 8px !important;
+  font-size: 0.75rem !important;
+}
+
 .dashboard-announcement-icon {
   display: grid;
   place-items: center;

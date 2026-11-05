@@ -25,13 +25,21 @@ router.get("/capabilities", async (_req, res) => {
       const health = await response.json().catch(() => ({}));
       result.aiService = response.ok ? "online" : "error";
       result.aiConfigured = Boolean(health?.capabilities?.aiConfigured);
+      if (!result.aiConfigured) {
+        result.features.multilingualReplies = false;
+      }
       // An older AI service cannot return replyLanguage/replyLocale or answer in other languages.
       if (response.ok && !health?.capabilities?.multilingualReplies) {
         result.features = { multilingualReplies: false, replyLanguageField: false };
       }
     } catch (error) {
       result.aiService = "offline";
+      result.features.multilingualReplies = false;
     }
+  }
+
+  if (!result.aiConfigured) {
+    result.features.multilingualReplies = false;
   }
 
   res.json(result);
@@ -98,6 +106,7 @@ router.post("/chat", requireFirebaseUser, async (req, res) => {
     const response = await fetch(`${aiServiceUrl}/unipal/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      signal: AbortSignal.timeout(15000),
       body: JSON.stringify({
         message: cleanMessage,
         language,
@@ -133,30 +142,57 @@ router.post("/chat", requireFirebaseUser, async (req, res) => {
   }
 });
 
-function localFallback(text) {
+export function localFallback(text) {
   const q = text.toLowerCase();
 
   if (/(^|\s)(hi|hello|hey|good morning|good afternoon|good evening)(\s|!|$)/.test(q)) {
-    return "Hi! Iâ€™m UniPal, your UniAble Companion. I can help with UniAble, accessibility and student disability support.";
+    return "Hi! I'm UniPal, your UniAble Companion. I can guide you through app features, accessibility settings, your schedule, campus navigation, peer support and emergency options. What would you like help with?";
   }
 
-  if (q.includes("accessibility") || q.includes("text size") || q.includes("font")) {
-    return "You can open Settings to adjust your accessibility preferences, including text size and appearance. You can also open the Accessibility area to choose a support profile.";
+  if (q.includes("emergency") || q.includes("sos") || q.includes("urgent")) {
+    return "For an immediate safety concern, open Emergency SOS in UniAble and use the options shown there. If there is immediate danger, contact campus security or local emergency services.";
   }
 
-  if (q.includes("emergency") || q.includes("sos")) {
-    return "For an immediate safety concern, open Emergency SOS in UniAble. Use the emergency options shown there and contact your campus or local emergency services when appropriate.";
+  if (q.includes("announcement") || q.includes("notice")) {
+    if (q.includes("lecturer") || q.includes("post") || q.includes("publish") || q.includes("make")) {
+      return "In the Lecturer workspace, open Announcements, choose one of your assigned modules, add a title and message, then publish. Only students enrolled in that module can see it.";
+    }
+    return "Module announcements appear on your student dashboard. They are limited to modules you are enrolled in; contact your lecturer if you are missing a module update.";
+  }
+
+  if (q.includes("schedule") || q.includes("timetable") || q.includes("class") || q.includes("lecture time")) {
+    return "Open My Schedule in UniAble to review classes assigned to your account. If it is empty, check that your modules have been assigned to your student profile or contact the lecturer.";
+  }
+
+  if (q.includes("accessibility") || q.includes("text size") || q.includes("font") || q.includes("contrast")) {
+    return "Open Settings to change text size, appearance and voice preferences. Open Accessibility to review or update your support profile.";
+  }
+
+  if (q.includes("voice") || q.includes("microphone") || q.includes("hands-free") || q.includes("hands free")) {
+    return "Select the microphone beside the message box and allow microphone access. UniPal will transcribe what you say into the message box; review or edit the text, then select Send. Voice is only captured after you activate the microphone.";
   }
 
   if (q.includes("campus") || q.includes("navigate") || q.includes("route") || q.includes("map")) {
-    return "Open Campus Navigation in UniAble to choose a destination and view an accessible route.";
+    return "Open Campus Navigation, choose a destination and review the route guidance. If you need a person to accompany you, submit a request through Peer Assistance.";
   }
 
-  if (q.includes("peer") || q.includes("volunteer")) {
-    return "Open Peer Assistance to request support or review available peer assistance options.";
+  if (q.includes("peer") || q.includes("volunteer") || q.includes("assistance")) {
+    return "Open Peer Assistance, describe the help you need and submit the request. You can return there to review its status.";
   }
 
-  return "Iâ€™m UniPal, your UniAble Companion. I can help with UniAble, accessibility, campus navigation, study support for students with disabilities, peer assistance and emergency features.";
+  if (q.includes("study") || q.includes("focus") || q.includes("reading") || q.includes("assignment")) {
+    return "Try one short study block: choose a single task, work for 20 minutes, then take a 5-minute break. Use read-aloud or text-size controls if they make the material easier to access.";
+  }
+
+  if (q.includes("sign up") || q.includes("signup") || q.includes("register") || q.includes("account") || q.includes("login") || q.includes("sign in")) {
+    return "Use Sign Up to create an account or Sign In to access an existing one. If you cannot sign in, use Forgot password rather than creating a duplicate account.";
+  }
+
+  if (q.includes("help") || q.includes("what can you do") || q.includes("how do i use")) {
+    return "I can guide you through schedules, accessibility settings, campus navigation, module announcements, peer assistance and Emergency SOS. Tell me which feature you are trying to use and what is happening.";
+  }
+
+  return "I don't have enough information to answer that confidently. I can guide you through schedules, accessibility, campus navigation, announcements, peer assistance and Emergency SOS. Which UniAble feature is your question about?";
 }
 
 export default router;

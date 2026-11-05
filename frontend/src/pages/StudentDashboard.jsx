@@ -5,8 +5,8 @@ import {
   ArrowRight,
   BookOpen,
   Brain,
+  Megaphone,
   CalendarDays,
-  CheckCircle2,
   Clock3,
   Ear,
   Footprints,
@@ -19,6 +19,7 @@ import {
   Volume2,
 } from "lucide-react";
 import { useSettings } from "../context/settingsContext/SettingsContext";
+import { api } from "../services/api";
 import { getUserAccessibilityProfile, subscribeToAuth } from "../services/firebaseAuth";
 import "./Dashboards.css";
 
@@ -149,6 +150,9 @@ export default function StudentDashboard() {
   const { locale } = useSettings();
   const [studentName, setStudentName] = useState("");
   const [accessibilityProfile, setAccessibilityProfile] = useState(null);
+  const [announcements, setAnnouncements] = useState([]);
+  const [announcementError, setAnnouncementError] = useState("");
+  const [announcementsLoading, setAnnouncementsLoading] = useState(true);
 
   useEffect(() => {
     return subscribeToAuth((user) => {
@@ -169,6 +173,26 @@ export default function StudentDashboard() {
 
     return () => {
       active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    api.getAcademicAnnouncements()
+    .then((response) => {
+      if (active) {
+        setAnnouncements(Array.isArray(response?.announcements) ? response.announcements : []);
+      }
+    })
+    .catch((error) => {
+      if (active) setAnnouncementError(error.message || "Could not load announcements.");
+    })
+    .finally(() => {
+      if (active) setAnnouncementsLoading(false);
+    });
+
+    return () => {
+    active = false;
     };
   }, []);
 
@@ -382,13 +406,44 @@ export default function StudentDashboard() {
         </section>
       </div>
 
-      <section className="dashboard-announcement">
-        <div className="dashboard-announcement-icon"><CheckCircle2 size={20} /></div>
-        <div>
-          <p className="dashboard-eyebrow">CAMPUS NOTICE</p>
-          <h2>Stay informed</h2>
-          <p>Check your institution&apos;s official channels for the latest library hours, campus notices and timetable changes.</p>
+      <section aria-labelledby="student-announcements-title">
+        <div className="dashboard-section-heading">
+          <div>
+            <p className="dashboard-eyebrow">MODULE UPDATES</p>
+            <h2 id="student-announcements-title">Announcements</h2>
+          </div>
         </div>
+        {announcementsLoading && <p role="status">Loading announcements...</p>}
+        {announcementError && <p className="dashboard-data-note" role="alert">{announcementError}</p>}
+        {!announcementsLoading && !announcementError && !announcements.length && (
+          <section className="dashboard-announcement">
+            <div className="dashboard-announcement-icon"><Megaphone size={20} /></div>
+            <div>
+              <p className="dashboard-eyebrow">NO NEW UPDATES</p>
+              <h2>You&apos;re all caught up</h2>
+              <p>Announcements from your enrolled modules will appear here.</p>
+            </div>
+          </section>
+        )}
+        {announcements.map((item) => (
+          <article
+            className={`dashboard-announcement ${item.importance === "important" ? "dashboard-announcement-important" : ""}`}
+            key={item.id}
+          >
+            <div className="dashboard-announcement-icon"><Megaphone size={20} /></div>
+            <div>
+              <p className="dashboard-eyebrow">
+                {item.importance === "important" ? "IMPORTANT" : "MODULE ANNOUNCEMENT"}
+                {item.moduleName ? ` · ${item.moduleName}` : ""}
+              </p>
+              <h2>{item.title}</h2>
+              <p>{item.message}</p>
+              <p className="dashboard-announcement-date">
+                {item.createdAt ? new Date(item.createdAt).toLocaleString(locale || "en-ZA") : ""}
+              </p>
+            </div>
+          </article>
+        ))}
       </section>
     </section>
   );

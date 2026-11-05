@@ -1,152 +1,65 @@
-# UniAble updated prototype – run guide
+# UniAble presentation quick start
 
-## 1. Frontend
-Open PowerShell in `UniAble/frontend`:
+This guide is for the current macOS project folder. Keep the two Terminal
+windows running while presenting.
 
-```powershell
-npm install
+## Start the backend
+
+Open Terminal and run:
+
+```bash
+cd "/Users/dylansmac/Downloads/UniAble-integration-landing-signup-2/backend"
 npm run dev
 ```
 
-Then open the Vite address shown in the terminal, normally:
+In another Terminal window, check that the API is ready:
 
-`http://localhost:5173/`
-
-The root page `/` is now the UniAble proposal/landing page. The student dashboard is `/dashboard`.
-
-## 2. Backend
-Open a SECOND PowerShell window in `UniAble/backend`:
-
-```powershell
-npm install
-npm run dev
+```bash
+curl http://localhost:4000/api/health
 ```
 
-The API should start on:
+The response should include `"status":"ok"`. Do not share or display
+`backend/.env`; it may contain private service configuration.
 
-`http://localhost:4000`
+## Start the app
 
-Check it with:
+Open a second Terminal window and run:
 
-`http://localhost:4000/api/health`
-
-If the backend is not running, the Peer Assistance page still displays demo requests, but browser requests to `/api/peer/...` will show `ERR_CONNECTION_REFUSED`.
-
-## 3. Accessibility dashboards
-From the Accessibility page, choose any profile. Direct routes are:
-
-- `/disability/blind`
-- `/disability/deaf`
-- `/disability/mobility`
-- `/disability/speech`
-- `/disability/colour`
-- `/disability/dyslexia`
-- `/disability/adhd`
-- `/disability/autism`
-- `/disability/down`
-- `/disability/multiple`
-
-## 4. Important fixes in this version
-
-- Added `React` imports to JSX files so `React is not defined` no longer occurs with the current Vite setup.
-- Added a proposal-style landing page at `/`.
-- Added ten personalised disability dashboard experiences.
-- Added an Accessibility profile selector.
-- Fixed the mobile/desktop sidebar so **Settings is no longer absolutely positioned over Emergency SOS**.
-- Added a mobile navigation backdrop and close button.
-- Kept the existing Peer Assistance, Emergency SOS, role-dashboard and backend integration points.
-
-## 5. If the page is blank
-1. Keep `npm run dev` running in the frontend terminal.
-2. Open the browser developer console (F12).
-3. If you see `React is not defined`, make sure you are running this updated ZIP and have restarted Vite after replacing files.
-4. If you see `ERR_CONNECTION_REFUSED` for `localhost:4000`, start the backend in the second terminal.
-
-
-## 5. UniPal AI assistant
-
-UniPal is available at:
-
-`http://localhost:5173/unipal`
-
-The app sends UniPal requests to the Node backend at `/api/unipal/chat`. The backend forwards them to the existing FastAPI AI service.
-
-For the full AI experience:
-
-PowerShell window 3:
-
-```powershell
-cd ..\ai-service
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-copy .env.example .env
+```bash
+cd "/Users/dylansmac/Downloads/UniAble-integration-landing-signup-2/frontend"
+npm run dev -- --host 0.0.0.0
 ```
 
-Open `ai-service/.env` and add your own OpenAI API key:
+Open [http://localhost:5173](http://localhost:5173) in the presentation
+browser. The student dashboard requires signing in with an existing student
+account. Staff can start from `/staff` and sign in with an existing staff
+account. Do not create test accounts during the presentation.
 
-```env
-OPENAI_API_KEY=your_key_here
-OPENAI_MODEL=gpt-6-luna
-OPENAI_MAX_OUTPUT_TOKENS=500
-```
+## If something is unavailable
 
-Then start the service:
+- **Blank page:** Check the frontend Terminal for an error and reload the page.
+- **API/network error:** Make sure the backend Terminal is still running and
+  `http://localhost:4000/api/health` returns healthy.
+- **UniPal AI:** The UI and built-in guidance work without the AI service.
+  Live generated responses require the separate FastAPI service and a valid
+  Gemini key in the private `ai-service/.env`. The key is not included in this
+  project folder's example configuration.
+- **Phone app:** A simulator or phone uses a different API address than
+  `localhost`. Follow [MOBILE-SETUP.md](./MOBILE-SETUP.md) and configure the
+  API address before presenting from a device.
 
-```powershell
-uvicorn app.main:app --reload --port 8000 --env-file .env
-```
+## Current verified features
 
-Do not commit `.env` or your API key to GitHub.
+- Lecturer announcements are scoped to their assigned modules; students see
+  announcements for modules they are enrolled in.
+- Attendance entry uses the selected class roster and does not display
+  disability profile details.
+- Accessibility settings checks this device's text-to-speech support for the
+  available languages.
+- Voice navigation listens only after the microphone is activated. Device
+  Voice Control, Voice Access, or switch control can help activate the button.
+- The disability-office workspace shares the staff portal layout while keeping
+  administrator-only sections restricted.
 
-Without an AI key/service, UniPal uses a limited local fallback so the screen can still be demonstrated.
-
-## 6. UniPal connection troubleshooting (Android emulator)
-
-The Android emulator cannot use `localhost` to reach a server running on your Windows computer.
-This version uses `http://10.0.2.2:4000/api` for the Android emulator. The Android manifest permits
-HTTP only for local development; use HTTPS for a deployed/production API.
-
-Run the services in three separate PowerShell terminals, from the `UniAble` directory:
-
-**Terminal 1 — Node backend**
-```powershell
-cd backend
-npm install
-npm run dev
-```
-Confirm `http://localhost:4000/api/health` returns a JSON status of `ok`.
-
-**Terminal 2 — Python AI service**
-```powershell
-cd ai-service
-python -m venv .venv
-.venv\\Scripts\\Activate.ps1
-pip install -r requirements.txt
-Copy-Item .env.example .env
-notepad .env
-```
-Add your own OpenAI API key to `OPENAI_API_KEY` in `ai-service/.env`, save, then run:
-```powershell
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-Confirm `http://localhost:8000/health` returns a JSON status of `ok`.
-
-**Terminal 3 — optional browser frontend**
-```powershell
-cd frontend
-npm install
-npm run dev
-```
-The browser frontend uses `http://localhost:4000/api`. The Android emulator uses `10.0.2.2`.
-If testing on a physical Android phone, set `VITE_API_URL` in `frontend/.env` to your computer's
-LAN IP (for example `http://192.168.1.20:4000/api`), allow that port through Windows Firewall,
-then rebuild and sync Android.
-
-If UniPal still fails, first check the backend terminal for `/api/unipal/chat` requests, then check
-the Python terminal for OpenAI errors. A network error before the backend logs a request is an API
-address/server reachability issue. A `401` or `403` logged by the AI service indicates a key or
-permission issue; a model-related `400` indicates the configured model/access needs checking.
-
-**Security:** API keys are not included in this repaired ZIP. Add your own key locally and never
-commit `.env` files to GitHub.
+The frontend production build and targeted lint checks passed for this version.
+The build still prints existing React Router and large-bundle warnings.

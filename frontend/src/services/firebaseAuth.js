@@ -595,7 +595,8 @@ export async function createAccountWithEmailPassword(
   password,
   displayName,
   accessibility = "None",
-  accountType = "student"
+  accountType = "student",
+  studentDetails = {}
 ) {
   if (!firebaseConfigured || !auth) {
     throw new Error(
@@ -644,6 +645,15 @@ export async function createAccountWithEmailPassword(
         {
           displayName: displayName?.trim() || "",
           accountType: String(accountType || "student"),
+          studentDetails: {
+            surname: String(studentDetails.surname || "").trim(),
+            studentNumber: String(studentDetails.studentNumber || "").trim(),
+            qualification: String(studentDetails.qualification || "").trim(),
+            yearOfStudy: String(studentDetails.yearOfStudy || "").trim(),
+            modules: Array.isArray(studentDetails.modules)
+              ? studentDetails.modules.map((module) => String(module).trim()).filter(Boolean)
+              : [],
+          },
           accessibility: selectedAccessibility,
           voiceFirstEnabled,
           voiceFirstManuallySet: false,

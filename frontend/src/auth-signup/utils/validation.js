@@ -9,6 +9,28 @@ export function isValidEmail(email) {
     return emailPattern.test(email);
 }
 
+export function normalizeSouthAfricanMobile(phoneNumber) {
+    const enteredNumber = String(phoneNumber || "").trim();
+    const compactNumber = enteredNumber.replace(/[\s()-]/g, "");
+    let nationalNumber;
+
+    if (/^\+27[0-9]{9}$/.test(compactNumber)) {
+        nationalNumber = compactNumber.slice(3);
+    } else if (/^27[0-9]{9}$/.test(compactNumber)) {
+        nationalNumber = compactNumber.slice(2);
+    } else if (/^0[0-9]{9}$/.test(compactNumber)) {
+        nationalNumber = compactNumber.slice(1);
+    } else if (/^[0-9]{9}$/.test(compactNumber)) {
+        nationalNumber = compactNumber;
+    } else {
+        return null;
+    }
+
+    return /^[6-8][0-9]{8}$/.test(nationalNumber)
+        ? `+27${nationalNumber}`
+        : null;
+}
+
 
 export function validateSignUpForm(formData) {
 
@@ -20,15 +42,43 @@ export function validateSignUpForm(formData) {
     if (!formData.fullName.trim()) {
 
         errors.fullName =
-            "Please enter your full name.";
+            "Please enter your first and middle names.";
 
     }
 
     else if (formData.fullName.trim().length < 2) {
 
         errors.fullName =
-            "Please enter a valid full name.";
+            "Please enter a valid first name.";
 
+    }
+
+    if (!String(formData.surname || "").trim()) {
+        errors.surname = "Please enter your surname.";
+    }
+
+    if (!String(formData.studentNumber || "").trim()) {
+        errors.studentNumber = "Please enter your student number.";
+    }
+
+    if (!String(formData.qualification || "").trim()) {
+        errors.qualification = "Please select your qualification.";
+    } else if (
+        formData.qualification === "Other IT qualification" &&
+        !String(formData.otherQualification || "").trim()
+    ) {
+        errors.otherQualification = "Please enter your IT qualification.";
+    }
+
+    if (!String(formData.yearOfStudy || "").trim()) {
+        errors.yearOfStudy = "Please select your year of study.";
+    }
+
+    if (
+        !Array.isArray(formData.modules) ||
+        (!formData.modules.length && !String(formData.otherModules || "").trim())
+    ) {
+        errors.modules = "Select or enter at least one IT module.";
     }
 
 
@@ -84,7 +134,12 @@ export function validateSignUpForm(formData) {
         errors.password = "Password must contain at least one special character.";
     }
 
+    if (!formData.confirmPassword) {
+        errors.confirmPassword = "Please confirm your password.";
+    } else if (formData.password !== formData.confirmPassword) {
+        errors.confirmPassword = "Passwords do not match.";
+    }
+
 
     return errors;
 }
-

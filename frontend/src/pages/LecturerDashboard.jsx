@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   BookOpen, CalendarDays, ClipboardCheck, FileText,
@@ -30,13 +30,16 @@ export default function LecturerDashboard({ requests = [], onRefreshRequests }) 
   const { locale, voiceAssistanceEnabled } = useSettings();
   const [loggingOut, setLoggingOut] = useState(false);
   const [section, setSection] = useState("modules");
+  const voiceAnnouncementRef = useRef("");
   const [modules, setModules] = useState([]);
   const [timetable, setTimetable] = useState([]);
   const [materials, setMaterials] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
   const [attendance, setAttendance] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [announcementError, setAnnouncementError] = useState("");
   const [notice, setNotice] = useState("");
 
   const [moduleForm, setModuleForm] = useState({
@@ -52,6 +55,9 @@ export default function LecturerDashboard({ requests = [], onRefreshRequests }) 
   });
   const [attendanceForm, setAttendanceForm] = useState({
     timetableId: "", studentId: "", status: "present",
+  });
+  const [announcementForm, setAnnouncementForm] = useState({
+    moduleId: "", title: "", message: "", importance: "normal",
   });
 
   const loadAcademicData = useCallback(async () => {
@@ -70,6 +76,18 @@ export default function LecturerDashboard({ requests = [], onRefreshRequests }) 
       setTimetable(Array.isArray(timetableRows) ? timetableRows : timetableRows?.timetable || []);
       setMaterials(Array.isArray(materialRows) ? materialRows : materialRows?.materials || []);
       setAttendance(Array.isArray(attendanceRows) ? attendanceRows : attendanceRows?.attendance || []);
+      try {
+        const announcementRows = await api.getAcademicAnnouncements();
+        setAnnouncements(Array.isArray(announcementRows)
+          ? announcementRows
+          : announcementRows?.announcements || []);
+        setAnnouncementError("");
+      } catch (announcementLoadError) {
+        setAnnouncements([]);
+        setAnnouncementError(
+          announcementLoadError.message || "Could not load announcements."
+        );
+      }
     } catch (err) {
       setError(err.message || "Could not load academic information.");
     } finally {
@@ -88,7 +106,10 @@ export default function LecturerDashboard({ requests = [], onRefreshRequests }) 
     if (!materialForm.moduleId && modules.length) {
       setMaterialForm((form) => ({ ...form, moduleId: modules[0].id }));
     }
-  }, [modules, timetableForm.moduleId, materialForm.moduleId]);
+    if (!announcementForm.moduleId && modules.length) {
+      setAnnouncementForm((form) => ({ ...form, moduleId: modules[0].id }));
+    }
+  }, [modules, timetableForm.moduleId, materialForm.moduleId, announcementForm.moduleId]);
 
   async function submitAction(action, successMessage) {
     setSaving(true);
@@ -269,27 +290,53 @@ export default function LecturerDashboard({ requests = [], onRefreshRequests }) 
       );
     }
 
+    const selectedSession = timetable.find(
+      (item) => item.id === attendanceForm.timetableId
+    );
+    const enrolledStudentIds = selectedSession
+      ? modules.find((item) => item.id === selectedSession.moduleId)?.studentIds || []
+      : [];
+    const sessionAttendance = attendance.filter(
+      (item) => item.timetableId === selectedSession?.id
+    );
+
     return (
       <>
         <form className="lecturer-form" onSubmit={(event) => {
           event.preventDefault();
-          submitAction(() => api.recordAcademicAttendance(attendanceForm),
-            "Attendance recorded.");
+          if (!selectedSession) return;
+          submitAction(() => api.recordAcademicAttendance({
+            ...attendanceForm,
+            moduleId: selectedSession.moduleId,
+          }), "Attendance recorded.");
         }}>
           <h3>Record attendance</h3>
+          <p className="lecturer-form-note">
+            The roster includes enrolled students only. Disability details are not shown.
+          </p>
           <div className="lecturer-form-grid">
             <label>Class session
               <select required value={attendanceForm.timetableId}
-                onChange={(e) => setAttendanceForm({ ...attendanceForm, timetableId: e.target.value })}>
+                onChange={(e) => setAttendanceForm({
+                  ...attendanceForm,
+                  timetableId: e.target.value,
+                  studentId: "",
+                })}>
                 <option value="">Select class</option>
                 {timetable.map((item) => <option key={item.id} value={item.id}>
                   {item.title || moduleName(item.moduleId)} — {item.date}
                 </option>)}
               </select>
             </label>
-            <label>Student ID
-              <input required value={attendanceForm.studentId}
-                onChange={(e) => setAttendanceForm({ ...attendanceForm, studentId: e.target.value })} />
+            <label>Enrolled student
+              <select required value={attendanceForm.studentId}
+                onChange={(e) => setAttendanceForm({ ...attendanceForm, studentId: e.target.value })}
+                disabled={!selectedSession || !enrolledStudentIds.length}>
+                <option value="">Select student</option>
+                {enrolledStudentIds.map((studentId) => (
+                  <option key={studentId} value={studentId}>{studentId}</option>
+                ))}
+              </select>
             </label>
             <label>Attendance status
               <select value={attendanceForm.status}
@@ -299,18 +346,36 @@ export default function LecturerDashboard({ requests = [], onRefreshRequests }) 
               </select>
             </label>
           </div>
-          <button disabled={saving || !timetable.length}>Record attendance</button>
+          {selectedSession && !enrolledStudentIds.length && (
+            <p className="lecturer-form-note">
+              No students are enrolled in this module yet. Ask an administrator to update the module roster.
+            </p>
+          )}
+          <button disabled={saving || !selectedSession || !enrolledStudentIds.length}>
+            Record attendance
+          </button>
         </form>
         <div className="lecturer-list">
-          {attendance.map((item) => (
-            <article className="lecturer-list-row" key={item.id}>
-              <div><strong>{item.studentId}</strong>
-                <p>{moduleName(item.moduleId)} · {item.date || "Date not set"}</p>
-              </div>
-              <span className={`lecturer-status ${item.status}`}>{item.status}</span>
-            </article>
-          ))}
-          {!attendance.length && <p className="lecturer-empty">No attendance records found.</p>}
+          {!selectedSession && (
+            <p className="lecturer-empty">Select a class session to see its enrolled-student roster.</p>
+          )}
+          {selectedSession && enrolledStudentIds.map((studentId) => {
+            const record = sessionAttendance.find((item) => item.studentId === studentId);
+            return (
+              <article className="lecturer-list-row" key={studentId}>
+                <div>
+                  <strong>{studentId}</strong>
+                  <p>{moduleName(selectedSession.moduleId)} · {selectedSession.date}</p>
+                </div>
+                <span className={`lecturer-status ${record?.status || ""}`}>
+                  {record?.status || "Not recorded"}
+                </span>
+              </article>
+            );
+          })}
+          {selectedSession && !enrolledStudentIds.length && (
+            <p className="lecturer-empty">No enrolled students to show for this class.</p>
+          )}
         </div>
       </>
     );
@@ -411,11 +476,75 @@ export default function LecturerDashboard({ requests = [], onRefreshRequests }) 
 
   function renderAnnouncements() {
     return (
-      <div className="lecturer-placeholder">
-        <Megaphone size={30} />
-        <h3>Announcements are not connected yet</h3>
-        <p>The current backend does not have an announcements endpoint. No announcements are being fabricated.</p>
-      </div>
+      <>
+        {!modules.length ? (
+          <div className="lecturer-empty-state">
+            <BookOpen size={34} />
+            <h2>Create a module first</h2>
+            <p>Announcements are delivered only to students enrolled in one of your modules.</p>
+            <button type="button" onClick={() => setSection("modules")}>Go to module management</button>
+          </div>
+        ) : (
+          <form className="lecturer-form" onSubmit={(event) => {
+            event.preventDefault();
+            submitAction(async () => {
+              await api.createAcademicAnnouncement(announcementForm);
+              setAnnouncementForm((form) => ({ ...form, title: "", message: "" }));
+            }, "Announcement published to enrolled students.");
+          }}>
+            <h3>Publish an announcement</h3>
+            <p className="lecturer-form-note">
+              This will be visible to students enrolled in the selected module.
+            </p>
+            <div className="lecturer-form-grid">
+              <label>Module
+                <select required value={announcementForm.moduleId}
+                  onChange={(e) => setAnnouncementForm({ ...announcementForm, moduleId: e.target.value })}>
+                  <option value="">Select module</option>
+                  {modules.map((item) => <option key={item.id} value={item.id}>
+                    {item.code} — {item.name}
+                  </option>)}
+                </select>
+              </label>
+              <label>Importance
+                <select value={announcementForm.importance}
+                  onChange={(e) => setAnnouncementForm({ ...announcementForm, importance: e.target.value })}>
+                  <option value="normal">Standard</option>
+                  <option value="important">Important</option>
+                </select>
+              </label>
+            </div>
+            <label>Title
+              <input required maxLength={120} value={announcementForm.title}
+                onChange={(e) => setAnnouncementForm({ ...announcementForm, title: e.target.value })} />
+            </label>
+            <label>Message
+              <textarea required maxLength={2000} value={announcementForm.message}
+                onChange={(e) => setAnnouncementForm({ ...announcementForm, message: e.target.value })} />
+            </label>
+            <button disabled={saving || !modules.length}>Publish announcement</button>
+          </form>
+        )}
+        <div className="lecturer-list">
+          {announcementError && (
+            <p className="lecturer-message error" role="alert">{announcementError}</p>
+          )}
+          {announcements.map((item) => (
+            <article className="lecturer-list-row" key={item.id}>
+              <div>
+                <strong>{item.title}</strong>
+                <p>{item.message}</p>
+                <small>{item.moduleName || moduleName(item.moduleId)} · {
+                  item.importance === "important" ? "Important" : "Standard"
+                } · {item.createdAt ? new Date(item.createdAt).toLocaleString() : "Recently published"}</small>
+              </div>
+            </article>
+          ))}
+          {!announcements.length && (
+            <p className="lecturer-empty">No announcements have been published for your modules.</p>
+          )}
+        </div>
+      </>
     );
   }
 
@@ -433,8 +562,18 @@ export default function LecturerDashboard({ requests = [], onRefreshRequests }) 
 
   function handleVoiceCommand(spokenText) {
     const command = String(spokenText || "").toLowerCase();
-    const target = sections.find((item) => command.includes(item.label.toLowerCase()));
+    const target = sections.find((item) =>
+      command.includes(item.label.toLowerCase()) ||
+      (item.id === "timetable" && command.includes("schedule"))
+    );
     if (target) {
+      if (target.id === section) {
+        void speak(`I heard ${spokenText}. You are already in ${target.label}.`, {
+          locale: locale || "en-ZA",
+        });
+        return;
+      }
+      voiceAnnouncementRef.current = `I heard ${spokenText}. Opening ${target.label}.`;
       setSection(target.id);
       return;
     }
@@ -453,7 +592,10 @@ export default function LecturerDashboard({ requests = [], onRefreshRequests }) 
   useEffect(() => {
     if (!voiceAssistanceEnabled) return undefined;
     const timer = window.setTimeout(() => {
-      void speak(`Lecturer dashboard. ${activeSection?.label || "Modules"} section. Say a section name to navigate.`, {
+      const announcement = voiceAnnouncementRef.current ||
+        `Lecturer dashboard. ${activeSection?.label || "Modules"} section. Say a section name to navigate.`;
+      voiceAnnouncementRef.current = "";
+      void speak(announcement, {
         locale: locale || "en-ZA",
       });
     }, 100);

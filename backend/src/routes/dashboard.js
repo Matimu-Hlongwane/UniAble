@@ -42,7 +42,8 @@ router.get("/", requireFirebaseUser, requireRole(...allowedRoles), async (req, r
         activeSOS,
         accessibilityProfiles,
         recentRequests,
-        recentAlerts
+        recentAlerts,
+        accessibilityProfileSnapshot
       ] = await Promise.all([
         count(db.collection("users")),
         count(db.collection("users").where("role", "==", "admin")),
@@ -54,8 +55,9 @@ router.get("/", requireFirebaseUser, requireRole(...allowedRoles), async (req, r
         count(db.collection("peerRequests").where("status", "==", "open")),
         count(db.collection("sosAlerts").where("status", "==", "active")),
         count(db.collection("accessibilityProfiles")),
-        recent("peerRequests", 10),
-        recent("sosAlerts", 10)
+        recent("peerRequests", 100),
+        recent("sosAlerts", 10),
+        db.collection("accessibilityProfiles").limit(100).get()
       ]);
 
       const staffCount = adminCount + lecturerCount + volunteerCount +
@@ -96,7 +98,12 @@ router.get("/", requireFirebaseUser, requireRole(...allowedRoles), async (req, r
           disabilityOffice: disabilityOfficeCount,
           security: securityCount
         },
-        recentActivity: activity
+        recentActivity: activity,
+        requests: recentRequests,
+        accessibilityProfiles: accessibilityProfileSnapshot.docs.map(doc => ({
+          studentId: doc.id,
+          ...doc.data()
+        }))
       });
     }
 

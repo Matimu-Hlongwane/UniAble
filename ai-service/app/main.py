@@ -280,10 +280,18 @@ def local_unipal_reply(message: str, language: str) -> str:
     q = message.lower()
 
     if q in {"hi", "hello", "hey"}:
-        return "Hi! Iâ€™m UniPal, your UniAble Companion. I can help with UniAble, accessibility and student disability support."
+        return "Hi! I'm UniPal, your UniAble Companion. I can guide you through app features, accessibility settings, your schedule, campus navigation, peer support and emergency options. What would you like help with?"
 
     if "what is unipal" in q or "who are you" in q:
-        return "Iâ€™m UniPal, your UniAble Companion. Iâ€™m here to help you understand and use UniAble and to support questions related to accessibility and students with disabilities."
+        return "I'm UniPal, your UniAble Companion. I can help you use UniAble, accessibility features, campus support and academic IT learning."
+
+    if any(term in q for term in ("announcement", "notice")):
+        if any(term in q for term in ("lecturer", "post", "publish", "make")):
+            return "In the Lecturer workspace, open Announcements, choose one of your assigned modules, add a title and message, then publish. Only students enrolled in that module can see it."
+        return "Module announcements appear on your student dashboard. They are limited to modules you are enrolled in; contact your lecturer if you are missing a module update."
+
+    if any(term in q for term in ("schedule", "timetable", "class", "lecture time")):
+        return "Open My Schedule in UniAble to review classes assigned to your account. If it is empty, check that your modules have been assigned to your student profile or contact the lecturer."
 
     if "accessibility" in q or "text size" in q or "font" in q:
         return "Open Settings to adjust your text size, appearance, language and other preferences. You can also use the Accessibility area to choose an experience that matches your needs."
@@ -297,8 +305,19 @@ def local_unipal_reply(message: str, language: str) -> str:
     if "peer" in q or "volunteer" in q:
         return "Open Peer Assistance to request support or review the available peer assistance options."
 
+    if any(term in q for term in ("voice", "microphone", "hands-free", "hands free")):
+        return "Select the microphone beside the message box and allow microphone access. UniPal will transcribe what you say into the message box; review or edit the text, then select Send. Voice is only captured after you activate the microphone."
+
     if "study" in q or "learning" in q or "assignment" in q or "exam" in q:
-        return "A useful accessible study approach is to break work into short sections, use the text or voice settings that suit you, and build in regular review breaks."
+        return "Try one short study block: choose a single task, work for 20 minutes, then take a 5-minute break. Use read-aloud or text-size controls if they make the material easier to access."
 
-    return "Iâ€™m UniPal, your UniAble Companion. I can help with UniAble, accessibility, campus navigation, accessible study support, peer assistance and emergency features."
+    if any(term in q for term in ("campus", "navigate", "route", "map")):
+        return "Open Campus Navigation, choose a destination and review the route guidance. If you need a person to accompany you, submit a request through Peer Assistance."
 
+    if any(term in q for term in ("sign up", "signup", "register", "account", "login", "sign in")):
+        return "Use Sign Up to create an account or Sign In to access an existing one. If you cannot sign in, use Forgot password rather than creating a duplicate account."
+
+    if any(term in q for term in ("help", "what can you do", "how do i use")):
+        return "I can guide you through schedules, accessibility settings, campus navigation, module announcements, peer assistance and Emergency SOS. Tell me which feature you are trying to use and what is happening."
+
+    return "I don't have enough information to answer that confidently. I can guide you through schedules, accessibility, campus navigation, announcements, peer assistance and Emergency SOS. Which UniAble feature is your question about?"

@@ -12,6 +12,8 @@ import {
   Zap,
 } from "lucide-react";
 import { useSettings } from "../context/settingsContext/SettingsContext";
+import { getSpeechSupport } from "../services/speechService";
+import { LANGUAGE_OPTIONS } from "../context/settingsContext/translations";
 import {
   getCurrentUser,
   getUserAccessibilityProfile,
@@ -48,11 +50,47 @@ function readLocalProfile() {
 }
 
 export default function AccessibilitySettings() {
-  const { t, voiceAssistanceEnabled, setVoiceAssistanceEnabled } = useSettings();
+  const {
+    t,
+    language,
+    setLanguage,
+    voiceAssistanceEnabled,
+    setVoiceAssistanceEnabled,
+  } = useSettings();
   const [active, setActive] = useState(() => readLocalProfile().id);
   const [saveState, setSaveState] = useState("loading");
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [voicePreferenceSaving, setVoicePreferenceSaving] = useState(false);
+  const [speechSupport, setSpeechSupport] = useState({});
+  const [speechSupportLoading, setSpeechSupportLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function checkSpeechSupport() {
+      setSpeechSupportLoading(true);
+      try {
+        const results = await Promise.all(LANGUAGE_OPTIONS.map(async (option) => [
+          option.name,
+          await getSpeechSupport(option.locale).catch((error) => {
+            console.error(`Could not check speech support for ${option.name}:`, error);
+            return { supported: false, reason: "check-error" };
+          }),
+        ]));
+        if (!cancelled) setSpeechSupport(Object.fromEntries(results));
+      } catch (error) {
+        console.error("Could not check device speech support:", error);
+        if (!cancelled) setSpeechSupport({});
+      } finally {
+        if (!cancelled) setSpeechSupportLoading(false);
+      }
+    }
+
+    checkSpeechSupport();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -126,6 +164,15 @@ export default function AccessibilitySettings() {
   }, [active, profileLoaded, setVoiceAssistanceEnabled]);
 
   const selectedProfile = profiles.find(([id]) => id === active) || profiles[9];
+  const unavailableSpeechLanguages = LANGUAGE_OPTIONS.filter(
+    ({ name }) => speechSupport[name] &&
+      !speechSupport[name].supported &&
+      speechSupport[name].reason !== "check-error"
+  );
+  const unverifiedSpeechLanguages = LANGUAGE_OPTIONS.filter(
+    ({ name }) => speechSupport[name]?.reason === "check-error"
+  );
+  const selectedSpeechSupport = speechSupport[language];
 
   async function handleVoiceFirstToggle(event) {
     const enabled = event.target.checked;
@@ -174,6 +221,85 @@ export default function AccessibilitySettings() {
       <p role="status" aria-live="polite" className="muted">
         {statusText}
       </p>
+
+      <section className="settings-intro audio-language-settings" aria-labelledby="audio-language-title">
+        <Volume2 size={28} aria-hidden="true" />
+        <div className="audio-language-settings-content">
+          <strong id="audio-language-title">{t("spokenResponses")}</strong>
+          <p>{t("spokenResponsesDescription")}</p>
+          <div className="audio-language-support-summary" role="status" aria-live="polite">
+            {speechSupportLoading ? (
+              <p>{t("spokenVoiceChecking")}</p>
+            ) : (
+              <>
+                {unavailableSpeechLanguages.length > 0 && (
+                  <>
+                    <p>{t("spokenVoiceUnavailable").replace(
+                      "{language}",
+                      unavailableSpeechLanguages.map(({ name }) => name).join(", ")
+                    )}</p>
+                    <ul>
+                      {unavailableSpeechLanguages.map(({ name }) => (
+                        <li key={name}>
+                          {name}: {speechSupport[name].reason === "no-engine" ||
+                          speechSupport[name].reason === "plugin-missing"
+                            ? t("spokenVoiceNoEngine")
+                            : t("spokenVoiceUnavailable").replace("{language}", name)}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+                {unverifiedSpeechLanguages.length > 0 && (
+                  <p>{t("spokenVoiceCheckFailed").replace(
+                    "{language}",
+                    unverifiedSpeechLanguages.map(({ name }) => name).join(", ")
+                  )}</p>
+                )}
+                {!unavailableSpeechLanguages.length && !unverifiedSpeechLanguages.length && (
+                  <p>{t("spokenVoiceReady").replace(
+                    "{language}",
+                    LANGUAGE_OPTIONS.map(({ name }) => name).join(", ")
+                  )}</p>
+                )}
+              </>
+            )}
+          </div>
+          <label className="audio-language-select">
+            <span>{t("language")}</span>
+            <select
+              value={language}
+              onChange={(event) => setLanguage(event.target.value)}
+              aria-describedby="selected-audio-support"
+            >
+              {LANGUAGE_OPTIONS.map(({ name }) => {
+                const support = speechSupport[name];
+                const status = speechSupportLoading
+                  ? t("spokenVoiceChecking")
+                  : !support || support.reason === "check-error"
+                    ? t("spokenVoiceCheckFailed").replace("{language}", name)
+                  : support?.supported
+                    ? t("spokenVoiceAvailableLabel")
+                    : t("spokenVoiceTextOnlyLabel");
+                return (
+                  <option key={name} value={name}>
+                    {name} — {status}
+                  </option>
+                );
+              })}
+            </select>
+          </label>
+          <p id="selected-audio-support" className="muted">
+            {speechSupportLoading || !selectedSpeechSupport
+              ? t("spokenVoiceChecking")
+              : selectedSpeechSupport.reason === "check-error"
+                ? t("spokenVoiceCheckFailed").replace("{language}", language)
+              : selectedSpeechSupport.supported
+                ? t("spokenVoiceReady").replace("{language}", language)
+                : t("spokenVoiceUnavailable").replace("{language}", language)}
+          </p>
+        </div>
+      </section>
 
       <div className="settings-intro" style={{ marginTop: 16 }}>
         <Volume2 size={28} aria-hidden="true" />

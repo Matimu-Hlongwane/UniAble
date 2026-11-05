@@ -48,6 +48,7 @@ import {
 
 import {
     isValidEmail,
+    normalizeSouthAfricanMobile,
     validateSignUpForm
 } from "../utils/validation";
 
@@ -119,7 +120,7 @@ function SignUp() {
         voiceQuestion,
         setVoiceQuestion
     ] = useState(
-        "Speak your full name to continue"
+        "Speak your first and middle names to continue"
     );
 
 
@@ -132,7 +133,7 @@ function SignUp() {
             {
                 speaker: "UNIABLE",
                 text:
-                    "Welcome! Let's set up your account together. What's your full name?"
+                    "Welcome! Let's set up your account together. What are your first and middle names?"
             }
         ]);
 
@@ -146,13 +147,29 @@ function SignUp() {
 
             fullName: "",
 
+            surname: "",
+
+            studentNumber: "",
+
+            qualification: "",
+
+            otherQualification: "",
+
+            yearOfStudy: "",
+
+            modules: [],
+
+            otherModules: "",
+
             accessibility: "",
 
             additionalNeeds: "",
 
             email: "",
 
-            password: ""
+            password: "",
+
+            confirmPassword: ""
 
         });
 
@@ -175,7 +192,7 @@ function SignUp() {
             timer = window.setTimeout(async () => {
                 try {
                     await speak(
-                        "UniAble create account page. Enter your full name, accessibility needs, email address, and password. You can choose voice-assisted signup or switch to typing. The microphone only listens when you activate it. Do not speak your password aloud.",
+                        "UniAble create account page. Enter your name, surname, student number, IT qualification, year, modules, accessibility needs, student email, and password. You can choose voice-assisted signup or switch to typing. The microphone only listens when you activate it. Do not speak your password aloud.",
                         { locale: locale || "en-ZA" }
                     );
                 } catch (error) {
@@ -227,9 +244,9 @@ function SignUp() {
 
         const guidance = mode === "voice"
 
-            ? "Welcome to UniAble sign up. You can complete the first steps by speaking or switch to typing at any time. The microphone is optional. You only need to select Tap to Speak if you want to provide an answer using your voice. I will guide you through your full name, accessibility needs and email address. For your security, your password must be entered using typing mode and will never be read aloud. You can also use your keyboard to navigate the page."
+            ? "Welcome to UniAble sign up. You can complete the first steps by speaking or switch to typing at any time. The microphone is optional. You only need to select Tap to Speak if you want to provide an answer using your voice. I will guide you through your first and middle names, accessibility needs and email address. Switch to typing to enter your surname, student number, qualification, year, modules and password. For your security, your password must be entered using typing mode and will never be read aloud. You can also use your keyboard to navigate the page."
 
-            : "You are now in typing sign up mode. Enter your full name, accessibility needs, email address and password. Your password is private and will never be read aloud. You can use your keyboard to move between fields. You can return to voice sign up if you prefer.";
+            : "You are now in typing sign up mode. Enter your first and middle names, surname, student number, IT qualification, year of study, modules, accessibility needs, email address and password. Your password is private and will never be read aloud. You can use your keyboard to move between fields. You can return to voice sign up if you prefer.";
 
         const timer = window.setTimeout(() => {
             speakText(guidance);
@@ -311,9 +328,21 @@ function SignUp() {
             const createdUser = await createAccountWithEmailPassword(
                 formData.email,
                 formData.password,
-                formData.fullName,
+                `${formData.fullName.trim()} ${formData.surname.trim()}`,
                 formData.accessibility,
-                formData.accountType
+                formData.accountType,
+                {
+                    studentNumber: formData.studentNumber.trim(),
+                    qualification: formData.qualification === "Other IT qualification"
+                        ? formData.otherQualification.trim()
+                        : formData.qualification,
+                    yearOfStudy: formData.yearOfStudy,
+                    modules: [
+                        ...formData.modules,
+                        ...formData.otherModules.split(",").map((module) => module.trim()).filter(Boolean)
+                    ],
+                    surname: formData.surname.trim()
+                }
             );
 
             if (formData.accountType === "volunteer") {
@@ -352,6 +381,17 @@ function SignUp() {
         }
     }
 
+    function handleModuleChange(event) {
+        const { checked, value } = event.target;
+        setFormData((previousData) => ({
+            ...previousData,
+            modules: checked
+                ? [...previousData.modules, value]
+                : previousData.modules.filter((module) => module !== value)
+        }));
+        setErrors((previousErrors) => ({ ...previousErrors, modules: "" }));
+    }
+
     async function handleSendEmailCode() {
         setVerificationBusy(true); setVerificationError("");
         try {
@@ -364,8 +404,8 @@ function SignUp() {
     async function handleSendPhoneCode() {
         setVerificationBusy(true); setVerificationError("");
         try {
-            const normalized = verificationPhone.trim();
-            if (!/^\+[1-9]\d{7,14}$/.test(normalized)) throw new Error("Enter your phone number in international format, for example +27821234567.");
+            const normalized = normalizeSouthAfricanMobile(verificationPhone);
+            if (!normalized) throw new Error("Enter a valid South African mobile number, with or without the first 0.");
             phoneVerifier?.clear();
             const result = await sendPhoneOtp(normalized, "uniable-phone-recaptcha");
             setPhoneConfirmation(result.confirmation); setPhoneVerifier(result.verifier);
@@ -838,7 +878,7 @@ function SignUp() {
                         <SignUpSuccess
 
                             fullName={
-                                formData.fullName
+                                `${formData.fullName} ${formData.surname}`.trim()
                             }
 
                             onGoBack={() => {
@@ -868,6 +908,7 @@ function SignUp() {
                             busy={verificationBusy}
                             error={verificationError}
                             email={formData.email || getCurrentUser()?.email || ""}
+                            locale={locale || "en-ZA"}
                             onSendEmail={handleSendEmailCode}
                             onSendPhone={handleSendPhoneCode}
                             onVerify={handleVerifyCode}
@@ -955,6 +996,10 @@ function SignUp() {
                                 errors
                             }
 
+                            onModuleChange={
+                                handleModuleChange
+                            }
+
                             onInputChange={
                                 handleInputChange
                             }
@@ -986,4 +1031,3 @@ function SignUp() {
 }
 
 export default SignUp;
-

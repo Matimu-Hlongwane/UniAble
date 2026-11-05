@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Activity, Users, UserCog, Building2, ClipboardCheck,
+  Accessibility, Activity, Users, UserCog, Building2, ClipboardCheck,
   BarChart3, Settings, ShieldCheck, Search, Bell,
   Menu, X, LayoutDashboard, ChevronRight, LockKeyhole, LogOut,
   AlertTriangle, MapPin, RefreshCw
@@ -15,6 +15,8 @@ import { speak } from "../services/speechService";
 
 const sections = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
+  { id: "support", label: "Support requests", icon: ClipboardCheck },
+  { id: "accessibility", label: "Accessibility services", icon: Accessibility },
   { id: "users", label: "User management", icon: Users },
   { id: "staff", label: "Staff management", icon: UserCog },
   { id: "departments", label: "Departments", icon: Building2 },
@@ -30,6 +32,8 @@ const descriptions = {
   departments: "Manage institutional departments and staff assignments.",
   approvals: "Review pending account and access requests.",
   analytics: "Review platform usage and accessibility-service performance.",
+  support: "Review student support requests and their current status.",
+  accessibility: "Review student accessibility preferences for support coordination.",
   settings: "Manage institution-wide platform configuration and permissions.",
   audit: "Review administrative actions and changes across the platform.",
 };
@@ -40,7 +44,7 @@ function formatAlertTime(value) {
   return Number.isNaN(date.getTime()) ? "Time unavailable" : date.toLocaleString();
 }
 
-export default function AdminDashboard() {
+export default function AdminDashboard({ staffRole = "admin" }) {
   const navigate = useNavigate();
   const { locale, voiceAssistanceEnabled } = useSettings();
   const [loggingOut, setLoggingOut] = useState(false);
@@ -69,6 +73,11 @@ export default function AdminDashboard() {
   const [sosError, setSosError] = useState("");
   const [sosWorkingId, setSosWorkingId] = useState("");
   const [sosActionError, setSosActionError] = useState("");
+  const voiceAnnouncementRef = useRef("");
+  const isDisabilityOffice = staffRole === "disability_office";
+  const availableSections = isDisabilityOffice
+    ? sections.filter((item) => ["overview", "support", "accessibility"].includes(item.id))
+    : sections;
 
   async function loadSosAlerts() {
     try {
@@ -91,6 +100,9 @@ export default function AdminDashboard() {
         setDashboardLoading(true);
         setDashboardError("");
         const result = await api.getDashboard();
+        if (active && result.role !== staffRole) {
+          throw new Error("Your account does not have access to this staff workspace.");
+        }
         if (active) setDashboard(result);
       } catch (error) {
         if (active) {
@@ -105,15 +117,16 @@ export default function AdminDashboard() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [staffRole]);
 
   useEffect(() => {
+    if (staffRole !== "admin" || dashboard?.role !== "admin") return undefined;
     void loadSosAlerts();
     const timer = window.setInterval(() => {
       void loadSosAlerts();
     }, 15000);
     return () => window.clearInterval(timer);
-  }, []);
+  }, [dashboard?.role, staffRole]);
 
   async function updateSosAlert(alertId, status) {
     setSosWorkingId(alertId);
@@ -129,7 +142,13 @@ export default function AdminDashboard() {
   }
 
   const stats = dashboard?.stats || {};
-  const statCards = [
+  const statCards = isDisabilityOffice
+    ? [
+      { label: "Support requests", icon: ClipboardCheck, value: stats.supportRequests ?? "—" },
+      { label: "Pending requests", icon: Activity, value: stats.pendingRequests ?? "—" },
+      { label: "Accessibility profiles", icon: UserCog, value: stats.accessibilityProfiles ?? "—" },
+    ]
+    : [
     {
       label: "Total student accounts",
       icon: Users,
@@ -152,13 +171,20 @@ export default function AdminDashboard() {
     },
   ];
 
-  const current = sections.find((item) => item.id === active);
+  const current = availableSections.find((item) => item.id === active);
   const Icon = current?.icon || LayoutDashboard;
 
   function handleVoiceCommand(spokenText) {
     const command = String(spokenText || "").toLowerCase();
-    const section = sections.find((item) => command.includes(item.label.toLowerCase()));
+    const section = availableSections.find((item) => command.includes(item.label.toLowerCase()));
     if (section) {
+      if (section.id === active) {
+        void speak(`I heard ${spokenText}. You are already in ${section.label}.`, {
+          locale: locale || "en-ZA",
+        });
+        return;
+      }
+      voiceAnnouncementRef.current = `I heard ${spokenText}. Opening ${section.label}.`;
       selectSection(section.id);
       return;
     }
@@ -169,7 +195,9 @@ export default function AdminDashboard() {
     }
 
     void speak(
-      "Say overview, user management, staff management, departments, approvals, analytics, system settings, or audit logs.",
+      isDisabilityOffice
+        ? "Say overview, support requests, or accessibility services."
+        : "Say overview, support requests, accessibility services, user management, staff management, departments, approvals, analytics, system settings, or audit logs.",
       { locale: locale || "en-ZA" }
     );
   }
@@ -177,17 +205,84 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!voiceAssistanceEnabled) return undefined;
     const timer = window.setTimeout(() => {
-      void speak(`Administrator dashboard. ${current?.label || "Overview"} section. Say a section name to navigate.`, {
+      const announcement = voiceAnnouncementRef.current ||
+        `${isDisabilityOffice ? "Disability services" : "Administrator"} dashboard. ${current?.label || "Overview"} section. Say a section name to navigate.`;
+      voiceAnnouncementRef.current = "";
+      void speak(announcement, {
         locale: locale || "en-ZA",
       });
     }, 100);
     return () => window.clearTimeout(timer);
-  }, [active, current?.label, locale, voiceAssistanceEnabled]);
+  }, [active, current?.label, isDisabilityOffice, locale, voiceAssistanceEnabled]);
 
   function selectSection(id) {
+    if (!availableSections.some((item) => item.id === id)) return;
     setActive(id);
     setMobileOpen(false);
     setSearch("");
+  }
+
+  function renderSupportRequests() {
+    const requests = dashboard?.requests || [];
+    return (
+      <section className="admin-panel admin-module-panel">
+        <div className="admin-module-icon"><ClipboardCheck size={27} /></div>
+        <span className="admin-eyebrow">STUDENT SUPPORT</span>
+        <h2>Support requests</h2>
+        {requests.length ? (
+          <div className="admin-sos-list">
+            {requests.map((request) => (
+              <article className="admin-sos-alert" key={request.id}>
+                <div className="admin-sos-alert-details">
+                  <strong>{request.type || "Student assistance request"}</strong>
+                  <span>{request.detail || "No additional details supplied."}</span>
+                  <span>Student: {request.student || request.studentId || "Not supplied"}</span>
+                  <span>Status: {request.status || "unknown"} · Priority: {request.priority || "Normal"}</span>
+                  <time dateTime={request.createdAt || undefined}>
+                    Received {formatAlertTime(request.createdAt)}
+                  </time>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="admin-empty-state">
+            <span>No student support requests have been recorded.</span>
+          </div>
+        )}
+      </section>
+    );
+  }
+
+  function renderAccessibilityServices() {
+    const profiles = dashboard?.accessibilityProfiles || [];
+    return (
+      <section className="admin-panel admin-module-panel">
+        <div className="admin-module-icon"><UserCog size={27} /></div>
+        <span className="admin-eyebrow">ACCESSIBILITY SERVICES</span>
+        <h2>Student accessibility profiles</h2>
+        {profiles.length ? (
+          <div className="admin-sos-list">
+            {profiles.map((profile) => (
+              <article className="admin-sos-alert" key={profile.studentId}>
+                <div className="admin-sos-alert-details">
+                  <strong>{profile.displayName || profile.studentId}</strong>
+                  <span>Student ID: {profile.studentId}</span>
+                  <span>Preferred language: {profile.language || "Not specified"}</span>
+                  <span>Font size: {profile.fontSize || "Default"}</span>
+                  <span>High contrast: {profile.highContrast ? "Enabled" : "Disabled"}</span>
+                  <span>Screen reader: {profile.screenReader ? "Enabled" : "Disabled"}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="admin-empty-state">
+            <span>No accessibility preferences have been recorded.</span>
+          </div>
+        )}
+      </section>
+    );
   }
 
   return (
@@ -213,10 +308,10 @@ export default function AdminDashboard() {
           </button>
         </div>
 
-        <div className="admin-sidebar-label">ADMINISTRATION</div>
+        <div className="admin-sidebar-label">STAFF SERVICES</div>
 
         <nav className="admin-navigation">
-          {sections.map((item) => {
+          {availableSections.map((item) => {
             const ItemIcon = item.icon;
             return (
               <button
@@ -235,13 +330,13 @@ export default function AdminDashboard() {
         <div className="admin-sidebar-bottom">
           <div className="admin-secure-note">
             <LockKeyhole size={17} />
-            <span>Restricted administrator access</span>
+            <span>{isDisabilityOffice ? "Restricted accessibility services access" : "Restricted administrator access"}</span>
           </div>
           <div className="admin-profile">
-            <div className="admin-avatar">AD</div>
+            <div className="admin-avatar">{isDisabilityOffice ? "DO" : "AD"}</div>
             <div>
-              <strong>Administrator</strong>
-              <span>Platform administration</span>
+              <strong>{isDisabilityOffice ? "Disability Office" : "Administrator"}</strong>
+              <span>{isDisabilityOffice ? "Student support services" : "Platform administration"}</span>
             </div>
           </div>
         </div>
@@ -283,29 +378,47 @@ export default function AdminDashboard() {
           <div className="admin-heading">
             <div>
               <p className="admin-eyebrow">UNIABLE PLATFORM MANAGEMENT</p>
-              <h1>{active === "overview" ? "Administration overview" : current?.label}</h1>
+              <h1>{active === "overview"
+                ? isDisabilityOffice ? "Disability services overview" : "Administration overview"
+                : current?.label}</h1>
               <p>
                 {active === "overview"
-                  ? "Manage the platform, institutional accounts and administrative services."
+                  ? isDisabilityOffice
+                    ? "Review student support requests and accessibility preferences in your shared staff workspace."
+                    : "Manage the platform, institutional accounts and administrative services."
                   : descriptions[active]}
               </p>
             </div>
             <span className="admin-access-badge">
-              <ShieldCheck size={16} /> Administrator
+              <ShieldCheck size={16} /> {isDisabilityOffice ? "Disability Office" : "Administrator"}
             </span>
           </div>
 
-          {active === "staff" ? (
+          {dashboardError && (
+            <div className="admin-empty-state" role="alert">
+              <strong>Dashboard data could not be loaded</strong>
+              <span>{dashboardError}</span>
+            </div>
+          )}
+
+          {active === "staff" && !isDisabilityOffice ? (
             <StaffManagement />
+          ) : active === "support" ? (
+            renderSupportRequests()
+          ) : active === "accessibility" ? (
+            renderAccessibilityServices()
           ) : active === "overview" ? (
             <>
               <section className="admin-welcome">
                 <div>
-                  <span>ADMINISTRATIVE WORKSPACE</span>
-                  <h2>Platform oversight and management</h2>
+                  <span>{isDisabilityOffice ? "STUDENT SUPPORT WORKSPACE" : "ADMINISTRATIVE WORKSPACE"}</span>
+                  <h2>{isDisabilityOffice
+                    ? "Accessibility support and coordination"
+                    : "Platform oversight and management"}</h2>
                   <p>
-                    A central workspace for managing UniAble accounts,
-                    institutional teams and platform configuration.
+                    {isDisabilityOffice
+                      ? "Review support requests and student accessibility preferences using the access assigned to your role."
+                      : "A central workspace for managing UniAble accounts, institutional teams and platform configuration."}
                   </p>
                 </div>
                 <div className="admin-welcome-icon">
@@ -332,13 +445,7 @@ export default function AdminDashboard() {
                 ))}
               </div>
 
-              {dashboardError && (
-                <div className="admin-empty-state" role="alert">
-                  <strong>Dashboard data could not be loaded</strong>
-                  <span>{dashboardError}</span>
-                </div>
-              )}
-
+              {!isDisabilityOffice && (
               <section className="admin-panel admin-sos-panel" aria-labelledby="admin-sos-heading">
                 <div className="admin-sos-heading">
                   <div>
@@ -410,6 +517,7 @@ export default function AdminDashboard() {
                   </div>
                 )}
               </section>
+              )}
             </>
           ) : (
             <section className="admin-panel admin-module-panel">
@@ -432,7 +540,9 @@ export default function AdminDashboard() {
           )}
 
           <footer className="admin-footer">
-            <span>UniAble · Administration Portal</span>
+            <span>{isDisabilityOffice
+              ? "UniAble · Disability Services Portal"
+              : "UniAble · Administration Portal"}</span>
             <span>Secure institutional workspace</span>
           </footer>
         </div>

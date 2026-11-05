@@ -322,6 +322,107 @@ router.patch("/materials/:id/publish", requireRole("admin", "lecturer"), async (
   }
 });
 
+router.get("/announcements", async (req, res) => {
+  try {
+    const uid = req.firebaseToken.uid;
+    const role = await getRole(uid);
+
+    if (!["admin", "lecturer", "student"].includes(role)) {
+      return res.status(403).json({ error: "Access denied." });
+    }
+
+    let snapshots;
+
+    if (role === "admin") {
+      snapshots = [await db().collection("announcements")
+        .orderBy("createdAt", "desc")
+        .limit(100)
+        .get()];
+    } else {
+      let moduleQuery = db().collection("modules");
+      moduleQuery = role === "lecturer"
+        ? moduleQuery.where("lecturerId", "==", uid)
+        : moduleQuery.where("studentIds", "array-contains", uid);
+      const modules = await moduleQuery.get();
+      const moduleIds = modules.docs.map(doc => doc.id);
+
+      snapshots = await Promise.all(moduleIds.map(moduleId =>
+        db().collection("announcements")
+          .where("moduleId", "==", moduleId)
+          .limit(100)
+          .get()
+      ));
+    }
+
+    const announcements = snapshots
+      .flatMap(snapshot => snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      })))
+      .filter(item => role !== "student" || item.published === true)
+      .sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")))
+      .slice(0, 100);
+
+    res.json({ announcements });
+  } catch (error) {
+    console.error("Get announcements:", error.message);
+    res.status(500).json({ error: "Could not load announcements." });
+  }
+});
+
+router.post("/announcements", requireRole("lecturer"), async (req, res) => {
+  try {
+    const uid = req.firebaseToken.uid;
+    const { moduleId, title, message, importance = "normal" } = req.body || {};
+    const cleanModuleId = typeof moduleId === "string" ? moduleId.trim() : "";
+    const cleanTitle = typeof title === "string" ? title.trim() : "";
+    const cleanMessage = typeof message === "string" ? message.trim() : "";
+
+    if (
+      !cleanModuleId ||
+      !cleanTitle ||
+      cleanTitle.length > 120 ||
+      !cleanMessage ||
+      cleanMessage.length > 2000 ||
+      !["normal", "important"].includes(importance)
+    ) {
+      return res.status(400).json({
+        error: "Provide a module, a title (up to 120 characters), a message (up to 2000 characters), and a valid importance level.",
+      });
+    }
+
+    const module = await getModule(cleanModuleId, uid, req.userRole);
+
+    if (!module) {
+      return res.status(403).json({
+        error: "You can only publish announcements to your assigned modules.",
+      });
+    }
+
+    const ref = db().collection("announcements").doc();
+    const announcement = {
+      moduleId: cleanModuleId,
+      moduleName: module.name || module.code || "Module",
+      title: cleanTitle,
+      message: cleanMessage,
+      importance,
+      published: true,
+      createdBy: uid,
+      createdAt: now(),
+      updatedAt: now(),
+    };
+
+    await ref.set(announcement);
+
+    res.status(201).json({
+      announcement: { id: ref.id, ...announcement },
+    });
+  } catch (error) {
+    console.error("Create announcement:", error.message);
+    res.status(500).json({ error: "Could not publish announcement." });
+  }
+});
+
 router.get("/attendance", async (req, res) => {
   try {
     const uid = req.firebaseToken.uid;

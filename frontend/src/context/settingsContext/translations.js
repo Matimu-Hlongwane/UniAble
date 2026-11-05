@@ -867,6 +867,11 @@ const UNIPAL_TRANSLATIONS = {
     unipalCopied: "Copied",
     unipalThinking: "UniPal is thinking",
     unipalVoiceError: "Voice input is not available right now.",
+    unipalMicrophoneDenied: "Microphone permission was denied. Allow microphone access or type your question.",
+    unipalVoiceTranscribed: "Voice note transcribed. Review it, then select Send.",
+    unipalVoiceTooLong: "That voice note is over 1,000 characters. Shorten it before sending.",
+    unipalBuiltInNotice: "UniPal is using built-in guidance because its AI service is currently offline or not configured.",
+    unipalBuiltInReply: "Built-in guidance",
     unipalSpeechUnavailable: "Spoken responses are not available on this device.",
     unipalCopyError: "The response could not be copied.",
     unipalGenericError: "UniPal could not respond right now. Please try again."
@@ -1031,6 +1036,9 @@ const SPEECH_TRANSLATIONS = {
     spokenVoiceReady: "A voice is available for {language}.",
     spokenVoiceUnavailable: "No voice for {language} is installed on this device. UniPal will show answers as text only.",
     spokenVoiceNoEngine: "Spoken responses are not available on this device. UniPal will show answers as text only.",
+    spokenVoiceAvailableLabel: "audio available",
+    spokenVoiceTextOnlyLabel: "text only",
+    spokenVoiceCheckFailed: "Could not verify voice support for {language}.",
     unipalSpeechUnsupportedLanguage: "Spoken responses aren't available in {language} on this device, so this answer is shown as text only.",
     unipalSpeechFailed: "UniPal couldn't speak this answer. The text is still shown above."
   },

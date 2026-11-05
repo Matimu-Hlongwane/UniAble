@@ -6,6 +6,7 @@ import VoiceCommandButton from "../components/VoiceCommandButton";
 import VoiceAssistanceToggle from "../components/VoiceAssistanceToggle";
 import { subscribeToAuth, getVerificationStatus, signOutAccount, getCurrentUser, getCurrentUserRole } from "../services/firebaseAuth";
 import { speak, stopSpeaking } from "../services/speechService";
+import { resolveVoiceNavigationCommand } from "../services/voiceNavigation";
 
 const links = [
   { to: "/dashboard", label: "home", icon: Home },
@@ -35,6 +36,7 @@ export default function Layout() {
   const isAdminPage = location.pathname === "/staff/admin";
   const canGoBack = location.pathname !== "/dashboard";
   const [guidanceStatus, setGuidanceStatus] = useState("");
+  const voiceAnnouncementRef = useRef("");
   const [authChecking, setAuthChecking] = useState(true);
   const [authUser, setAuthUser] = useState(null);
   const [profilePhoto, setProfilePhoto] = useState("");
@@ -117,11 +119,12 @@ export default function Layout() {
   useEffect(() => {
     if (!voiceAssistanceEnabled) return undefined;
     let cancelled = false;
-    const guidance = routeGuidance[location.pathname] || (
+    const guidance = voiceAnnouncementRef.current || routeGuidance[location.pathname] || (
       `You are on the ${location.pathname.split("/").filter(Boolean).join(" ").replace(/[-_]/g, " ") || "UniAble home"} page. ` +
       "Use the visible page controls, the back button, or activate the microphone to navigate. " +
       "The microphone only listens when you activate it."
     );
+    voiceAnnouncementRef.current = "";
     const timer = window.setTimeout(async () => {
       if (cancelled) return;
       try {
@@ -142,19 +145,41 @@ export default function Layout() {
   }, [location.pathname, locale, voiceAssistanceEnabled]);
 
   const handleVoiceCommand = useCallback((spokenText) => {
-    const command = String(spokenText || "").toLowerCase().trim();
-    if (!command) return;
-    const matches = (...phrases) => phrases.some((phrase) => phrase && command.includes(String(phrase).toLowerCase()));
-    if (matches("emergency", "sos", "help me", t("emergency"))) { navigate("/emergency"); return; }
-    if (matches("campus", "navigate", "map", t("navigateCampus"))) { navigate("/campus"); return; }
-    if (matches("schedule", "timetable", "classes", t("mySchedule"))) { navigate("/schedule"); return; }
-    if (matches("peer assistance", "peer help", "peer support", t("peerAssistance"))) { navigate("/peer-assistance"); return; }
-    if (matches("unipal", "uni pal", "companion")) { navigate("/unipal"); return; }
-    if (matches("accessibility", "accessibility settings")) { navigate("/accessibility"); return; }
-    if (matches("scan and read", "scan read", "scan document", "read document", "ocr")) { navigate("/scan-read"); return; }
-    if (matches("home", "dashboard", t("home"))) { navigate("/dashboard"); return; }
-    if (voiceAssistanceEnabled) speak("I did not recognise that destination. Try dashboard, campus, schedule, scan and read, peer assistance, UniPal, emergency, accessibility, or settings.", { locale: locale || "en-ZA" });
-  }, [navigate, t, locale, voiceAssistanceEnabled]);
+    const intent = resolveVoiceNavigationCommand(spokenText);
+    if (!intent) {
+      void speak(
+        "I didn't recognise that command. Try dashboard, campus navigation, schedule, Scan and Read, peer assistance, UniPal, emergency support, accessibility settings, or settings.",
+        { locale: locale || "en-ZA" }
+      );
+      return;
+    }
+
+    if (intent.action === "read") {
+      const guidance = routeGuidance[location.pathname] ||
+        "Use the visible page controls or say the name of a UniAble destination to navigate.";
+      void speak(guidance, { locale: locale || "en-ZA" });
+      return;
+    }
+
+    if (intent.action === "back") {
+      if (location.pathname === "/dashboard") {
+        voiceAnnouncementRef.current = "You are already on your dashboard.";
+        void speak(voiceAnnouncementRef.current, { locale: locale || "en-ZA" });
+        return;
+      }
+      voiceAnnouncementRef.current = "";
+      navigate(-1);
+      return;
+    }
+
+    if (location.pathname === intent.path) {
+      void speak(`You are already on ${intent.label}.`, { locale: locale || "en-ZA" });
+      return;
+    }
+
+    voiceAnnouncementRef.current = `Opening ${intent.label}.`;
+    navigate(intent.path);
+  }, [navigate, location.pathname, locale]);
 
   const profileInitial =
     (profileName || authUser?.email || "G").trim().charAt(0).toUpperCase() || "G";

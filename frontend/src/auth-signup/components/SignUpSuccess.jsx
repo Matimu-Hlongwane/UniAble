@@ -12,21 +12,17 @@ function SignUpSuccess({
             </div>
 
 
-            <h2>
-                Details Validated
-            </h2>
+            <h2>Account verified</h2>
 
 
             <p>
-                Thanks, {fullName}.
-                Your UNIABLE registration details
-                passed the frontend validation.
+                Thanks, {fullName}. Your UniAble account has been created
+                and your verification is complete.
             </p>
 
 
             <p className="success-note">
-                The account will be created once
-                the backend and Firebase are connected.
+                You can now continue to your UniAble account.
             </p>
 
 
@@ -42,7 +38,7 @@ function SignUpSuccess({
                 onClick={onGoBack}
             >
 
-                â† Go Back
+                Go Back
 
             </button>
 
@@ -52,4 +48,3 @@ function SignUpSuccess({
 
 
 export default SignUpSuccess;
-

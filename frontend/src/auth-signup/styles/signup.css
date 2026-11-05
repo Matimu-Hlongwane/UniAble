@@ -843,6 +843,46 @@
     margin-bottom: 18px;
 }
 
+.signup-module-options {
+    box-sizing: border-box;
+    padding: 14px;
+    border: 1px solid #d9d9e7;
+    border-radius: 11px;
+}
+
+.signup-module-options legend {
+    padding: 0 6px;
+    color: #343342;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.signup-module-options p {
+    margin: 0 0 10px;
+    color: #555466;
+    font-size: 13px;
+}
+
+.signup-module-options .signup-module-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+    font-weight: 400;
+}
+
+.signup-module-options input[type="checkbox"] {
+    width: 20px;
+    min-width: 20px;
+    height: 20px;
+    margin: 0;
+    accent-color: #5942df;
+}
+
+.signup-module-options > input[type="text"] {
+    margin-top: 6px;
+}
+
 
 .form-group:last-child {
     margin-bottom: 0;

@@ -509,17 +509,6 @@ export default function Login() {
             </button>
           </form>
 
-          <div className="auth-divider">
-            <span>OR</span>
-          </div>
-
-          <Link
-            className="auth-secondary-action"
-            to="/voice-login"
-          >
-            Continue with Voice Login
-          </Link>
-
           <p className="auth-switch">
             New to UniAble?{" "}
             <Link to="/signup">

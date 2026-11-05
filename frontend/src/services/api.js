@@ -169,6 +169,14 @@ export const api = {
       }
     ),
 
+  getAcademicAnnouncements: () => request("/academics/announcements"),
+
+  createAcademicAnnouncement: (payload) =>
+    request("/academics/announcements", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
   getAcademicAttendance: () => request("/academics/attendance"),
 
   recordAcademicAttendance: (payload) =>
