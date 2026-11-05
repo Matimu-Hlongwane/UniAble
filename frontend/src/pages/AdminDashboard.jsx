@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import {
   Activity, Users, UserCog, Building2, ClipboardCheck,
   BarChart3, Settings, ShieldCheck, Search, Bell,
-  Menu, X, LayoutDashboard, ChevronRight, LockKeyhole, LogOut
+  Menu, X, LayoutDashboard, ChevronRight, LockKeyhole, LogOut,
+  AlertTriangle, MapPin, RefreshCw
 } from "lucide-react";
 import "./AdminDashboard.css";
 import { api } from "../services/api";
@@ -33,6 +34,12 @@ const descriptions = {
   audit: "Review administrative actions and changes across the platform.",
 };
 
+function formatAlertTime(value) {
+  if (!value) return "Time unavailable";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "Time unavailable" : date.toLocaleString();
+}
+
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const { locale, voiceAssistanceEnabled } = useSettings();
@@ -57,6 +64,24 @@ export default function AdminDashboard() {
   const [dashboard, setDashboard] = useState(null);
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [dashboardError, setDashboardError] = useState("");
+  const [sosAlerts, setSosAlerts] = useState([]);
+  const [sosLoading, setSosLoading] = useState(true);
+  const [sosError, setSosError] = useState("");
+  const [sosWorkingId, setSosWorkingId] = useState("");
+  const [sosActionError, setSosActionError] = useState("");
+
+  async function loadSosAlerts() {
+    try {
+      setSosError("");
+      setSosLoading(true);
+      const result = await api.getSOS();
+      setSosAlerts(result.alerts || []);
+    } catch (error) {
+      setSosError(error.message || "Unable to load SOS alerts.");
+    } finally {
+      setSosLoading(false);
+    }
+  }
 
   useEffect(() => {
     let active = true;
@@ -82,6 +107,27 @@ export default function AdminDashboard() {
     };
   }, []);
 
+  useEffect(() => {
+    void loadSosAlerts();
+    const timer = window.setInterval(() => {
+      void loadSosAlerts();
+    }, 15000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  async function updateSosAlert(alertId, status) {
+    setSosWorkingId(alertId);
+    setSosActionError("");
+    try {
+      await api.updateSOS(alertId, status);
+      await loadSosAlerts();
+    } catch (error) {
+      setSosActionError(error.message || "Unable to update the SOS alert.");
+    } finally {
+      setSosWorkingId("");
+    }
+  }
+
   const stats = dashboard?.stats || {};
   const statCards = [
     {
@@ -95,9 +141,9 @@ export default function AdminDashboard() {
       value: stats.staff ?? stats.totalStaff ?? "—",
     },
     {
-      label: "Departments",
-      icon: Building2,
-      value: stats.departments ?? stats.totalDepartments ?? "—",
+      label: "Active SOS alerts",
+      icon: AlertTriangle,
+      value: sosLoading && sosAlerts.length === 0 ? "…" : sosAlerts.length,
     },
     {
       label: "Pending approvals",
@@ -292,6 +338,78 @@ export default function AdminDashboard() {
                   <span>{dashboardError}</span>
                 </div>
               )}
+
+              <section className="admin-panel admin-sos-panel" aria-labelledby="admin-sos-heading">
+                <div className="admin-sos-heading">
+                  <div>
+                    <span className="admin-eyebrow">STUDENT SAFETY</span>
+                    <h2 id="admin-sos-heading">Active SOS alerts</h2>
+                    <p>New alerts are checked automatically every 15 seconds.</p>
+                  </div>
+                  <button
+                    className="admin-sos-refresh"
+                    type="button"
+                    onClick={() => void loadSosAlerts()}
+                    disabled={sosLoading}
+                  >
+                    <RefreshCw size={16} className={sosLoading ? "admin-sos-spinning" : ""} />
+                    Refresh
+                  </button>
+                </div>
+
+                {sosError && (
+                  <div className="admin-sos-error" role="alert">
+                    <span>{sosError}</span>
+                    <button type="button" onClick={() => void loadSosAlerts()}>Try again</button>
+                  </div>
+                )}
+                {sosActionError && <p className="admin-sos-error" role="alert">{sosActionError}</p>}
+
+                {sosLoading && sosAlerts.length === 0 ? (
+                  <p className="admin-sos-empty" role="status">Loading SOS alerts…</p>
+                ) : !sosError && sosAlerts.length === 0 ? (
+                  <p className="admin-sos-empty">No active SOS alerts.</p>
+                ) : (
+                  <div className="admin-sos-list">
+                    {sosAlerts.map((alert) => (
+                      <article className="admin-sos-alert" key={alert.id}>
+                        <div className="admin-sos-alert-icon" aria-hidden="true">
+                          <AlertTriangle size={20} />
+                        </div>
+                        <div className="admin-sos-alert-details">
+                          <strong>Emergency SOS</strong>
+                          <span>Student: {alert.student || alert.studentId || "Not supplied"}</span>
+                          <span>
+                            <MapPin size={14} />
+                            {alert.location
+                              ? `${alert.location.lat}, ${alert.location.lng}`
+                              : "Location unavailable"}
+                          </span>
+                          <time dateTime={alert.createdAt || undefined}>
+                            Received {formatAlertTime(alert.createdAt)}
+                          </time>
+                        </div>
+                        <div className="admin-sos-alert-actions">
+                          <button
+                            type="button"
+                            onClick={() => void updateSosAlert(alert.id, "acknowledged")}
+                            disabled={sosWorkingId === alert.id}
+                          >
+                            {sosWorkingId === alert.id ? "Updating…" : "Acknowledge"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void updateSosAlert(alert.id, "resolved")}
+                            disabled={sosWorkingId === alert.id}
+                          >
+                            Resolve
+                          </button>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </section>
             </>
           ) : (
             <section className="admin-panel admin-module-panel">

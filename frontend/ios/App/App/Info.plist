@@ -29,6 +29,13 @@
 	<!-- Explains why the voice-guided experience needs speech recognition access. -->
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>UniAble uses speech recognition to provide voice-guided access.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>UniAble connects to the UniAble API server on your local network during app testing.</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

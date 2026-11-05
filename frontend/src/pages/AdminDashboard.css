@@ -126,6 +126,36 @@
 }
 .admin-empty-state strong { color:#e2ece5;font-size:13px; }
 .admin-empty-state span { max-width:420px;color:#91a197;font-size:11px;line-height:1.7; }
+.admin-sos-panel { margin-top:20px; }
+.admin-sos-heading { display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px; }
+.admin-sos-heading h2 { margin:7px 0 5px; }
+.admin-sos-heading p { margin:0;color:#91a197;font-size:11px; }
+.admin-sos-refresh,.admin-sos-alert-actions button,.admin-sos-error button {
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  padding:9px 12px;border:1px solid #385440;border-radius:8px;
+  background:#17251c;color:#c5ead1;font:inherit;font-size:11px;font-weight:700;cursor:pointer;
+}
+.admin-sos-refresh:disabled,.admin-sos-alert-actions button:disabled { opacity:.6;cursor:wait; }
+.admin-sos-spinning { animation:admin-sos-spin 1s linear infinite; }
+.admin-sos-list { display:grid;gap:10px; }
+.admin-sos-alert {
+  display:flex;align-items:center;gap:14px;padding:14px;
+  border:1px solid #67413c;border-radius:10px;background:#211715;
+}
+.admin-sos-alert-icon {
+  width:38px;height:38px;flex:0 0 38px;display:grid;place-items:center;
+  border-radius:10px;background:#462522;color:#ffad9d;
+}
+.admin-sos-alert-details { display:grid;gap:5px;min-width:0;flex:1;color:#c1cec5;font-size:11px; }
+.admin-sos-alert-details strong { color:#fff;font-size:13px; }
+.admin-sos-alert-details span { display:flex;align-items:center;gap:5px;overflow-wrap:anywhere; }
+.admin-sos-alert-details time { color:#91a197;font-size:10px; }
+.admin-sos-alert-actions { display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px; }
+.admin-sos-alert-actions button:last-child { border-color:#67413c;background:#301c1a;color:#ffc1b5; }
+.admin-sos-empty { margin:0;padding:24px;text-align:center;color:#91a197;font-size:12px; }
+.admin-sos-error { display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border:1px solid #67413c;border-radius:8px;color:#ffc1b5;font-size:11px; }
+.admin-sos-error button { flex:0 0 auto; }
+@keyframes admin-sos-spin { to { transform:rotate(360deg); } }
 .admin-footer { display:flex;justify-content:space-between;gap:15px;color:#718077;font-size:10px;margin-top:35px; }
 .admin-mobile-overlay { display:none; }
 
@@ -148,6 +178,8 @@
   .admin-welcome { padding:21px; }
   .admin-welcome-icon { display:none; }
   .admin-overview-grid { grid-template-columns:1fr; }
+  .admin-sos-alert { align-items:flex-start;flex-wrap:wrap; }
+  .admin-sos-alert-actions { width:100%;justify-content:flex-start;padding-left:52px; }
   .admin-footer { flex-direction:column; }
 }
 @media(max-width:430px) {

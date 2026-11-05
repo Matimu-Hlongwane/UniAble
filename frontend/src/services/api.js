@@ -34,17 +34,23 @@ async function request(path, options = {}, requiresAuth = true) {
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      throw new Error(
+      const error = new Error(
         data.error ||
           data.message ||
           data.detail ||
           `Request failed (${response.status})`
       );
+      error.status = response.status;
+      throw error;
     }
 
     return data;
   } catch (error) {
-    console.error(`UniAble API request failed (${API_URL}${path})`, error);
+    console.error(
+      `UniAble API request failed (${API_URL}${path}): ${
+        error.status ? `HTTP ${error.status} - ` : ""
+      }${error.message || "Network error"}`
+    );
 
     if (error.name === "AbortError") {
       throw new Error(
@@ -52,7 +58,7 @@ async function request(path, options = {}, requiresAuth = true) {
       );
     }
 
-    if (error.message?.startsWith("Request failed")) {
+    if (error.status) {
       throw error;
     }
 

@@ -36,7 +36,7 @@ router.post("/sos", requireRole("student"), async (req, res) => {
     console.log("SOS alert stored:", ref.id);
 
     return res.status(201).json({
-      message: "SOS alert recorded. Notification delivery must be configured separately.",
+      message: "SOS alert recorded and available in the UniAble admin dashboard. No push notification was sent.",
       alert: { id: ref.id, ...alert },
       notified: []
     });
