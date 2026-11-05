@@ -2,8 +2,10 @@
 
 function MicrophoneButton({
   onStartListening,
+  onStopListening,
   isListening,
-  voiceQuestion
+  voiceQuestion,
+  transcript
 }) {
   return (
     <div className="microphone-section">
@@ -14,28 +16,30 @@ function MicrophoneButton({
             ? "microphone-button microphone-listening"
             : "microphone-button"
         }
-        aria-label={
-          isListening
-            ? "UniAble is listening"
-            : "Tap to speak. Activate microphone for voice input."
-        }
-        onClick={onStartListening}
-        disabled={isListening}
+        aria-label={isListening ? "Stop voice input" : "Tap to speak. Activate microphone for voice input."}
+        onClick={isListening ? onStopListening : onStartListening}
       >
         <span className="microphone-icon" aria-hidden="true">
           🎙
         </span>
 
         <span className="microphone-button-label">
-          {isListening ? "Listening..." : "Tap to Speak"}
+          {isListening ? "Stop Listening" : "Tap to Speak"}
         </span>
       </button>
 
       <p className="voice-question" aria-live="polite">
         {isListening
-          ? "Listening... speak now"
+          ? transcript
+            ? `Listening: ${transcript}`
+            : "Listening... speak now"
           : voiceQuestion}
       </p>
+      {transcript && (
+        <p className="voice-transcript" aria-live="polite">
+          You said: {transcript}
+        </p>
+      )}
     </div>
   );
 }

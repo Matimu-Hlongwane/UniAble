@@ -8,7 +8,9 @@ import {
 import "./AdminDashboard.css";
 import { api } from "../services/api";
 import StaffManagement from "./StaffManagement";
-import { signOutAccount } from "../services/firebaseAuth";
+import VoiceNavigationControls from "../components/VoiceNavigationControls";
+import { useSettings } from "../context/settingsContext/SettingsContext";
+import { speak } from "../services/speechService";
 
 const sections = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
@@ -33,6 +35,7 @@ const descriptions = {
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
+  const { locale, voiceAssistanceEnabled } = useSettings();
   const [loggingOut, setLoggingOut] = useState(false);
 
   async function handleLogout() {
@@ -106,6 +109,35 @@ export default function AdminDashboard() {
   const current = sections.find((item) => item.id === active);
   const Icon = current?.icon || LayoutDashboard;
 
+  function handleVoiceCommand(spokenText) {
+    const command = String(spokenText || "").toLowerCase();
+    const section = sections.find((item) => command.includes(item.label.toLowerCase()));
+    if (section) {
+      selectSection(section.id);
+      return;
+    }
+
+    if (command.includes("student dashboard") || command.includes("student home")) {
+      navigate("/dashboard");
+      return;
+    }
+
+    void speak(
+      "Say overview, user management, staff management, departments, approvals, analytics, system settings, or audit logs.",
+      { locale: locale || "en-ZA" }
+    );
+  }
+
+  useEffect(() => {
+    if (!voiceAssistanceEnabled) return undefined;
+    const timer = window.setTimeout(() => {
+      void speak(`Administrator dashboard. ${current?.label || "Overview"} section. Say a section name to navigate.`, {
+        locale: locale || "en-ZA",
+      });
+    }, 100);
+    return () => window.clearTimeout(timer);
+  }, [active, current?.label, locale, voiceAssistanceEnabled]);
+
   function selectSection(id) {
     setActive(id);
     setMobileOpen(false);
@@ -114,6 +146,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="admin-shell">
+      <VoiceNavigationControls onCommand={handleVoiceCommand} />
       {mobileOpen && (
         <button
           className="admin-mobile-overlay"

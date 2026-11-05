@@ -1,12 +1,15 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  Activity, ArrowRight, ClipboardList, HeartHandshake,
+  Activity, ClipboardList, HeartHandshake,
   LifeBuoy, LockKeyhole, MapPinned, RefreshCw,
   ShieldCheck, UserRoundCheck, CheckCircle2, LogOut, LayoutDashboard, Users
 } from "lucide-react";
 import { api } from "../services/api";
 import { getCurrentUser, signOutAccount } from "../services/firebaseAuth";
+import VoiceNavigationControls from "../components/VoiceNavigationControls";
+import { useSettings } from "../context/settingsContext/SettingsContext";
+import { speak } from "../services/speechService";
 import "./Dashboards.css";
 import AdminDashboard from "./AdminDashboard";
 import LecturerDashboard from "./LecturerDashboard";
@@ -67,12 +70,15 @@ function formatDate(value) {
 export default function RoleDashboard() {
   const { role = "" } = useParams();
   const navigate = useNavigate();
+  const { locale, voiceAssistanceEnabled } = useSettings();
   const normalRole = String(role).toLowerCase();
   const backendRole = normalRole === "disability" ? "disability_office" : normalRole;
   const isDedicatedStaffRole = ["disability", "security"].includes(normalRole);
+  const workspace = workspaces[normalRole];
 
   async function handleStaffLogout() {
     try {
+      await signOutAccount();
       sessionStorage.setItem("uniableStaffLogout", "1");
       navigate("/staff", { replace: true });
     } catch (err) {
@@ -100,16 +106,30 @@ export default function RoleDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [normalRole]);
+  }, [backendRole]);
 
   useEffect(() => {
     loadDashboard();
   }, [loadDashboard]);
 
-  if (normalRole === "admin") return <AdminDashboard />;
-if (normalRole === "lecturer") return <LecturerDashboard requests={data?.requests || []} onRefreshRequests={loadDashboard} />;
+  useEffect(() => {
+    if (
+      !voiceAssistanceEnabled ||
+      !workspace ||
+      normalRole === "lecturer"
+    ) return undefined;
+    const timer = window.setTimeout(() => {
+      void speak(`${workspace.title} dashboard. Say student dashboard, campus navigation, schedule, peer assistance, or emergency support to navigate.`, {
+        locale: locale || "en-ZA",
+      });
+    }, 100);
+    return () => window.clearTimeout(timer);
+  }, [locale, normalRole, voiceAssistanceEnabled, workspace]);
 
-  const workspace = workspaces[normalRole];
+  if (normalRole === "admin") return <AdminDashboard />;
+  if (normalRole === "lecturer") {
+    return <LecturerDashboard requests={data?.requests || []} onRefreshRequests={loadDashboard} />;
+  }
 
   if (!workspace) {
     return (
@@ -127,6 +147,34 @@ if (normalRole === "lecturer") return <LecturerDashboard requests={data?.request
   const alerts = data?.alerts || [];
   const profiles = data?.accessibilityProfiles || [];
 
+  function handleVoiceCommand(spokenText) {
+    const command = String(spokenText || "").toLowerCase();
+    if (command.includes("student dashboard") || command.includes("student home")) {
+      navigate("/dashboard");
+      return;
+    }
+    if (command.includes("campus") || command.includes("navigation") || command.includes("navigate")) {
+      navigate("/campus");
+      return;
+    }
+    if (command.includes("schedule") || command.includes("timetable")) {
+      navigate("/schedule");
+      return;
+    }
+    if (command.includes("peer assistance") || command.includes("peer support")) {
+      navigate("/peer-assistance");
+      return;
+    }
+    if (command.includes("emergency") || command.includes("sos")) {
+      navigate("/emergency");
+      return;
+    }
+    void speak(
+      "Say student dashboard, campus navigation, schedule, peer assistance, or emergency support.",
+      { locale: locale || "en-ZA" }
+    );
+  }
+
   async function performAction(id, action) {
     setWorkingId(id);
     setActionError("");
@@ -142,6 +190,7 @@ if (normalRole === "lecturer") return <LecturerDashboard requests={data?.request
 
   return (
     <div className={`staff-operations-shell role-dashboard role-dashboard-${normalRole}`}>
+      <VoiceNavigationControls onCommand={handleVoiceCommand} />
       {isDedicatedStaffRole && (
         <aside className="staff-operations-sidebar">
           <div className="staff-sidebar-brand">
@@ -357,4 +406,3 @@ if (normalRole === "lecturer") return <LecturerDashboard requests={data?.request
   </div>
   );
 }
-

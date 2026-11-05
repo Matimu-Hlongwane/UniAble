@@ -1,3 +1,5 @@
+import { speak } from "../../services/speechService";
+
 /* =========================================
    UNIABLE SPEECH SERVICE
    ========================================= */
@@ -62,6 +64,7 @@ export async function requestMicrophonePermission() {
 */
 
 export function startSpeechRecognition({
+    language = "en-ZA",
     onStart,
     onResult,
     onEnd,
@@ -92,11 +95,7 @@ export function startSpeechRecognition({
         new SpeechRecognition();
 
 
-    /*
-      South African English.
-    */
-
-    recognition.lang = "en-ZA";
+    recognition.lang = language;
 
 
     /*
@@ -106,11 +105,7 @@ export function startSpeechRecognition({
     recognition.continuous = false;
 
 
-    /*
-      Only return the final result.
-    */
-
-    recognition.interimResults = false;
+    recognition.interimResults = true;
 
 
     recognition.maxAlternatives = 1;
@@ -126,13 +121,12 @@ export function startSpeechRecognition({
 
 
     recognition.onresult = (event) => {
-
-        const transcript =
-            event.results[0][0].transcript.trim();
-
-
-        if (onResult) {
-            onResult(transcript);
+        for (let index = event.resultIndex || 0; index < event.results.length; index += 1) {
+            const result = event.results[index];
+            const transcript = result?.[0]?.transcript?.trim() || "";
+            if (transcript && onResult) {
+                onResult(transcript, result.isFinal);
+            }
         }
 
     };
@@ -216,41 +210,5 @@ export function startSpeechRecognition({
    ========================================= */
 
 export function speakText(text) {
-
-    if (!("speechSynthesis" in window)) {
-
-        console.warn(
-            "Text-to-speech is not supported by this browser."
-        );
-
-        return;
-
-    }
-
-
-    /*
-      Stop anything UNIABLE may already
-      be saying.
-    */
-
-    window.speechSynthesis.cancel();
-
-
-    const speech =
-        new SpeechSynthesisUtterance(text);
-
-
-    speech.lang = "en-ZA";
-
-    speech.rate = 0.95;
-
-    speech.pitch = 1;
-
-    speech.volume = 1;
-
-
-    window.speechSynthesis.speak(
-        speech
-    );
-
+    return speak(text, { locale: "en-ZA" });
 }

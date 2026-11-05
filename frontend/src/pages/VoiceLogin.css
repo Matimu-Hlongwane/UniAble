@@ -123,7 +123,8 @@
 
 @media (max-width: 520px) {
     .voice-login-page {
-        padding: 12px;
+        padding: max(12px, env(safe-area-inset-top)) 12px
+            max(12px, env(safe-area-inset-bottom));
         align-items: flex-start;
     }
 

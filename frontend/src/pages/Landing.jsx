@@ -1,5 +1,5 @@
-﻿import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Accessibility,
   Mic,
@@ -11,17 +11,23 @@ import {
   MessageCircle,
   Palette,
   Brain,
-  ShieldAlert,
   Users,
   Globe,
-  ArrowRight,
   MapPin,
   CalendarDays,
-  Sparkles,
   Menu,
   X,
 } from "lucide-react";
+import {
+  speak,
+} from "../services/speechService";
+import { useSettings } from "../context/settingsContext/SettingsContext";
+import VoiceCommandButton from "../components/VoiceCommandButton";
+import VoiceAssistanceToggle from "../components/VoiceAssistanceToggle";
 import "./LandingPrototype.css";
+
+const LANDING_WELCOME =
+  "Welcome to UniAble. Choose voice sign-up, voice login, or email login to get started. Touch or press a key to pause; I will continue after three seconds of inactivity.";
 
 const dashboardTypes = [
   {
@@ -126,6 +132,82 @@ function DashboardPreview({ item }) {
 }
 export default function Landing() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [voiceStatus, setVoiceStatus] = useState("");
+  const { voiceAssistanceEnabled, locale } = useSettings();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    let active = true;
+
+    async function playWelcome() {
+      try {
+        const result = await speak(LANDING_WELCOME, {
+          locale: locale || "en-ZA",
+          onStart: () => {
+            if (active) setVoiceStatus("Welcome message is playing.");
+          },
+          onEnd: () => {
+            if (active) setVoiceStatus("");
+          },
+        });
+
+        if (active && !result.started) {
+          setVoiceStatus(
+            "Spoken welcome is unavailable. Use the Hear welcome button or your screen reader."
+          );
+        }
+      } catch (error) {
+        console.error("Landing page voice welcome failed:", error);
+        if (active) {
+          setVoiceStatus(
+            "Spoken welcome could not start. Use the Hear welcome button or your screen reader."
+          );
+        }
+      }
+    }
+
+    if (!voiceAssistanceEnabled) return undefined;
+    const startTimer = window.setTimeout(playWelcome, 100);
+
+    return () => {
+      active = false;
+      window.clearTimeout(startTimer);
+    };
+  }, [voiceAssistanceEnabled, locale]);
+
+  function handleLandingVoiceCommand(spokenText) {
+    const command = String(spokenText || "").toLowerCase();
+    if (command.includes("sign up") || command.includes("signup") || command.includes("register")) {
+      navigate("/signup");
+    } else if (command.includes("voice login")) {
+      navigate("/voice-login");
+    } else if (command.includes("login") || command.includes("sign in")) {
+      navigate("/login");
+    } else if (command.includes("campus") || command.includes("navigation") || command.includes("map")) {
+      navigate("/campus");
+    } else if (command.includes("schedule") || command.includes("timetable") || command.includes("classes")) {
+      navigate("/schedule");
+    } else if (command.includes("unipal") || command.includes("uni pal")) {
+      navigate("/unipal");
+    } else if (command.includes("peer assistance") || command.includes("peers")) {
+      navigate("/peer-assistance");
+    } else if (command.includes("emergency")) {
+      navigate("/emergency");
+    } else if (command.includes("accessibility")) {
+      navigate("/accessibility");
+    } else if (command.includes("settings")) {
+      navigate("/settings");
+    } else if (command.includes("dashboard") || command.includes("disability")) {
+      navigate("/dashboard");
+    } else if (command.includes("about")) {
+      document.getElementById("about")?.scrollIntoView({ behavior: "smooth" });
+    } else {
+      void speak(
+        "I did not recognize that destination. Say sign up, login, dashboard, campus navigation, schedule, UniPal, peer assistance, emergency, accessibility, settings, or about.",
+        { locale: locale || "en-ZA" }
+      );
+    }
+  }
 
   return (
     <main className="landing-page" id="main-content">
@@ -187,6 +269,8 @@ export default function Landing() {
             id="landing-actions"
             aria-label="Choose how to access UniAble"
           >
+            <VoiceAssistanceToggle />
+
             <Link className="landing-action-button landing-action-primary" to="/signup">
               <Mic size={19} aria-hidden="true" />
               Voice sign-up
@@ -202,9 +286,13 @@ export default function Landing() {
               Email login
             </Link>
           </div>
+          {voiceAssistanceEnabled && (
+            <VoiceCommandButton onCommand={handleLandingVoiceCommand} />
+          )}
 
           <p className="landing-hero-note">
-            Accessible tools. Personalised support. One campus community.
+            {voiceStatus ||
+              "Accessible tools. Personalised support. One campus community."}
           </p>
         </div>
 
@@ -280,7 +368,7 @@ export default function Landing() {
         </span>
         <div>
           <strong id="landing-language-title">Support in your language</strong>
-          <p>UniAble recognises South Africa's 11 official languages.</p>
+          <p>UniAble recognises South Africa&apos;s 11 official languages.</p>
           <ul className="landing-language-list">
             <li>isiZulu</li>
             <li>isiXhosa</li>
@@ -307,8 +395,4 @@ export default function Landing() {
     </main>
   );
 }
-
-
-
-
 

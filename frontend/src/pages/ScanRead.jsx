@@ -2,9 +2,11 @@ import React, { useEffect, useRef, useState } from "react";
 import { Camera, FileImage, LoaderCircle, Play, Square, RotateCcw } from "lucide-react";
 import { createWorker } from "tesseract.js";
 import { speak, stopSpeaking } from "../services/speechService";
+import { useSettings } from "../context/settingsContext/SettingsContext";
 import "./ScanRead.css";
 
 export default function ScanRead() {
+  const { locale } = useSettings();
   const [image, setImage] = useState("");
   const [file, setFile] = useState(null);
   const [extractedText, setExtractedText] = useState("");
@@ -126,8 +128,7 @@ export default function ScanRead() {
       setStatus("Reading your document...");
 
       const result = await speak(text, {
-        locale: "en-ZA",
-        rate: 0.9,
+        locale: locale || "en-ZA",
         onEnd: () => {
           if (mountedRef.current) {
             setIsSpeaking(false);

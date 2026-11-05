@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useSettings } from "../context/settingsContext/SettingsContext";
+import VoiceAssistanceToggle from "../components/VoiceAssistanceToggle";
 import { Accessibility, Mic, MicOff, Volume2 } from "lucide-react";
-import { SpeechRecognition } from "@capacitor-community/speech-recognition";
 import { signInWithEmailPassword, getCurrentUserRole } from "../services/firebaseAuth";
+import { isNative, startNativeVoiceRecognition } from "../services/platformVoice";
 import { speak } from "../services/speechService";
 import "./VoiceLogin.css";
 
@@ -16,54 +18,38 @@ function cleanSpokenEmail(value) {
     .replace(/\s+/g, "");
 }
 
-function browserRecognizeEmail() {
-  return new Promise((resolve, reject) => {
-    const BrowserRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
-
-    if (!BrowserRecognition) {
-      reject(new Error("Voice recognition is not supported in this browser."));
-      return;
-    }
-
-    const recognition = new BrowserRecognition();
-    recognition.lang = "en-ZA";
-    recognition.maxAlternatives = 3;
-    recognition.interimResults = false;
-    recognition.continuous = false;
-
-    recognition.onresult = (event) => {
-      const transcript = event.results?.[0]?.[0]?.transcript;
-      if (transcript) resolve(transcript);
-      else reject(new Error("I could not hear an email address. Please try again."));
-    };
-
-    recognition.onerror = () => {
-      reject(new Error("I could not recognise your email. Please try again or type it."));
-    };
-
-    recognition.onend = () => {};
-    recognition.start();
-  });
-}
-
 export default function VoiceLogin() {
   const navigate = useNavigate();
+  const { voiceAssistanceEnabled, locale } = useSettings();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [listening, setListening] = useState(false);
+  const [recordingTranscript, setRecordingTranscript] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("Press the microphone and say your email address.");
   const [error, setError] = useState("");
+  const nativeStopRef = useRef(null);
+  const browserRecognitionRef = useRef(null);
+  const mountedRef = useRef(true);
 
   const instructionText = "Welcome to UniAble voice-assisted sign-in. You can activate the microphone to speak your email address, or type your email. For account security, passwords are not read aloud and should not be spoken into the microphone. You may type your password or choose the passwordless email sign-in link option. Use the back to home link to return to the landing page.";
 
   useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      browserRecognitionRef.current?.abort?.();
+      void nativeStopRef.current?.();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!voiceAssistanceEnabled) return undefined;
     // This screen is explicitly opened by the user. Try to read the instructions
     // automatically; the visible read-aloud control remains if the browser blocks it.
     const timer = window.setTimeout(async () => {
       try {
-        const result = await speak(instructionText, { locale: "en-ZA", rate: 0.94 });
+        const result = await speak(instructionText, { locale: locale || "en-ZA" });
         if (!result?.started) {
           setMessage("Edge did not start automatic speech. Select Read instructions aloud once to allow spoken guidance, or continue with the visible controls.");
         } else {
@@ -73,61 +59,114 @@ export default function VoiceLogin() {
         console.warn("Voice Login automatic guidance failed:", speechError);
         setMessage("Automatic speech could not start. Select Read instructions aloud or use your screen reader.");
       }
-    }, 400);
+    }, 100);
     return () => window.clearTimeout(timer);
     // Read the fixed instructions once when this page opens.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [voiceAssistanceEnabled, locale]);
 
   async function captureEmail() {
-    if (listening || busy) return;
+    if (busy) return;
+    if (listening) {
+      await stopListening();
+      return;
+    }
 
     setListening(true);
     setError("");
+    setRecordingTranscript("");
     setMessage("Listening for your email address…");
 
     try {
-      let transcript = "";
-
-      try {
-        const permission = await SpeechRecognition.requestPermissions();
-        const state = permission?.speechRecognition;
-        if (state && state !== "granted") {
-          throw new Error("Microphone permission was not granted.");
-        }
-
-        const result = await SpeechRecognition.start({
-          language: "en-ZA",
-          maxResults: 3,
-          prompt: "Say your email address",
-          partialResults: false
+      if (isNative()) {
+        nativeStopRef.current = await startNativeVoiceRecognition({
+          language: locale || "en-ZA",
+          onResult: (transcript, isFinal) => {
+            if (!mountedRef.current) return;
+            setRecordingTranscript(transcript);
+            if (isFinal) applySpokenEmail(transcript);
+          },
+          onError: (voiceError) => {
+            console.error("Native email recognition failed:", voiceError);
+            if (mountedRef.current) {
+              setError(voiceError?.message || "Voice input failed. You can type your email instead.");
+              setMessage("Voice input did not complete.");
+              setListening(false);
+            }
+          },
+          onEnd: () => {
+            nativeStopRef.current = null;
+            if (mountedRef.current) setListening(false);
+          },
         });
-
-        transcript = result?.matches?.[0] || "";
-      } catch (nativeError) {
-        // Use browser speech recognition if the native plugin is unavailable.
-        if (nativeError?.message?.includes("permission")) throw nativeError;
-        transcript = await browserRecognizeEmail();
+        return;
       }
 
-      const cleaned = cleanSpokenEmail(transcript);
-
-      if (!cleaned.includes("@") || !cleaned.includes(".")) {
-        throw new Error("That did not sound like a complete email address. Try again or type it.");
+      const BrowserRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!BrowserRecognition) {
+        throw new Error("Voice recognition is not supported in this browser. You can type your email instead.");
       }
 
-      setEmail(cleaned);
-      setMessage(`Email captured: ${cleaned}. Check it before signing in.`);
+      const recognition = new BrowserRecognition();
+      browserRecognitionRef.current = recognition;
+      recognition.lang = locale || "en-ZA";
+      recognition.maxAlternatives = 1;
+      recognition.interimResults = true;
+      recognition.continuous = false;
+      recognition.onresult = (event) => {
+        const result = event.results?.[event.resultIndex];
+        const transcript = String(result?.[0]?.transcript || "").trim();
+        if (!transcript || !mountedRef.current) return;
+        setRecordingTranscript(transcript);
+        if (result.isFinal) applySpokenEmail(transcript);
+      };
+      recognition.onerror = (event) => {
+        if (!mountedRef.current) return;
+        setError(event.error === "not-allowed"
+          ? "Microphone permission was denied. Allow microphone access or type your email."
+          : "Voice recognition failed. Please try again or type your email.");
+        setMessage("Voice input did not complete.");
+        setListening(false);
+      };
+      recognition.onend = () => {
+        browserRecognitionRef.current = null;
+        if (mountedRef.current) setListening(false);
+      };
+      recognition.start();
     } catch (captureError) {
-      setError(captureError?.message || "Voice input failed. You can type your email instead.");
-      setMessage("Voice input did not complete.");
-    } finally {
-      setListening(false);
-      try {
-        await SpeechRecognition.stop();
-      } catch {
-        // It is okay if recognition has already stopped.
+      console.error("Voice email capture failed:", captureError);
+      if (mountedRef.current) {
+        setError(captureError?.message || "Voice input failed. You can type your email instead.");
+        setMessage("Voice input did not complete.");
+        setListening(false);
       }
+    }
+  }
+
+  function applySpokenEmail(transcript) {
+    const cleaned = cleanSpokenEmail(String(transcript || ""));
+    if (!cleaned || !mountedRef.current) return;
+
+    setEmail(cleaned);
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleaned)) {
+      setError("");
+      setMessage(`Email captured: ${cleaned}. Check it before signing in.`);
+    } else {
+      setMessage(`I heard "${cleaned}". Edit it or type the complete email address.`);
+    }
+  }
+
+  async function stopListening() {
+    if (isNative()) {
+      await nativeStopRef.current?.();
+      return;
+    }
+
+    try {
+      browserRecognitionRef.current?.stop();
+    } catch (stopError) {
+      console.warn("Could not stop email voice recognition:", stopError);
+      setListening(false);
     }
   }
 
@@ -171,7 +210,7 @@ export default function VoiceLogin() {
 
   async function readInstructions() {
     try {
-      const result = await speak(instructionText, { locale: "en-ZA", rate: 0.94 });
+      const result = await speak(instructionText, { locale: locale || "en-ZA" });
       setMessage(result?.started
         ? "Reading the sign-in instructions aloud. The microphone remains off."
         : "Edge could not start speech. Check that Windows has an English speech voice installed.");
@@ -196,20 +235,29 @@ export default function VoiceLogin() {
           Use your voice to enter your email, then sign in securely with your password.
         </p>
 
+        <VoiceAssistanceToggle />
+
         <button
           className="voice-login-mic"
           type="button"
           onClick={captureEmail}
-          disabled={listening || busy}
-          aria-label={listening ? "Listening for email address" : "Speak email address"}
+          disabled={busy}
+          aria-label={listening ? "Stop listening for email address" : "Speak email address"}
         >
           {listening ? <MicOff size={30} /> : <Mic size={30} />}
-          <span>{listening ? "Listening…" : "Speak your email"}</span>
+          <span>{listening ? "Stop listening" : "Speak your email"}</span>
         </button>
 
         <p className="voice-login-status" role="status" aria-live="polite">
-          {message}
+          {listening && recordingTranscript
+            ? `Listening: ${recordingTranscript}`
+            : message}
         </p>
+        {recordingTranscript && (
+          <p className="voice-login-status" aria-live="polite">
+            Recognized: {recordingTranscript}
+          </p>
+        )}
 
         <button className="voice-login-read" type="button" onClick={readInstructions}>
           <Volume2 size={18} /> Read instructions aloud
@@ -240,7 +288,7 @@ export default function VoiceLogin() {
 
           {error && <p className="voice-login-error" role="alert">{error}</p>}
 
-          <button className="voice-login-submit" type="submit" disabled={busy || listening}>
+          <button className="voice-login-submit" type="submit" disabled={busy}>
             {busy ? "Signing in…" : "Confirm and sign in"}
           </button>
         </form>
@@ -252,7 +300,7 @@ export default function VoiceLogin() {
           </Link>
 
           <Link className="voice-login-nav-link" to="/login?mode=email-link">
-            <span className="voice-login-nav-title">Don't want to enter a password?</span>
+            <span className="voice-login-nav-title">Don&apos;t want to enter a password?</span>
             <span className="voice-login-nav-description">Use a secure email sign-in link.</span>
           </Link>
 

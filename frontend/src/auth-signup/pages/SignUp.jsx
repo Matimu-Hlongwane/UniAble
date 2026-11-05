@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../../services/api";
 import { Link } from "react-router-dom";
+import { useSettings } from "../../context/settingsContext/SettingsContext";
+import VoiceAssistanceToggle from "../../components/VoiceAssistanceToggle";
 import {
     createAccountWithEmailPassword,
     startAccountVerification,
@@ -28,11 +30,13 @@ import SignUpSuccess from "../components/SignUpSuccess";
 import AccountVerification from "../components/AccountVerification";
 
 import {
-    isSpeechRecognitionSupported,
-    requestMicrophonePermission,
-    startSpeechRecognition,
-    speakText
+    startSpeechRecognition
 } from "../services/speechService";
+import {
+    isNative,
+    isVoiceRecognitionAvailable,
+    startNativeVoiceRecognition
+} from "../../services/platformVoice";
 
 import {
     detectAccessibility
@@ -49,6 +53,13 @@ import {
 
 
 function SignUp() {
+    const { voiceAssistanceEnabled, locale } = useSettings();
+    const speakText = useCallback(
+        (text) => voiceAssistanceEnabled
+            ? speak(text, { locale: locale || "en-ZA" })
+            : undefined,
+        [voiceAssistanceEnabled, locale]
+    );
 
     /* =========================================
        PAGE MODE
@@ -85,6 +96,10 @@ function SignUp() {
 
     const [isListening, setIsListening] =
         useState(false);
+    const [recordingTranscript, setRecordingTranscript] = useState("");
+    const recognitionRef = useRef(null);
+    const nativeStopRef = useRef(null);
+    const mountedRef = useRef(true);
 
 
     /*
@@ -141,35 +156,32 @@ function SignUp() {
 
         });
 
+    useEffect(() => {
+        mountedRef.current = true;
+        return () => {
+            mountedRef.current = false;
+            recognitionRef.current?.abort?.();
+            void nativeStopRef.current?.();
+        };
+    }, []);
+
 
     useEffect(() => {
         let cancelled = false;
         let timer;
 
         async function announceSignup() {
-            try {
-                const profile = JSON.parse(
-                    window.localStorage.getItem("uniableAccessibilityProfile") || "null"
-                );
-                const voiceFirst =
-                    profile?.id === "blind" ||
-                    window.localStorage.getItem("uniableVoiceFirstEnabled") === "true";
-
-                if (!voiceFirst || cancelled) return;
-
-                timer = window.setTimeout(async () => {
-                    try {
-                        await speak(
-                            "UniAble create account page. Enter your full name, accessibility needs, email address, and password. You can choose voice-assisted signup or switch to typing. The microphone only listens when you activate it. Do not speak your password aloud.",
-                            { locale: "en-ZA", rate: 0.94 }
-                        );
-                    } catch (error) {
-                        console.warn("Signup page spoken guidance failed:", error);
-                    }
-                }, 600);
-            } catch (error) {
-                console.warn("Could not determine signup voice-first preference:", error);
-            }
+            if (!voiceAssistanceEnabled || cancelled) return;
+            timer = window.setTimeout(async () => {
+                try {
+                    await speak(
+                        "UniAble create account page. Enter your full name, accessibility needs, email address, and password. You can choose voice-assisted signup or switch to typing. The microphone only listens when you activate it. Do not speak your password aloud.",
+                        { locale: locale || "en-ZA" }
+                    );
+                } catch (error) {
+                    console.warn("Signup page spoken guidance failed:", error);
+                }
+            }, 100);
         }
 
         announceSignup();
@@ -177,7 +189,7 @@ function SignUp() {
             cancelled = true;
             if (timer) window.clearTimeout(timer);
         };
-    }, []);
+    }, [voiceAssistanceEnabled, locale]);
 
     useEffect(() => {
         let active = true;
@@ -204,6 +216,7 @@ function SignUp() {
        ========================================= */
 
     useEffect(() => {
+        if (!voiceAssistanceEnabled) return undefined;
 
         if (registrationValidated) {
             speakText(
@@ -220,19 +233,19 @@ function SignUp() {
 
         const timer = window.setTimeout(() => {
             speakText(guidance);
-        }, 600);
+        }, 100);
 
         return () => {
             window.clearTimeout(timer);
         };
 
-    }, [mode, registrationValidated]);
+    }, [mode, registrationValidated, speakText, voiceAssistanceEnabled]);
     /* =========================================
        SWITCH INPUT MODES
        ========================================= */
 
     function switchToTyping() {
-
+        void stopListening();
         setMode("typing");
 
     }
@@ -415,14 +428,21 @@ function SignUp() {
     function processVoiceAnswer(
         transcript
     ) {
+        const answer = String(transcript || "").trim();
+        if (!answer) {
+            setRecordingTranscript("");
+            setVoiceQuestion("I didn't catch that. Please tap to speak and try again.");
+            return;
+        }
 
+        setRecordingTranscript(answer);
         /*
           Display what the user said.
         */
 
         addMessage(
             "You",
-            transcript
+            answer
         );
 
 
@@ -437,14 +457,14 @@ function SignUp() {
 
                     ...previousData,
 
-                    fullName: transcript
+                    fullName: answer
 
                 })
             );
 
 
             const response =
-                `Thank you, ${transcript}. Do you have any accessibility needs, such as visual, hearing, mobility or speech support?`;
+                `Thank you, ${answer}. Do you have any accessibility needs, such as visual, hearing, mobility or speech support?`;
 
 
             addMessage(
@@ -478,7 +498,7 @@ function SignUp() {
 
             const detectedAccessibility =
                 detectAccessibility(
-                    transcript
+                    answer
                 );
 
 
@@ -533,7 +553,7 @@ function SignUp() {
 
             const normalizedEmail =
                 normalizeSpokenEmail(
-                    transcript
+                    answer
                 );
 
 
@@ -619,7 +639,7 @@ function SignUp() {
               to speak before switching modes.
             */
 
-            setTimeout(
+            window.setTimeout(
                 () => {
 
                     setMode(
@@ -682,90 +702,61 @@ function SignUp() {
 
         }
 
-
-        /*
-          Check if browser speech
-          recognition is available.
-        */
-
-        if (
-            !isSpeechRecognitionSupported()
-        ) {
-
-            setVoiceQuestion(
-                "Voice recognition is not supported on this browser. Please switch to typing."
-            );
-
-
-            return;
-
-        }
-
-
+        setRecordingTranscript("");
+        setIsListening(true);
         try {
+            const available = await isVoiceRecognitionAvailable();
+            if (!available) {
+                throw new Error(
+                    "Voice recognition is not available on this device. Please switch to typing."
+                );
+            }
 
-            /*
-              Ask user for microphone access.
-            */
+            if (isNative()) {
+                nativeStopRef.current = await startNativeVoiceRecognition({
+                    language: locale || "en-ZA",
+                    onResult: (transcript, isFinal) => {
+                        if (!mountedRef.current) return;
+                        setRecordingTranscript(transcript);
+                        if (isFinal) processVoiceAnswer(transcript);
+                    },
+                    onEnd: () => {
+                        nativeStopRef.current = null;
+                        if (mountedRef.current) setIsListening(false);
+                    },
+                    onError: (error) => {
+                        console.error("Native signup voice recognition failed:", error);
+                        nativeStopRef.current = null;
+                        if (mountedRef.current) {
+                            setIsListening(false);
+                            setVoiceQuestion(
+                                error.message || "Voice recognition failed. Please try again."
+                            );
+                        }
+                    },
+                });
+                return;
+            }
 
-            await requestMicrophonePermission();
-
-
-            /*
-              Start recognition.
-            */
-
-            startSpeechRecognition({
-
-                onStart: () => {
-
-                    setIsListening(
-                        true
-                    );
-
+            recognitionRef.current = startSpeechRecognition({
+                language: locale || "en-ZA",
+                onResult: (transcript, isFinal) => {
+                    if (!mountedRef.current) return;
+                    setRecordingTranscript(transcript);
+                    if (isFinal) processVoiceAnswer(transcript);
                 },
-
-
-                onResult: (
-                    transcript
-                ) => {
-
-                    processVoiceAnswer(
-                        transcript
-                    );
-
-                },
-
-
                 onEnd: () => {
-
-                    setIsListening(
-                        false
-                    );
-
+                    recognitionRef.current = null;
+                    if (mountedRef.current) setIsListening(false);
                 },
-
-
-                onError: (
-                    error
-                ) => {
-
-                    console.error(
-                        error
-                    );
-
-
-                    setIsListening(
-                        false
-                    );
-
-
-                    setVoiceQuestion(
-                        error.message
-                    );
-
-                }
-
+                onError: (error) => {
+                    console.error("Signup voice recognition failed:", error);
+                    recognitionRef.current = null;
+                    if (mountedRef.current) {
+                        setIsListening(false);
+                        setVoiceQuestion(error.message);
+                    }
+                },
             });
 
         }
@@ -777,17 +768,28 @@ function SignUp() {
             );
 
 
-            setIsListening(
-                false
-            );
-
-
-            setVoiceQuestion(
-                error.message
-            );
+            recognitionRef.current = null;
+            nativeStopRef.current = null;
+            if (mountedRef.current) {
+                setIsListening(false);
+                setVoiceQuestion(error.message);
+            }
 
         }
 
+    }
+
+    async function stopListening() {
+        if (isNative()) {
+            await nativeStopRef.current?.();
+            return;
+        }
+
+        try {
+            recognitionRef.current?.stop();
+        } catch (error) {
+            console.warn("Could not stop signup voice recognition:", error);
+        }
     }
 
 
@@ -800,6 +802,7 @@ function SignUp() {
         <main className="signup-screen">
 
             <section className="signup-app">
+                <VoiceAssistanceToggle />
 
 
                 {/* HEADER */}
@@ -885,10 +888,12 @@ function SignUp() {
                                 onStartListening={
                                     handleStartListening
                                 }
+                                onStopListening={stopListening}
 
                                 isListening={
                                     isListening
                                 }
+                                transcript={recordingTranscript}
 
                                 voiceQuestion={
                                     voiceQuestion
@@ -918,7 +923,7 @@ function SignUp() {
                             <SignUpActions
 
                                 onContinueSpeaking={
-                                    handleStartListening
+                                    isListening ? stopListening : handleStartListening
                                 }
 
                                 onSwitchToTyping={
@@ -981,10 +986,4 @@ function SignUp() {
 }
 
 export default SignUp;
-
-
-
-
-
-
 

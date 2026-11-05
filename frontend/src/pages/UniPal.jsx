@@ -38,7 +38,15 @@ function loadLocalAccessibilityProfile() {
 }
 
 export default function UniPal() {
-  const { t, language, locale, theme, fontSize, spokenResponses } = useSettings();
+  const {
+    t,
+    language,
+    locale,
+    theme,
+    fontSize,
+    spokenResponses,
+    voiceAssistanceEnabled,
+  } = useSettings();
   const profile = useMemo(loadProfile, []);
   const [messages, setMessages] = useState([
     {
@@ -176,7 +184,9 @@ export default function UniPal() {
       if (replyBase !== chosenBase) setNotice(t("unipalReplyNotTranslated"));
 
       // Automatic spoken response (Settings > Language & Region > Spoken responses).
-      if (spokenResponses && data.message) speakMessage(assistantMessage, { automatic: true });
+      if (spokenResponses && voiceAssistanceEnabled && data.message) {
+        speakMessage(assistantMessage, { automatic: true });
+      }
     } catch (err) {
       const message = err?.message || t("unipalGenericError");
       setError(message);

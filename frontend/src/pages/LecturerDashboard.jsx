@@ -5,7 +5,10 @@ import {
   Megaphone, MessageSquare, RefreshCw, Users, LogOut
 } from "lucide-react";
 import { api } from "../services/api";
-import { getCurrentUser, signOutAccount } from "../services/firebaseAuth";
+import { getCurrentUser } from "../services/firebaseAuth";
+import VoiceNavigationControls from "../components/VoiceNavigationControls";
+import { useSettings } from "../context/settingsContext/SettingsContext";
+import { speak } from "../services/speechService";
 import "./LecturerDashboard.css";
 
 const sections = [
@@ -24,6 +27,7 @@ function today() {
 
 export default function LecturerDashboard({ requests = [], onRefreshRequests }) {
   const navigate = useNavigate();
+  const { locale, voiceAssistanceEnabled } = useSettings();
   const [loggingOut, setLoggingOut] = useState(false);
   const [section, setSection] = useState("modules");
   const [modules, setModules] = useState([]);
@@ -427,8 +431,38 @@ export default function LecturerDashboard({ requests = [], onRefreshRequests }) 
 
   const activeSection = sections.find((item) => item.id === section);
 
+  function handleVoiceCommand(spokenText) {
+    const command = String(spokenText || "").toLowerCase();
+    const target = sections.find((item) => command.includes(item.label.toLowerCase()));
+    if (target) {
+      setSection(target.id);
+      return;
+    }
+
+    if (command.includes("student dashboard") || command.includes("student home")) {
+      navigate("/dashboard");
+      return;
+    }
+
+    void speak(
+      "Say modules, timetable, classes, attendance, learning materials, student support, or announcements.",
+      { locale: locale || "en-ZA" }
+    );
+  }
+
+  useEffect(() => {
+    if (!voiceAssistanceEnabled) return undefined;
+    const timer = window.setTimeout(() => {
+      void speak(`Lecturer dashboard. ${activeSection?.label || "Modules"} section. Say a section name to navigate.`, {
+        locale: locale || "en-ZA",
+      });
+    }, 100);
+    return () => window.clearTimeout(timer);
+  }, [activeSection?.label, locale, voiceAssistanceEnabled]);
+
   return (
     <div className="lecturer-shell">
+      <VoiceNavigationControls onCommand={handleVoiceCommand} />
       <aside className="lecturer-sidebar">
         <div className="lecturer-brand">
           <span>UA</span>

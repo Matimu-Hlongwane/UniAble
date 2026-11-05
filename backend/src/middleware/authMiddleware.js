@@ -10,6 +10,7 @@ const VALID_ROLES = new Set([
 ]);
 
 export async function requireFirebaseUser(req, res, next) {
+  console.log("AUTH MIDDLEWARE HIT:", req.method, req.originalUrl);
   try {
     const header = req.headers.authorization || "";
     const token = header.startsWith("Bearer ")
@@ -46,7 +47,7 @@ export async function requireFirebaseUser(req, res, next) {
 
     return next();
   } catch (error) {
-    console.error("Firebase authentication failed:", error.message);
+    console.error("Firebase authentication failed:", { code: error.code || error.name, message: error.message, path: req.originalUrl });
 
     return res.status(401).json({
       error: "Your session is invalid, disabled or expired. Please sign in again."

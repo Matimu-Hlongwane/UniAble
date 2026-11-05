@@ -636,7 +636,8 @@
 
 @media (max-width: 820px) {
   .auth-page--redesigned {
-    padding: 18px;
+    padding: max(18px, env(safe-area-inset-top)) 18px
+      max(18px, env(safe-area-inset-bottom));
   }
 
   .auth-layout {
@@ -680,7 +681,7 @@
 
 @media (max-width: 520px) {
   .auth-page--redesigned {
-    padding: 0;
+    padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
     background: #fff;
   }
 

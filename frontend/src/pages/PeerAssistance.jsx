@@ -278,7 +278,6 @@ export default function PeerAssistance() {
           <span className="eyebrow">{t("safetyReminder")}</span>
           <h2>{t("contactSecurity")}</h2>
           <p>{t("emergencyResponse")}</p>
-          <small>{t("lastKnownLocation")} · {t("nearbyVolunteers")}</small>
         </div>
         <button className="secondary-btn" type="button" onClick={openEmergency}>
           <ShieldAlert size={17} />

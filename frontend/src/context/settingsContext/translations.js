@@ -335,10 +335,13 @@ const EXTRA_TRANSLATIONS = {
     navigateCampus:"Navigate Campus", accessibleRoutes:"Accessible routes", mySchedule:"My Schedule",
     securityPeers:"Security + peers", todaysClasses:"Today's classes", recentAnnouncement:"Recent announcement",
     viewAll:"View all", screenReader:"Screen reader", highContrast:"High contrast", on:"On",
-    emergencyResponse:"Emergency response", emergencySos:"Emergency SOS", emergencyDescription:"UniAble can notify campus security and nearby volunteers with the student's last known location.",
+    emergencyResponse:"Emergency response", emergencySos:"Emergency SOS", emergencyDescription:"SOS records an alert in UniAble. It does not contact emergency services or notify staff. If you need immediate help, call campus security or local emergency services directly.",
     helpImmediate:"Need immediate help?", sendEmergency:"SEND EMERGENCY SOS", helpRequested:"Help requested",
-    sosSent:"SOS sent", genuineEmergency:"Press the button only for a genuine emergency.",
-    securityNotified:"Security and nearby volunteers have been notified.",
+    sosSent:"SOS alert recorded", genuineEmergency:"Press the button only for a genuine emergency.",
+    sosRecordedNotice:"The alert was recorded in UniAble, but security and volunteers were not automatically contacted. Call them directly for help.",
+    sosLocationWillBeRequested:"Your device may ask to share your current location.",
+    sosLocationShared:"Your current location was included with the alert.",
+    sosLocationUnavailable:"Your location was unavailable and was not included.",
     personalised:"Personalisation", accessibilityTitle:"Accessibility",
     accessibilityDescription:"Choose a dashboard that matches the student's preferred way of learning, communicating and navigating campus.",
     adaptiveProfile:"Adaptive accessibility profile", selectedExperience:"Selected experience",
@@ -1087,4 +1090,3 @@ if (translations.isiZulu) {
   translations.isiZulu.unipalReplyNotTranslated =
     "Isevisi ye-AI ye-UniPal ayixhunyiwe, ngakho le mpendulo isesiNgisini.";
 }
-

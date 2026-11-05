@@ -16,7 +16,6 @@ import {
   getCurrentUser,
   getUserAccessibilityProfile,
   saveUserAccessibilityProfile,
-  getVoiceFirstPreference,
   setVoiceFirstPreference,
 } from "../services/firebaseAuth";
 
@@ -49,11 +48,10 @@ function readLocalProfile() {
 }
 
 export default function AccessibilitySettings() {
-  const { t } = useSettings();
+  const { t, voiceAssistanceEnabled, setVoiceAssistanceEnabled } = useSettings();
   const [active, setActive] = useState(() => readLocalProfile().id);
   const [saveState, setSaveState] = useState("loading");
   const [profileLoaded, setProfileLoaded] = useState(false);
-  const [voiceFirstEnabled, setVoiceFirstEnabled] = useState(false);
   const [voicePreferenceSaving, setVoicePreferenceSaving] = useState(false);
 
   useEffect(() => {
@@ -63,13 +61,8 @@ export default function AccessibilitySettings() {
       try {
         const saved = await getUserAccessibilityProfile();
         const detailed = saved?.accessibilityProfile;
-        const voicePreference = await getVoiceFirstPreference();
-
         if (!cancelled && detailed && profiles.some(([id]) => id === detailed.id)) {
           setActive(detailed.id);
-        }
-        if (!cancelled) {
-          setVoiceFirstEnabled(Boolean(voicePreference));
         }
       } catch (error) {
         console.error("Could not load the saved accessibility profile:", error);
@@ -117,7 +110,6 @@ export default function AccessibilitySettings() {
       try {
         await saveUserAccessibilityProfile(profile);
         if (!cancelled) {
-          if (profile.id === "blind") setVoiceFirstEnabled(true);
           setSaveState("saved");
         }
       } catch (error) {
@@ -131,19 +123,19 @@ export default function AccessibilitySettings() {
     return () => {
       cancelled = true;
     };
-  }, [active, profileLoaded]);
+  }, [active, profileLoaded, setVoiceAssistanceEnabled]);
 
   const selectedProfile = profiles.find(([id]) => id === active) || profiles[9];
 
   async function handleVoiceFirstToggle(event) {
     const enabled = event.target.checked;
-    setVoiceFirstEnabled(enabled);
+    setVoiceAssistanceEnabled(enabled);
     setVoicePreferenceSaving(true);
     try {
       await setVoiceFirstPreference(enabled);
     } catch (error) {
       console.error("Could not save voice-first preference:", error);
-      setVoiceFirstEnabled(!enabled);
+      setVoiceAssistanceEnabled(!enabled);
     } finally {
       setVoicePreferenceSaving(false);
     }
@@ -189,8 +181,8 @@ export default function AccessibilitySettings() {
           <strong>Voice-first spoken guidance</strong>
           <p>Read out page guidance and show a microphone control for voice navigation. The microphone only listens when you activate it.</p>
           <label style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12 }}>
-            <input type="checkbox" checked={voiceFirstEnabled} onChange={handleVoiceFirstToggle} disabled={voicePreferenceSaving} />
-            {voicePreferenceSaving ? "Saving preference…" : voiceFirstEnabled ? "Enabled for this account" : "Disabled"}
+            <input type="checkbox" checked={voiceAssistanceEnabled} onChange={handleVoiceFirstToggle} disabled={voicePreferenceSaving} />
+            {voicePreferenceSaving ? "Saving preference…" : voiceAssistanceEnabled ? "Enabled" : "Disabled"}
           </label>
         </div>
       </div>

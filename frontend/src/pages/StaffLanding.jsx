@@ -5,7 +5,6 @@ import {
   ShieldCheck,
   GraduationCap,
   HeartHandshake,
-  Building2,
   Users,
 } from "lucide-react";
 import "./StaffLanding.css";
@@ -113,5 +112,4 @@ export default function StaffLanding() {
     </main>
   );
 }
-
 

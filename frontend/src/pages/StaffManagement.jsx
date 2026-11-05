@@ -1,13 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Search, UserPlus, RefreshCw, ShieldCheck, UserCog, Users,
-  Mail, CheckCircle2, XCircle, AlertCircle
+  Mail, CheckCircle2, AlertCircle
 } from "lucide-react";
 import { api } from "../services/api";
 import "./StaffManagement.css";
 
 const ROLE_OPTIONS = [
-  { value: "lecturer", label: "Lecturer" },
   { value: "volunteer", label: "Volunteer" },
   { value: "disability_office", label: "Disability Office" },
   { value: "security", label: "Security" }
@@ -26,7 +25,7 @@ export default function StaffManagement() {
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [email, setEmail] = useState("");
-  const [newRole, setNewRole] = useState("lecturer");
+  const [newRole, setNewRole] = useState("volunteer");
   const [submitting, setSubmitting] = useState(false);
   const [updatingUid, setUpdatingUid] = useState("");
 

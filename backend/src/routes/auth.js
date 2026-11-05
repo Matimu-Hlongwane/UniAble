@@ -222,8 +222,7 @@ router.post("/staff/provision", requireRole("admin"), async (req, res) => {
     const allowedRoles = new Set([
       "volunteer",
       "disability_office",
-      "security",
-      "lecturer"
+      "security"
     ]);
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {

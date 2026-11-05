@@ -676,7 +676,7 @@
 @media (max-width: 640px) {
   .landing-hero {
     min-height: auto;
-    padding: 0 20px;
+    padding: env(safe-area-inset-top) 20px 0;
   }
 
   .landing-hero::before {
@@ -1169,4 +1169,3 @@
   font-size: 0.88rem;
   line-height: 1.4;
 }
-

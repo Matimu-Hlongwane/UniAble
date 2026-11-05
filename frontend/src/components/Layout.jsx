@@ -3,7 +3,8 @@ import { NavLink, Outlet, Link, useLocation, useNavigate } from "react-router-do
 import { Home, Settings, Siren, Users, MapPin, CalendarDays, ArrowLeft, Volume2, LogOut, ScanText } from "lucide-react";
 import { useSettings } from "../context/settingsContext/SettingsContext";
 import VoiceCommandButton from "./VoiceCommandButton";
-import { getVoiceFirstPreference, subscribeToAuth, getVerificationStatus, signOutAccount, getCurrentUser, getCurrentUserRole } from "../services/firebaseAuth";
+import VoiceAssistanceToggle from "./VoiceAssistanceToggle";
+import { subscribeToAuth, getVerificationStatus, signOutAccount, getCurrentUser, getCurrentUserRole } from "../services/firebaseAuth";
 import { speak, stopSpeaking } from "../services/speechService";
 
 const links = [
@@ -28,12 +29,11 @@ const routeGuidance = {
 
 export default function Layout() {
   const intentionalLogoutRef = useRef(false);
-  const { t, locale } = useSettings();
+  const { t, locale, voiceAssistanceEnabled } = useSettings();
   const location = useLocation();
   const navigate = useNavigate();
   const isAdminPage = location.pathname === "/staff/admin";
   const canGoBack = location.pathname !== "/dashboard";
-  const [voiceFirstEnabled, setVoiceFirstEnabled] = useState(false);
   const [guidanceStatus, setGuidanceStatus] = useState("");
   const [authChecking, setAuthChecking] = useState(true);
   const [authUser, setAuthUser] = useState(null);
@@ -121,32 +121,7 @@ export default function Layout() {
   }, [navigate]);
 
   useEffect(() => {
-    const handlePreferenceChange = (event) => setVoiceFirstEnabled(Boolean(event.detail?.enabled));
-    window.addEventListener("uniable-voice-first-change", handlePreferenceChange);
-    return () => window.removeEventListener("uniable-voice-first-change", handlePreferenceChange);
-  }, []);
-
-  useEffect(() => {
-    let active = true;
-    const unsubscribe = subscribeToAuth(async (user) => {
-      try {
-        // Also honour the locally saved Blind / Low-Vision profile when a user
-        // is not signed in. The previous code forced this to false.
-        const preference = await getVoiceFirstPreference(user || null);
-        if (active) setVoiceFirstEnabled(Boolean(preference));
-      } catch (error) {
-        console.warn("Could not load voice-first accessibility settings:", error);
-        if (active) setVoiceFirstEnabled(false);
-      }
-    });
-    return () => {
-      active = false;
-      unsubscribe?.();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!voiceFirstEnabled) return undefined;
+    if (!voiceAssistanceEnabled) return undefined;
     let cancelled = false;
     const guidance = routeGuidance[location.pathname] || (
       `You are on the ${location.pathname.split("/").filter(Boolean).join(" ").replace(/[-_]/g, " ") || "UniAble home"} page. ` +
@@ -156,7 +131,7 @@ export default function Layout() {
     const timer = window.setTimeout(async () => {
       if (cancelled) return;
       try {
-        const result = await speak(guidance, { locale: locale || "en-ZA", rate: 0.94 });
+        const result = await speak(guidance, { locale: locale || "en-ZA" });
         if (!cancelled) {
           setGuidanceStatus(result?.started ? "Spoken page guidance started." : "Automatic speech is unavailable. Use Read this page aloud or your screen reader.");
         }
@@ -164,13 +139,13 @@ export default function Layout() {
         console.warn("Automatic page guidance failed:", error);
         if (!cancelled) setGuidanceStatus("Spoken page guidance failed. Use your screen reader or the visible controls.");
       }
-    }, 500);
+    }, 100);
     return () => {
       cancelled = true;
       window.clearTimeout(timer);
       stopSpeaking();
     };
-  }, [location.pathname, locale, voiceFirstEnabled]);
+  }, [location.pathname, locale, voiceAssistanceEnabled]);
 
   const handleVoiceCommand = useCallback((spokenText) => {
     const command = String(spokenText || "").toLowerCase().trim();
@@ -184,8 +159,8 @@ export default function Layout() {
     if (matches("accessibility", "accessibility settings")) { navigate("/accessibility"); return; }
     if (matches("scan and read", "scan read", "scan document", "read document", "ocr")) { navigate("/scan-read"); return; }
     if (matches("home", "dashboard", t("home"))) { navigate("/dashboard"); return; }
-    if (voiceFirstEnabled) speak("I did not recognise that destination. Try dashboard, campus, schedule, scan and read, peer assistance, UniPal, emergency, accessibility, or settings.", { locale: locale || "en-ZA" });
-  }, [navigate, t, locale, voiceFirstEnabled]);
+    if (voiceAssistanceEnabled) speak("I did not recognise that destination. Try dashboard, campus, schedule, scan and read, peer assistance, UniPal, emergency, accessibility, or settings.", { locale: locale || "en-ZA" });
+  }, [navigate, t, locale, voiceAssistanceEnabled]);
 
   const profileInitial =
     (profileName || authUser?.email || "G").trim().charAt(0).toUpperCase() || "G";
@@ -273,16 +248,16 @@ export default function Layout() {
         </div>
       </header>
       <main className="main-content mobile-main-content">
-        {voiceFirstEnabled && (
-          <div className="voice-first-navigation" aria-label="Voice-first navigation">
-            <p className="muted">Voice-first guidance is enabled. If Edge blocks the first automatic announcement, select Read this page aloud once. Page guidance can then speak as you navigate. The microphone only listens when you activate it.</p>
+        <VoiceAssistanceToggle />
+        <div className="voice-first-navigation" aria-label="Voice assistance controls">
+            {voiceAssistanceEnabled && <p className="muted">Voice assistance is enabled. Page guidance is spoken as you navigate. The microphone only listens when you activate it.</p>}
             <button
               type="button"
               className="voice-first-read-guidance"
               onClick={async () => {
                 const guidance = routeGuidance[location.pathname] || "You are in UniAble. Use the navigation options to move between pages.";
                 try {
-                  const result = await speak(guidance, { locale: locale || "en-ZA", rate: 0.94 });
+                  const result = await speak(guidance, { locale: locale || "en-ZA" });
                   setGuidanceStatus(result?.started ? "Reading page guidance aloud." : "Speech is unavailable on this device. Use your screen reader or the visible navigation controls.");
                 } catch (error) {
                   console.warn("Manual page guidance failed:", error);
@@ -294,9 +269,8 @@ export default function Layout() {
               <Volume2 size={18} aria-hidden="true" /> Read this page aloud
             </button>
             {guidanceStatus && <p className="muted" role="status" aria-live="polite">{guidanceStatus}</p>}
-            <VoiceCommandButton onCommand={handleVoiceCommand} />
-          </div>
-        )}
+            {voiceAssistanceEnabled && <VoiceCommandButton onCommand={handleVoiceCommand} />}
+        </div>
         {canGoBack && <button className="page-back-button" type="button" onClick={() => navigate(-1)}><ArrowLeft size={17} />{t("back")}</button>}
         <Outlet />
       </main>

@@ -13,12 +13,10 @@ function SignUpActions({
         className="action-button primary-action"
 
         onClick={onContinueSpeaking}
-
-        disabled={isListening}
       >
 
         {isListening
-          ? "🎙 Listening..."
+          ? "⏹ Stop Listening"
           : "🎙 Continue Speaking"}
 
       </button>
@@ -29,8 +27,6 @@ function SignUpActions({
         className="action-button secondary-action"
 
         onClick={onSwitchToTyping}
-
-        disabled={isListening}
       >
 
         ⌨ Switch to Typing
@@ -42,4 +38,3 @@ function SignUpActions({
 }
 
 export default SignUpActions;
-

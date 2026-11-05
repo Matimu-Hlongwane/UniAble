@@ -47,7 +47,7 @@ export default function ForgotPassword() {
             <p className="auth-showcase-kicker">YOUR ACCOUNT, YOUR ACCESS</p>
             <h1>A fresh start is just a link away.</h1>
             <p className="auth-showcase-description">
-              We'll help you get back to your learning journey securely.
+              We&apos;ll help you get back to your learning journey securely.
             </p>
           </div>
           <div className="auth-showcase-note">
@@ -80,7 +80,7 @@ export default function ForgotPassword() {
           <p className="auth-eyebrow">ACCOUNT RECOVERY</p>
           <h2 id="recovery-heading">Forgot your password?</h2>
           <p className="auth-description">
-            Enter the email address linked to your UniAble account. If an account matches, we'll send you a secure reset link.
+            Enter the email address linked to your UniAble account. If an account matches, we&apos;ll send you a secure reset link.
           </p>
 
           <form onSubmit={handleSubmit}>

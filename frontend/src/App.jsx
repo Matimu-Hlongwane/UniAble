@@ -31,8 +31,8 @@ export default function App() {
       <Route path="/signup" element={<SignUp />} />
 
       {/* Student routes use the student layout and navigation. */}
-      <Route element={<Layout />}>
-        <Route path="/dashboard" element={<StudentDashboardGuard><StudentDashboard /></StudentDashboardGuard>} />
+      <Route element={<StudentDashboardGuard><Layout /></StudentDashboardGuard>}>
+        <Route path="/dashboard" element={<StudentDashboard />} />
         <Route path="/campus" element={<CampusNavigation />} />
         <Route path="/schedule" element={<Schedule />} />
         <Route path="/scan-read" element={<ScanRead />} />
