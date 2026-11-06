@@ -1029,6 +1029,41 @@ html[data-colour-display='true'] .settings-profile.selected {
   font-weight: 700;
 }
 
+.floor-plan-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.floor-plan-heading h2 {
+  margin: 0;
+}
+
+.floor-plan-heading span {
+  color: #5c6268;
+  font-size: 13px;
+}
+
+.floor-plan-image {
+  display: block;
+  width: 100%;
+  max-height: 460px;
+  object-fit: contain;
+  border: 1px solid #d5d9dc;
+  background: #f3f4f2;
+}
+
+.floor-plan-note {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-left: 4px solid #a8422d;
+  background: #fff2ed;
+  color: #5b2b20;
+  line-height: 1.45;
+}
+
 /* Direction steps */
 
 .direction-item {

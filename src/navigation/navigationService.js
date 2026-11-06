@@ -1,123 +1,167 @@
-import { collection, getDocs, query, where } from 'firebase/firestore'
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+} from 'firebase/firestore'
+
 import { db } from '../firebase'
 
-/*
-  Get all campuses belonging to a university
-*/
+// ============================================================
+// FIREBASE DATA
+// ============================================================
+
 export const getCampuses = async (universityId) => {
-  try {
-    const campusesRef = collection(db, 'campuses')
+  const ref = collection(db, 'campuses')
+  const q = query(ref, where('universityId', '==', universityId))
+  const snapshot = await getDocs(q)
 
-    const campusQuery = query(
-      campusesRef,
-      where('universityId', '==', universityId)
-    )
-
-    const snapshot = await getDocs(campusQuery)
-
-    return snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }))
-  } catch (error) {
-    console.error('Error loading campuses:', error)
-    throw error
-  }
+  return snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data(),
+  }))
 }
 
-/*
-  Get all buildings belonging to a campus
-*/
 export const getBuildings = async (campusId) => {
-  try {
-    const buildingsRef = collection(db, 'buildings')
+  const ref = collection(db, 'buildings')
+  const q = query(ref, where('campusId', '==', campusId))
+  const snapshot = await getDocs(q)
 
-    const buildingQuery = query(
-      buildingsRef,
-      where('campusId', '==', campusId)
-    )
-
-    const snapshot = await getDocs(buildingQuery)
-
-    return snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }))
-  } catch (error) {
-    console.error('Error loading buildings:', error)
-    throw error
-  }
+  return snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data(),
+  }))
 }
 
-/*
-  Get all floors belonging to a building
-*/
 export const getFloors = async (buildingId) => {
-  try {
-    const floorsRef = collection(db, 'floors')
+  const ref = collection(db, 'floors')
+  const q = query(ref, where('buildingId', '==', buildingId))
+  const snapshot = await getDocs(q)
 
-    const floorQuery = query(
-      floorsRef,
-      where('buildingId', '==', buildingId)
-    )
-
-    const snapshot = await getDocs(floorQuery)
-
-    return snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }))
-  } catch (error) {
-    console.error('Error loading floors:', error)
-    throw error
-  }
+  return snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data(),
+  }))
 }
 
-/*
-  Get all locations belonging to a floor
-*/
 export const getLocations = async (floorId) => {
-  try {
-    const locationsRef = collection(db, 'locations')
+  const ref = collection(db, 'locations')
+  const q = query(ref, where('floorId', '==', floorId))
+  const snapshot = await getDocs(q)
 
-    const locationQuery = query(
-      locationsRef,
-      where('floorId', '==', floorId)
-    )
-
-    const snapshot = await getDocs(locationQuery)
-
-    return snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }))
-  } catch (error) {
-    console.error('Error loading locations:', error)
-    throw error
-  }
+  return snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data(),
+  }))
 }
 
-/*
-  Get navigation connections.
-  These describe how locations are connected.
-*/
 export const getConnections = async (floorId) => {
+  const ref = collection(db, 'connections')
+  const q = query(ref, where('floorId', '==', floorId))
+  const snapshot = await getDocs(q)
+
+  return snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data(),
+  }))
+}
+
+// ============================================================
+// UNIABLe BACKEND NAVIGATION API
+// ============================================================
+
+const NAVIGATION_API = 'http://localhost:5000'
+
+async function readApiResponse(response) {
+  let data
+
   try {
-    const connectionsRef = collection(db, 'connections')
+    data = await response.json()
+  } catch {
+    throw new Error('The navigation server returned an invalid response.')
+  }
 
-    const connectionQuery = query(
-      connectionsRef,
-      where('floorId', '==', floorId)
+  if (!response.ok || !data.success) {
+    throw new Error(
+      data.message || 'The navigation request failed.'
     )
+  }
 
-    const snapshot = await getDocs(connectionQuery)
+  return data
+}
 
-    return snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }))
-  } catch (error) {
-    console.error('Error loading connections:', error)
-    throw error
+// ============================================================
+// LOAD NAVIGATION LOCATIONS
+// ============================================================
+
+export const getNavigationLocations = async () => {
+  const response = await fetch(
+    `${NAVIGATION_API}/api/navigation/locations`
+  )
+
+  const data = await readApiResponse(response)
+
+  if (!Array.isArray(data.locations)) {
+    throw new Error('The server returned an invalid locations list.')
+  }
+
+  return data.locations
+}
+
+// ============================================================
+// CALCULATE ACCESSIBLE ROUTE
+// ============================================================
+
+export const calculateNavigationRoute = async (
+  start,
+  destination
+) => {
+  if (!start || !destination) {
+    throw new Error(
+      'Please select a starting point and destination.'
+    )
+  }
+
+  const params = new URLSearchParams({
+    start,
+    destination,
+  })
+
+  const response = await fetch(
+    `${NAVIGATION_API}/api/navigation/route?${params.toString()}`
+  )
+
+  const data = await readApiResponse(response)
+
+  if (!Array.isArray(data.route) || data.route.length === 0) {
+    throw new Error('No accessible route was found.')
+  }
+
+  if (!Array.isArray(data.connections)) {
+    throw new Error('The server did not return route instructions.')
+  }
+
+  if (data.connections.length !== data.route.length - 1) {
+    throw new Error('The route instructions are incomplete.')
+  }
+
+  const connections = data.connections.map(connection => ({
+    ...connection,
+
+    instruction:
+      connection.instruction ||
+      connection.forwardInstruction ||
+      'Continue along the accessible route.',
+
+    accessible: connection.accessible !== false,
+  }))
+
+  if (connections.some(connection => !connection.accessible)) {
+    throw new Error('The route contains an inaccessible connection.')
+  }
+
+  return {
+    ...data,
+    connections,
   }
 }
