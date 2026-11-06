@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Camera, FileImage, LoaderCircle, Play, Square, RotateCcw } from "lucide-react";
-import { createWorker } from "tesseract.js";
 import { speak, stopSpeaking } from "../services/speechService";
 import { useSettings } from "../context/settingsContext/SettingsContext";
 import "./ScanRead.css";
@@ -76,6 +75,8 @@ export default function ScanRead() {
 
     try {
       if (!workerRef.current) {
+        setStatus("Loading the text recognition engine...");
+        const { createWorker } = await import("tesseract.js");
         workerRef.current = await createWorker("eng", 1, {
           logger: (message) => {
             if (!mountedRef.current) return;

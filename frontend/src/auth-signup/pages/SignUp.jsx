@@ -53,6 +53,10 @@ import {
 } from "../utils/validation";
 
 function phoneVerificationError(error, fallback) {
+    if (error?.code === "auth/internal-error" && isNative()) {
+        return "Firebase could not complete its phone security check in this iOS app. Check the Firebase project's iOS app registration, API key restrictions, Phone sign-in provider, South Africa SMS region policy and SMS quota. Try email verification or the browser signup while iOS Firebase phone auth is configured.";
+    }
+
     const messages = {
         "auth/operation-not-allowed": "SMS verification is disabled for this Firebase project. Enable Phone sign-in in Firebase Authentication settings.",
         "auth/captcha-check-failed": "Firebase could not verify the security check. Refresh the page and ensure localhost is an authorized Firebase domain.",
@@ -64,7 +68,7 @@ function phoneVerificationError(error, fallback) {
         "auth/unauthorized-continue-uri": "Add localhost to the authorized domains in Firebase Authentication settings, then try again.",
         "auth/network-request-failed": "Firebase could not reach its authentication service. Check the internet connection and try again.",
         "auth/billing-not-enabled": "Firebase SMS delivery requires billing to be enabled for this project. Check the Firebase plan and SMS quota.",
-        "auth/internal-error": "Firebase could not complete phone verification. Check that Phone sign-in is enabled, localhost is an authorized domain, the SMS region is allowed, and the Firebase project has SMS quota. If it persists, check the browser Console and Network tab for Firebase's response.",
+        "auth/internal-error": "Firebase could not complete phone verification. Check that Phone sign-in is enabled, localhost is an authorized domain, South Africa is allowed in the SMS region policy, and the Firebase project has SMS quota.",
         "auth/invalid-verification-code": "That SMS code is incorrect. Check the message and try again.",
         "auth/code-expired": "That SMS code has expired. Request a new one."
     };
@@ -381,14 +385,17 @@ function SignUp() {
                     );
                 }
             }
-            setVerificationStage("choose");
-            setVerificationMethod("email");
-            setVerificationError("");
-            setMode("typing");
+            setVerificationBusy(true);
             try {
                 await startAccountVerification();
+                setVerificationError("");
             } catch (setupError) {
                 setVerificationError(`Your account was created, but the verification service is not ready: ${setupError.message}`);
+            } finally {
+                setVerificationMethod("email");
+                setVerificationStage("choose");
+                setMode("typing");
+                setVerificationBusy(false);
             }
         } catch (error) {
             console.error("UniAble registration failed:", error);

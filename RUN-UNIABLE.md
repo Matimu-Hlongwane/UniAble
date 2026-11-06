@@ -40,6 +40,16 @@ account. Do not create test accounts during the presentation.
 - **Blank page:** Check the frontend Terminal for an error and reload the page.
 - **API/network error:** Make sure the backend Terminal is still running and
   `http://localhost:4000/api/health` returns healthy.
+- **Signup email code:** Gmail requires a Google App Password, not your normal
+  account password. Set it as `SMTP_APP_PASSWORD` in the private
+  `backend/.env`, then restart the backend. Never paste passwords or OTPs into
+  chat or commit them.
+- **Signup SMS code:** In Firebase Console, enable Phone sign-in, authorize
+  `localhost`, allow South Africa in the SMS region policy, and check the
+  project's SMS quota. The app cannot send a code until Firebase accepts the
+  phone-auth request.
+- **Signup blocked on OTP:** Use an existing verified demo account for the
+  presentation until a real email or SMS code has been received and verified.
 - **UniPal AI:** The UI and built-in guidance work without the AI service.
   Live generated responses require the separate FastAPI service and a valid
   Gemini key in the private `ai-service/.env`. The key is not included in this
@@ -61,5 +71,6 @@ account. Do not create test accounts during the presentation.
 - The disability-office workspace shares the staff portal layout while keeping
   administrator-only sections restricted.
 
-The frontend production build and targeted lint checks passed for this version.
-The build still prints existing React Router and large-bundle warnings.
+The frontend production build and lint checks passed for this version. Vite
+still reports React Router and Firebase SDK size warnings; the Firebase SDK is
+loaded only on sign-up, sign-in or authenticated routes.

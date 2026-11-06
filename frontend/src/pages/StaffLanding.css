@@ -14,7 +14,7 @@
   background:
     linear-gradient(90deg, rgba(5, 9, 8, .96) 0%, rgba(5, 9, 8, .82) 48%, rgba(5, 9, 8, .35) 100%),
     linear-gradient(0deg, #080a0a 0%, transparent 35%),
-    url("https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=2200&q=85") center 42% / cover;
+    url("https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=1400&q=70") center 42% / cover;
 }
 
 .staff-header {
