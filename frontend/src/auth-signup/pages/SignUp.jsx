@@ -52,6 +52,26 @@ import {
     validateSignUpForm
 } from "../utils/validation";
 
+function phoneVerificationError(error, fallback) {
+    const messages = {
+        "auth/operation-not-allowed": "SMS verification is disabled for this Firebase project. Enable Phone sign-in in Firebase Authentication settings.",
+        "auth/captcha-check-failed": "Firebase could not verify the security check. Refresh the page and ensure localhost is an authorized Firebase domain.",
+        "auth/invalid-app-credential": "Firebase rejected the SMS security check. Confirm Phone sign-in is enabled and localhost is authorized in Firebase.",
+        "auth/invalid-phone-number": "Enter a valid South African mobile number.",
+        "auth/too-many-requests": "Too many SMS attempts. Wait a while before requesting another code.",
+        "auth/quota-exceeded": "Firebase has reached its SMS quota. Try email verification or check the Firebase billing and SMS limits.",
+        "auth/app-not-authorized": "This app is not authorized for Firebase Phone Authentication. Check the Firebase project's app configuration.",
+        "auth/unauthorized-continue-uri": "Add localhost to the authorized domains in Firebase Authentication settings, then try again.",
+        "auth/network-request-failed": "Firebase could not reach its authentication service. Check the internet connection and try again.",
+        "auth/billing-not-enabled": "Firebase SMS delivery requires billing to be enabled for this project. Check the Firebase plan and SMS quota.",
+        "auth/internal-error": "Firebase could not complete phone verification. Check that Phone sign-in is enabled, localhost is an authorized domain, the SMS region is allowed, and the Firebase project has SMS quota. If it persists, check the browser Console and Network tab for Firebase's response.",
+        "auth/invalid-verification-code": "That SMS code is incorrect. Check the message and try again.",
+        "auth/code-expired": "That SMS code has expired. Request a new one."
+    };
+
+    return messages[error?.code] || error?.message || fallback;
+}
+
 
 function SignUp() {
     const { voiceAssistanceEnabled, locale } = useSettings();
@@ -395,22 +415,39 @@ function SignUp() {
     async function handleSendEmailCode() {
         setVerificationBusy(true); setVerificationError("");
         try {
+            const status = await getVerificationStatus();
+            if (!status.required || status.verified) {
+                throw new Error("Verification codes are only available while completing a new UniAble sign-up.");
+            }
             await sendEmailOtp();
             setVerificationMethod("email"); setVerificationCode(""); setVerificationStage("code");
-        } catch (error) { setVerificationError(error.message || "Could not send the email code."); }
+        } catch (error) {
+            console.error("UniAble signup email OTP failed:", error);
+            setVerificationError(error.message || "Could not send the email code.");
+        }
         finally { setVerificationBusy(false); }
     }
 
     async function handleSendPhoneCode() {
         setVerificationBusy(true); setVerificationError("");
         try {
+            const status = await getVerificationStatus();
+            if (!status.required || status.verified) {
+                throw new Error("Verification codes are only available while completing a new UniAble sign-up.");
+            }
             const normalized = normalizeSouthAfricanMobile(verificationPhone);
             if (!normalized) throw new Error("Enter a valid South African mobile number, with or without the first 0.");
             phoneVerifier?.clear();
             const result = await sendPhoneOtp(normalized, "uniable-phone-recaptcha");
             setPhoneConfirmation(result.confirmation); setPhoneVerifier(result.verifier);
             setVerificationPhone(normalized); setVerificationMethod("sms"); setVerificationCode(""); setVerificationStage("code");
-        } catch (error) { setVerificationError(error.message || "Could not send the SMS code. Check Firebase Phone Authentication and reCAPTCHA settings."); }
+        } catch (error) {
+            console.error("UniAble signup SMS OTP failed:", {
+                code: error.code || "unknown",
+                message: error.message,
+            });
+            setVerificationError(phoneVerificationError(error, "Could not send the SMS code. Check Firebase Phone Authentication and reCAPTCHA settings."));
+        }
         finally { setVerificationBusy(false); }
     }
 
@@ -427,7 +464,9 @@ function SignUp() {
             }
             setVerificationStage(null);
             setRegistrationValidated(true);
-        } catch (error) { setVerificationError(error.message || "The code could not be verified. Please try again."); }
+        } catch (error) { setVerificationError(verificationMethod === "sms"
+            ? phoneVerificationError(error, "The SMS code could not be verified. Please try again.")
+            : error.message || "The email code could not be verified. Please try again."); }
         finally { setVerificationBusy(false); }
     }
 

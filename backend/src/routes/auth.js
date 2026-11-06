@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { createHmac, randomInt, timingSafeEqual } from "node:crypto";
 import { Resend } from "resend";
+import nodemailer from "nodemailer";
 import { getAdminAuth, getAdminDb } from "../services/firebase.js";
 import { requireFirebaseUser, requireRole } from "../middleware/authMiddleware.js";
 
@@ -21,6 +22,65 @@ function safeEqualHex(left, right) {
   return a.length === b.length && a.length > 0 && timingSafeEqual(a, b);
 }
 
+async function sendVerificationEmail({ email, code }) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const resendSender = process.env.RESEND_FROM_EMAIL;
+
+  if (apiKey && resendSender) {
+    const resend = new Resend(apiKey);
+    const { error } = await resend.emails.send({
+      from: resendSender,
+      to: email,
+      subject: "Your UniAble verification code",
+      text:
+        `Your UniAble verification code is ${code}.\n\n` +
+        "It expires in 10 minutes. If you did not request this code, you can ignore this email.",
+      html: verificationEmailHtml(code),
+    });
+
+    if (error) throw new Error(error.message || "Resend could not send the email.");
+    return;
+  }
+
+  const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_APP_PASSWORD } = process.env;
+  const sender = process.env.EMAIL_FROM || SMTP_USER;
+  if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_APP_PASSWORD || !sender) {
+    throw new Error("Email verification is not configured. Configure Resend or SMTP in backend/.env.");
+  }
+
+  const transporter = nodemailer.createTransport({
+    host: SMTP_HOST,
+    port: Number(SMTP_PORT),
+    secure: String(process.env.SMTP_SECURE).toLowerCase() === "true",
+    auth: { user: SMTP_USER, pass: SMTP_APP_PASSWORD },
+  });
+
+  await transporter.sendMail({
+    from: sender,
+    to: email,
+    subject: "Your UniAble verification code",
+    text:
+      `Your UniAble verification code is ${code}.\n\n` +
+      "It expires in 10 minutes. If you did not request this code, you can ignore this email.",
+    html: verificationEmailHtml(code),
+  });
+}
+
+function verificationEmailHtml(code) {
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; color: #202124;">
+      <h2 style="color: #172554;">Verify your UniAble account</h2>
+      <p>Use the verification code below to complete your UniAble registration.</p>
+      <div style="margin: 24px 0; padding: 18px; background: #f3f4f6; border-radius: 8px; text-align: center;">
+        <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px;">${code}</span>
+      </div>
+      <p>This code expires in <strong>10 minutes</strong>.</p>
+      <p>If you did not request this code, you can safely ignore this email.</p>
+      <p style="margin-top: 28px; color: #6b7280; font-size: 13px;">UniAble — Access without limits. Education for everyone.</p>
+    </div>
+  `;
+}
+
 async function setVerified(uid, method) {
   const auth = getAdminAuth();
   const user = await auth.getUser(uid);
@@ -32,6 +92,15 @@ async function setVerified(uid, method) {
     verificationMethod: method,
     verifiedAt: new Date().toISOString(),
   }, { merge: true });
+}
+
+async function getPendingRegistrationUser(uid) {
+  const user = await getAdminAuth().getUser(uid);
+  const claims = user.customClaims || {};
+  return claims.accountVerificationRequired === true &&
+    claims.accountVerified === false
+    ? user
+    : null;
 }
 
 router.use(requireFirebaseUser);
@@ -70,20 +139,17 @@ router.get("/verification-status", async (req, res) => {
 router.post("/email-otp/send", async (req, res) => {
   try {
     const uid = req.firebaseToken.uid;
-    const user = await getAdminAuth().getUser(uid);
+    const user = await getPendingRegistrationUser(uid);
+
+    if (!user) {
+      return res.status(403).json({
+        error: "Verification codes are only available while completing a new UniAble sign-up."
+      });
+    }
 
     if (!user.email) {
       return res.status(400).json({
         error: "No email address is associated with this account."
-      });
-    }
-
-    const apiKey = process.env.RESEND_API_KEY;
-    const sender = process.env.RESEND_FROM_EMAIL;
-
-    if (!apiKey || !sender) {
-      return res.status(503).json({
-        error: "Email verification is not configured. Check the Resend settings in backend/.env."
       });
     }
 
@@ -113,39 +179,19 @@ router.post("/email-otp/send", async (req, res) => {
     });
 
     try {
-      const resend = new Resend(apiKey);
-
-      const { error: resendError } = await resend.emails.send({
-        from: sender,
-        to: user.email,
-        subject: "Your UniAble verification code",
-        text:
-          `Your UniAble verification code is ${code}.\n\n` +
-          "It expires in 10 minutes. If you did not request this code, you can ignore this email.",
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; color: #202124;">
-            <h2 style="color: #172554;">Verify your UniAble account</h2>
-            <p>Use the verification code below to complete your UniAble registration.</p>
-            <div style="margin: 24px 0; padding: 18px; background: #f3f4f6; border-radius: 8px; text-align: center;">
-              <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px;">${code}</span>
-            </div>
-            <p>This code expires in <strong>10 minutes</strong>.</p>
-            <p>If you did not request this code, you can safely ignore this email.</p>
-            <p style="margin-top: 28px; color: #6b7280; font-size: 13px;">UniAble — Access without limits. Education for everyone.</p>
-          </div>
-        `
-      });
-
-      if (resendError) {
-        throw new Error(resendError.message || "Resend could not send the email.");
-      }
+      await sendVerificationEmail({ email: user.email, code });
     } catch (emailError) {
       await ref.delete();
 
-      console.error("Resend email delivery failed:", emailError.message);
+      console.error("Verification email delivery failed:", emailError.message);
+
+      const deliveryError = emailError.code === "EAUTH" ||
+        /535|bad credentials|invalid login/i.test(emailError.message || "")
+        ? "Gmail rejected the SMTP login. Update SMTP_APP_PASSWORD in backend/.env with a valid Google App Password, or configure a verified Resend sender, then restart the backend."
+        : emailError.message || "The verification email could not be sent. Please try again shortly.";
 
       return res.status(502).json({
-        error: "The verification email could not be sent. Please try again shortly."
+        error: deliveryError
       });
     }
 
@@ -165,6 +211,11 @@ router.post("/email-otp/send", async (req, res) => {
 router.post("/email-otp/verify", async (req, res) => {
   try {
     const uid = req.firebaseToken.uid;
+    if (!await getPendingRegistrationUser(uid)) {
+      return res.status(403).json({
+        error: "Verification codes are only available while completing a new UniAble sign-up."
+      });
+    }
     const code = String(req.body?.code || "").trim();
     if (!/^\d{6}$/.test(code)) return res.status(400).json({ error: "Enter the six-digit code from your email." });
 
@@ -199,6 +250,11 @@ router.post("/email-otp/verify", async (req, res) => {
 router.post("/phone/verified", async (req, res) => {
   try {
     const uid = req.firebaseToken.uid;
+    if (!await getPendingRegistrationUser(uid)) {
+      return res.status(403).json({
+        error: "Verification codes are only available while completing a new UniAble sign-up."
+      });
+    }
     const phoneNumber = String(req.body?.phoneNumber || "").trim();
     if (!/^\+[1-9]\d{7,14}$/.test(phoneNumber)) return res.status(400).json({ error: "Enter a valid phone number in international format, for example +27821234567." });
     const user = await getAdminAuth().getUser(uid);
