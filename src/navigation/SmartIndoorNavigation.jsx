@@ -24,10 +24,23 @@ const floorPlans = {
   },
 }
 
+const getFloorPlan = (floorId) => {
+  if (!floorId) return null
+
+  const normalized = String(floorId)
+    .toLowerCase()
+    .replace(/\s+/g, '')
+    .replace('floor', 'level')
+
+  return floorPlans[normalized] || null
+}
+
 const formatFloor = (floorId) => {
   if (!floorId) return 'Floor not specified'
 
-  return floorId.replace('level', 'Level ')
+  return String(floorId)
+    .replace('level', 'Level ')
+    .replace('floor', 'Level ')
 }
 
 // ============================================================
@@ -61,7 +74,6 @@ function SmartIndoorNavigation({
   const [calculating, setCalculating] = useState(false)
   const [error, setError] = useState('')
 
-  // Voice state
   const [voiceEnabled, setVoiceEnabled] = useState(false)
   const [lastSpokenText, setLastSpokenText] = useState('')
   const [speechSpeaking, setSpeechSpeaking] = useState(false)
@@ -76,7 +88,6 @@ function SmartIndoorNavigation({
     const selectedLanguage = String(language).toLowerCase()
 
     if (selectedLanguage.includes('zulu')) return 'zu-ZA'
-
     if (selectedLanguage.includes('xhosa')) return 'xh-ZA'
 
     if (
@@ -90,76 +101,17 @@ function SmartIndoorNavigation({
   }
 
   // ==========================================================
-  // ENABLE VOICE GUIDANCE
-  // ==========================================================
-
-  const enableVoiceGuidance = () => {
-    if (
-      typeof window === 'undefined' ||
-      !('speechSynthesis' in window)
-    ) {
-      setSpeechError(
-        'Voice guidance is not supported by this browser.'
-      )
-      return
-    }
-
-    window.speechSynthesis.cancel()
-
-    const speech = new SpeechSynthesisUtterance(
-      'Voice guidance is now enabled.'
-    )
-
-    speech.lang = getSpeechLanguage()
-    speech.rate = 0.9
-    speech.pitch = 1
-    speech.volume = 1
-
-    speech.onstart = () => {
-      setSpeechSpeaking(true)
-      setSpeechPaused(false)
-      setSpeechError('')
-    }
-
-    speech.onend = () => {
-      setSpeechSpeaking(false)
-      setSpeechPaused(false)
-    }
-
-    speech.onerror = (event) => {
-      setSpeechSpeaking(false)
-      setSpeechPaused(false)
-      setSpeechError(`Voice error: ${event.error}`)
-    }
-
-    setVoiceEnabled(true)
-    setLastSpokenText('Voice guidance is now enabled.')
-    setSpeechError('')
-
-    window.speechSynthesis.speak(speech)
-  }
-
-  // ==========================================================
   // TEXT TO SPEECH
   // ==========================================================
 
   const speak = (text) => {
-    if (!text) return
-
-    if (!voiceEnabled) {
-      setSpeechError(
-        'Please enable voice guidance before starting navigation.'
-      )
-      return
-    }
+    if (!text || !voiceEnabled) return
 
     if (
       typeof window === 'undefined' ||
-      !('speechSynthesis' in window)
+      !window.speechSynthesis
     ) {
-      setSpeechError(
-        'Speech synthesis is unavailable on this device.'
-      )
+      setSpeechError('Voice guidance is unavailable on this device.')
       return
     }
 
@@ -178,16 +130,13 @@ function SmartIndoorNavigation({
     const matchingVoice =
       voices.find(
         voice =>
-          voice.lang.toLowerCase() ===
-          speechLanguage.toLowerCase()
+          voice.lang.toLowerCase() === speechLanguage.toLowerCase()
       ) ||
       voices.find(
         voice =>
-          voice.lang
-            .toLowerCase()
-            .startsWith(
-              speechLanguage.substring(0, 2).toLowerCase()
-            )
+          voice.lang.toLowerCase().startsWith(
+            speechLanguage.substring(0, 2).toLowerCase()
+          )
       )
 
     if (matchingVoice) {
@@ -218,13 +167,58 @@ function SmartIndoorNavigation({
   }
 
   // ==========================================================
+  // ENABLE VOICE GUIDANCE
+  // ==========================================================
+
+  const enableVoiceGuidance = () => {
+    if (
+      typeof window === 'undefined' ||
+      !window.speechSynthesis
+    ) {
+      setSpeechError(
+        'Voice guidance is not supported by this browser.'
+      )
+      return
+    }
+
+    setVoiceEnabled(true)
+
+    const text = 'Voice guidance is now enabled.'
+
+    setLastSpokenText(text)
+    setSpeechError('')
+
+    window.speechSynthesis.cancel()
+
+    const speech = new SpeechSynthesisUtterance(text)
+
+    speech.lang = getSpeechLanguage()
+    speech.rate = 0.9
+
+    speech.onstart = () => {
+      setSpeechSpeaking(true)
+      setSpeechPaused(false)
+    }
+
+    speech.onend = () => {
+      setSpeechSpeaking(false)
+      setSpeechPaused(false)
+    }
+
+    speech.onerror = (event) => {
+      setSpeechSpeaking(false)
+      setSpeechError(`Voice error: ${event.error}`)
+    }
+
+    window.speechSynthesis.speak(speech)
+  }
+
+  // ==========================================================
   // VOICE CONTROLS
   // ==========================================================
 
   const replaySpeech = () => {
-    if (lastSpokenText) {
-      speak(lastSpokenText)
-    }
+    if (lastSpokenText) speak(lastSpokenText)
   }
 
   const pauseSpeech = () => {
@@ -271,22 +265,16 @@ function SmartIndoorNavigation({
 
         setLocations(data)
 
-        setStartLocation(previous =>
-          data.some(item => item.id === previous)
-            ? previous
-            : data.find(item => item.id === 'entrance')?.id ||
-              data[0]?.id ||
-              ''
+        setStartLocation(
+          data.some(item => item.id === 'entrance')
+            ? 'entrance'
+            : data[0]?.id || ''
         )
 
-        setDestination(previous =>
-          data.some(item => item.id === previous)
-            ? previous
-            : data.find(
-                item => item.id === 'lectureRoomL1A'
-              )?.id ||
-              data[0]?.id ||
-              ''
+        setDestination(
+          data.some(item => item.id === 'lectureRoomL1A')
+            ? 'lectureRoomL1A'
+            : data[1]?.id || data[0]?.id || ''
         )
       } catch (err) {
         if (!active) return
@@ -294,9 +282,7 @@ function SmartIndoorNavigation({
         setError(err.message)
         setMessage('Unable to load campus locations.')
       } finally {
-        if (active) {
-          setLoadingLocations(false)
-        }
+        if (active) setLoadingLocations(false)
       }
     }
 
@@ -317,27 +303,21 @@ function SmartIndoorNavigation({
 
   const calculateRoute = async () => {
     if (!startLocation || !destination) {
-      setMessage(
-        'Please select a starting point and destination.'
-      )
+      setMessage('Please select a starting point and destination.')
       return
     }
 
-    stopSpeech()
-
     if (startLocation === destination) {
-      setRoute([])
-      setConnections([])
-      setDistance(0)
-      setCurrentStep(0)
+      resetNavigation()
 
       const text = 'You are already at your destination.'
 
       setMessage(text)
       speak(text)
-
       return
     }
+
+    stopSpeech()
 
     try {
       setCalculating(true)
@@ -362,30 +342,46 @@ function SmartIndoorNavigation({
         throw new Error('This route is not accessible.')
       }
 
-      const routeConnections = result.connections || []
-
       if (
-        routeConnections.length !== result.route.length - 1
+        !Array.isArray(result.connections) ||
+        result.connections.length !== result.route.length - 1
       ) {
-        throw new Error(
-          'The route instructions are incomplete.'
-        )
+        throw new Error('The route instructions are incomplete.')
+      }
+
+      const validConnections = result.connections.map(connection => {
+        const instruction =
+          connection.instruction ||
+          connection.forwardInstruction ||
+          connection.reverseInstruction
+
+        if (!instruction) {
+          throw new Error(
+            'A route connection is missing its instruction.'
+          )
+        }
+
+        return {
+          ...connection,
+          instruction,
+          accessible: connection.accessible !== false,
+        }
+      })
+
+      if (validConnections.some(item => !item.accessible)) {
+        throw new Error('The route contains an inaccessible connection.')
       }
 
       setRoute(result.route)
-      setConnections(routeConnections)
+      setConnections(validConnections)
       setDistance(result.distanceMeters || 0)
       setCurrentStep(0)
 
       const destinationName =
         result.route[result.route.length - 1].name
 
-      const firstInstruction =
-        routeConnections[0]?.instruction ||
-        `Continue towards ${destinationName}.`
-
       const text =
-        `Route found to ${destinationName}. ${firstInstruction}`
+        `Route found to ${destinationName}. ${validConnections[0]?.instruction || ''}`
 
       setMessage(text)
       speak(text)
@@ -399,8 +395,6 @@ function SmartIndoorNavigation({
       setError(err.message)
       setMessage(err.message)
 
-      speak(err.message)
-
     } finally {
       setCalculating(false)
     }
@@ -411,16 +405,13 @@ function SmartIndoorNavigation({
   // ==========================================================
 
   const nextStep = () => {
-    if (!connections.length) return
+    if (!connections.length || arrived) return
 
-    // All directions have been completed.
     if (currentStep >= connections.length - 1) {
       const destinationName =
-        route[route.length - 1]?.name ||
-        'your destination'
+        route[route.length - 1]?.name || 'your destination'
 
-      const text =
-        `You have arrived at ${destinationName}.`
+      const text = `You have arrived at ${destinationName}.`
 
       setCurrentStep(connections.length)
       setMessage(text)
@@ -442,9 +433,7 @@ function SmartIndoorNavigation({
   // ==========================================================
 
   const previousStep = () => {
-    if (!connections.length || currentStep === 0) {
-      return
-    }
+    if (!connections.length || currentStep === 0) return
 
     const previousIndex =
       currentStep >= connections.length
@@ -474,9 +463,7 @@ function SmartIndoorNavigation({
     setSpeechError('')
     setLastSpokenText('')
 
-    setMessage(
-      'Choose your starting point and destination.'
-    )
+    setMessage('Choose your starting point and destination.')
   }
 
   // ==========================================================
@@ -488,7 +475,7 @@ function SmartIndoorNavigation({
     : 0
 
   const activeFloorPlan = route.length
-    ? floorPlans[route[currentLocationIndex]?.floorId]
+    ? getFloorPlan(route[currentLocationIndex]?.floorId)
     : null
 
   const arrived =
@@ -501,8 +488,6 @@ function SmartIndoorNavigation({
 
   return (
     <div className="navigation-container">
-
-      {/* HEADER */}
 
       <div className="navigation-header">
         <button
@@ -522,8 +507,6 @@ function SmartIndoorNavigation({
         </div>
       </div>
 
-      {/* ACCESSIBILITY */}
-
       <div className="navigation-accessibility">
         <span className="accessibility-icon">♿</span>
 
@@ -533,8 +516,6 @@ function SmartIndoorNavigation({
         </div>
       </div>
 
-      {/* STARTING LOCATION */}
-
       <div className="navigation-card">
         <label htmlFor="start-location">
           📍 Current Location
@@ -543,9 +524,7 @@ function SmartIndoorNavigation({
         <select
           id="start-location"
           value={startLocation}
-          onChange={event =>
-            setStartLocation(event.target.value)
-          }
+          onChange={event => setStartLocation(event.target.value)}
           disabled={loadingLocations || calculating}
         >
           {locations.map(location => (
@@ -555,8 +534,6 @@ function SmartIndoorNavigation({
           ))}
         </select>
       </div>
-
-      {/* DESTINATION */}
 
       <div className="navigation-card">
         <label htmlFor="destination">
@@ -566,9 +543,7 @@ function SmartIndoorNavigation({
         <select
           id="destination"
           value={destination}
-          onChange={event =>
-            setDestination(event.target.value)
-          }
+          onChange={event => setDestination(event.target.value)}
           disabled={loadingLocations || calculating}
         >
           {locations.map(location => (
@@ -578,8 +553,6 @@ function SmartIndoorNavigation({
           ))}
         </select>
       </div>
-
-      {/* FIND ROUTE */}
 
       <button
         className="primary-button navigation-start-button"
@@ -597,12 +570,8 @@ function SmartIndoorNavigation({
       </button>
 
       {loadingLocations && (
-        <p role="status">
-          Loading campus locations...
-        </p>
+        <p role="status">Loading campus locations...</p>
       )}
-
-      {/* NAVIGATION MESSAGE */}
 
       <div
         className="navigation-message"
@@ -619,15 +588,11 @@ function SmartIndoorNavigation({
         </p>
       )}
 
-      {/* ROUTE SUMMARY */}
-
       {route.length > 0 && (
         <div className="navigation-card">
           <h2>🗺️ Your Route</h2>
 
-          <p>
-            Estimated route distance: {distance} metres
-          </p>
+          <p>Estimated route distance: {distance} metres</p>
 
           <div className="route-list">
             {route.map((location, index) => (
@@ -646,15 +611,11 @@ function SmartIndoorNavigation({
                 <div>
                   <strong>{location.name}</strong>
 
-                  <small>
-                    {formatFloor(location.floorId)}
-                  </small>
+                  <small>{formatFloor(location.floorId)}</small>
 
                   {index === currentLocationIndex && (
                     <small>
-                      {arrived
-                        ? 'Destination reached'
-                        : 'Current step'}
+                      {arrived ? 'Destination reached' : 'Current step'}
                     </small>
                   )}
                 </div>
@@ -663,8 +624,6 @@ function SmartIndoorNavigation({
           </div>
         </div>
       )}
-
-      {/* FLOOR PLAN */}
 
       {route.length > 0 && activeFloorPlan && (
         <section className="navigation-card floor-plan-card">
@@ -686,8 +645,6 @@ function SmartIndoorNavigation({
         </section>
       )}
 
-      {/* STEP-BY-STEP DIRECTIONS */}
-
       {connections.length > 0 && (
         <div className="navigation-card">
           <h2>👣 Step-by-Step Directions</h2>
@@ -703,7 +660,6 @@ function SmartIndoorNavigation({
                 }
               >
                 <span>{index + 1}</span>
-
                 <p>{connection.instruction}</p>
               </div>
             ))}
@@ -717,15 +673,11 @@ function SmartIndoorNavigation({
         </div>
       )}
 
-      {/* VOICE GUIDANCE */}
-
       {route.length > 0 && (
         <div className="navigation-card voice-controls">
           <h2>🔊 Voice Guidance</h2>
 
-          <p>
-            Listen to spoken navigation instructions.
-          </p>
+          <p>Listen to spoken navigation instructions.</p>
 
           <div className="navigation-controls">
             <button
@@ -767,8 +719,6 @@ function SmartIndoorNavigation({
         </div>
       )}
 
-      {/* STEP CONTROLS */}
-
       {connections.length > 0 && (
         <div className="navigation-controls">
           <button
@@ -795,8 +745,6 @@ function SmartIndoorNavigation({
         </div>
       )}
 
-      {/* RESET */}
-
       {route.length > 0 && (
         <button
           className="reset-navigation-button"
@@ -806,8 +754,6 @@ function SmartIndoorNavigation({
           🔄 Start New Route
         </button>
       )}
-
-      {/* VOICE STATUS AND ACTIVATION */}
 
       <div className="voice-guidance">
         <span>🔊</span>
@@ -822,8 +768,7 @@ function SmartIndoorNavigation({
           <p>Language: {language}</p>
 
           <p>
-            Spoken directions depend on the voices installed
-            on the device.
+            Spoken directions depend on the voices installed on the device.
           </p>
 
           <button
@@ -837,10 +782,7 @@ function SmartIndoorNavigation({
           </button>
 
           {speechError && (
-            <p
-              className="navigation-error"
-              role="alert"
-            >
+            <p className="navigation-error" role="alert">
               {speechError}
             </p>
           )}

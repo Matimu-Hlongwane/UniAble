@@ -81,7 +81,7 @@ async function readApiResponse(response) {
     throw new Error('The navigation server returned an invalid response.')
   }
 
-  if (!response.ok || !data.success) {
+  if (!response.ok || data.success === false) {
     throw new Error(
       data.message || 'The navigation request failed.'
     )
@@ -105,7 +105,14 @@ export const getNavigationLocations = async () => {
     throw new Error('The server returned an invalid locations list.')
   }
 
-  return data.locations
+  return data.locations.map(location => ({
+    ...location,
+    id: location.id,
+    name: location.name,
+    type: location.type,
+    floor: location.floor,
+    accessible: location.accessible !== false,
+  }))
 }
 
 // ============================================================
@@ -119,6 +126,12 @@ export const calculateNavigationRoute = async (
   if (!start || !destination) {
     throw new Error(
       'Please select a starting point and destination.'
+    )
+  }
+
+  if (start === destination) {
+    throw new Error(
+      'Your starting point and destination cannot be the same.'
     )
   }
 
@@ -147,12 +160,11 @@ export const calculateNavigationRoute = async (
 
   const connections = data.connections.map(connection => ({
     ...connection,
-
     instruction:
       connection.instruction ||
       connection.forwardInstruction ||
+      connection.reverseInstruction ||
       'Continue along the accessible route.',
-
     accessible: connection.accessible !== false,
   }))
 
@@ -162,6 +174,10 @@ export const calculateNavigationRoute = async (
 
   return {
     ...data,
+    route: data.route,
     connections,
+    distanceMeters: data.distanceMeters,
+    accessible: data.accessible !== false,
   }
 }
+
