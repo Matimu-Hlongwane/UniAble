@@ -3,66 +3,76 @@ const {
   getConnections,
 } = require("./navigationData");
 
-// These are destinations, not corridors.
-// A route must not pass through them to reach another destination.
 const NON_TRANSIT_TYPES = new Set([
   "classroom",
   "auditorium",
+  "office",
+  "service",
+  "study",
+  "meeting",
+  "medical",
+  "technical",
+  "storage",
+  "lab",
+  "restroom",
 ]);
 
 function calculateAccessibleRoute(startId, destinationId) {
   const start = locations[startId];
   const destination = locations[destinationId];
 
-  if (!start) {
-    throw new Error("Starting location not found.");
-  }
-
-  if (!destination) {
-    throw new Error("Destination not found.");
-  }
+  if (!start) throw new Error("Starting location not found.");
+  if (!destination) throw new Error("Destination not found.");
 
   if (!start.accessible || !destination.accessible) {
     return null;
   }
 
-  const distances = new Map();
-  const previous = new Map();
+  const distances = {};
+  const previous = {};
   const unvisited = new Set(Object.keys(locations));
 
   for (const id of unvisited) {
-    distances.set(id, Infinity);
+    distances[id] = Infinity;
   }
 
-  distances.set(startId, 0);
+  distances[startId] = 0;
 
   while (unvisited.size > 0) {
     let currentId = null;
     let shortestDistance = Infinity;
 
     for (const id of unvisited) {
-      const distance = distances.get(id);
-
-      if (distance < shortestDistance) {
-        shortestDistance = distance;
+      if (distances[id] < shortestDistance) {
+        shortestDistance = distances[id];
         currentId = id;
       }
     }
 
-    if (currentId === null || shortestDistance === Infinity) {
-      break;
-    }
+    if (currentId === null) break;
 
-    if (currentId === destinationId) {
-      break;
-    }
+    if (currentId === destinationId) break;
 
     unvisited.delete(currentId);
 
-    const edges = getConnections(currentId);
+    for (const edge of getConnections(currentId)) {
+      if (!edge || !edge.accessible) continue;
 
-    for (const edge of edges) {
-      if (!edge || !edge.accessible) {
+      const nextId =
+        edge.from === currentId ? edge.to :
+        edge.to === currentId ? edge.from :
+        null;
+
+      if (!nextId || !unvisited.has(nextId)) continue;
+
+      const nextLocation = locations[nextId];
+
+      if (!nextLocation || !nextLocation.accessible) continue;
+
+      if (
+        nextId !== destinationId &&
+        NON_TRANSIT_TYPES.has(nextLocation.type)
+      ) {
         continue;
       }
 
@@ -71,48 +81,19 @@ function calculateAccessibleRoute(startId, destinationId) {
         !Number.isFinite(edge.distance) ||
         edge.distance < 0
       ) {
-        throw new Error("Invalid connection distance.");
-      }
-
-      let nextId;
-
-      if (edge.from === currentId) {
-        nextId = edge.to;
-      } else if (edge.to === currentId) {
-        nextId = edge.from;
-      } else {
-        continue;
-      }
-
-      if (!unvisited.has(nextId)) {
-        continue;
-      }
-
-      const nextLocation = locations[nextId];
-
-      if (!nextLocation || !nextLocation.accessible) {
-        continue;
-      }
-
-      // Do not use classrooms or auditoriums as corridors.
-      // They can still be the requested starting point or destination.
-      if (
-        nextId !== destinationId &&
-        NON_TRANSIT_TYPES.has(nextLocation.type)
-      ) {
-        continue;
+        throw new Error(`Invalid distance on ${edge.from} -> ${edge.to}`);
       }
 
       const newDistance = shortestDistance + edge.distance;
 
-      if (newDistance < distances.get(nextId)) {
-        distances.set(nextId, newDistance);
-        previous.set(nextId, currentId);
+      if (newDistance < distances[nextId]) {
+        distances[nextId] = newDistance;
+        previous[nextId] = currentId;
       }
     }
   }
 
-  if (distances.get(destinationId) === Infinity) {
+  if (!Number.isFinite(distances[destinationId])) {
     return null;
   }
 
@@ -120,32 +101,23 @@ function calculateAccessibleRoute(startId, destinationId) {
   let currentId = destinationId;
 
   while (currentId !== undefined) {
-    const location = locations[currentId];
+    route.unshift(locations[currentId]);
 
-    if (!location) {
-      throw new Error("Invalid location in route.");
-    }
+    if (currentId === startId) break;
 
-    route.unshift(location);
-
-    if (currentId === startId) {
-      break;
-    }
-
-    currentId = previous.get(currentId);
+    currentId = previous[currentId];
   }
 
   if (
-    route.length === 0 ||
-    route[0].id !== startId ||
-    route[route.length - 1].id !== destinationId
+    route[0]?.id !== startId ||
+    route[route.length - 1]?.id !== destinationId
   ) {
     return null;
   }
 
   return {
     route,
-    distanceMeters: distances.get(destinationId),
+    distanceMeters: distances[destinationId],
     accessible: true,
   };
 }
@@ -153,3 +125,4 @@ function calculateAccessibleRoute(startId, destinationId) {
 module.exports = {
   calculateAccessibleRoute,
 };
+

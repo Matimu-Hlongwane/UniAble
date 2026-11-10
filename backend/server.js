@@ -1,19 +1,24 @@
 const express = require("express");
+const path = require("path");
 
 const {
   calculateAccessibleRoute,
-} = require("./navigation/navigationEngine");
+} = require(path.join(__dirname, "navigation", "navigationEngine"));
 
 const {
   locations,
   getConnections,
   getSelectableLocations,
-} = require("./navigation/navigationData");
+} = require(path.join(__dirname, "navigation", "navigationData"));
 
 const app = express();
 const PORT = 5000;
 
 app.use(express.json());
+
+// ============================================================
+// CORS
+// ============================================================
 
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
@@ -28,7 +33,7 @@ app.use((req, res, next) => {
 });
 
 // ============================================================
-// BACKEND HEALTH CHECK
+// HEALTH CHECK
 // ============================================================
 
 app.get("/", (req, res) => {
@@ -39,14 +44,29 @@ app.get("/", (req, res) => {
 });
 
 // ============================================================
-// GET ACCESSIBLE DESTINATIONS
+// GET NAVIGATION LOCATIONS
 // ============================================================
 
 app.get("/api/navigation/locations", (req, res) => {
-  res.json({
-    success: true,
-    locations: getSelectableLocations(),
-  });
+  try {
+    const selectableLocations = getSelectableLocations();
+
+    return res.json({
+      success: true,
+      locations: selectableLocations.map(location => ({
+        ...location,
+        accessible: location.accessible !== false,
+      })),
+    });
+  } catch (error) {
+    console.error("Location loading error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to load navigation locations.",
+      error: error.message,
+    });
+  }
 });
 
 // ============================================================
@@ -54,9 +74,12 @@ app.get("/api/navigation/locations", (req, res) => {
 // ============================================================
 
 app.get("/api/navigation/route", (req, res) => {
-  const { start, destination } = req.query;
+  const start = String(req.query.start || "").trim();
+  const destination = String(req.query.destination || "").trim();
 
-  // Validate required parameters.
+  console.log("Route requested:", start, "->", destination);
+
+  // Validate parameters.
   if (!start || !destination) {
     return res.status(400).json({
       success: false,
@@ -64,26 +87,27 @@ app.get("/api/navigation/route", (req, res) => {
     });
   }
 
-  // Validate starting location.
+  // Validate locations.
   if (!locations[start]) {
     return res.status(404).json({
       success: false,
       message: "Starting location was not found.",
+      start,
     });
   }
 
-  // Validate destination.
   if (!locations[destination]) {
     return res.status(404).json({
       success: false,
       message: "Destination was not found.",
+      destination,
     });
   }
 
   // Validate accessibility.
   if (
-    !locations[start].accessible ||
-    !locations[destination].accessible
+    locations[start].accessible === false ||
+    locations[destination].accessible === false
   ) {
     return res.status(403).json({
       success: false,
@@ -91,34 +115,46 @@ app.get("/api/navigation/route", (req, res) => {
     });
   }
 
-  try {
-    const result = calculateAccessibleRoute(
-      start,
-      destination
-    );
+  if (start === destination) {
+    return res.status(400).json({
+      success: false,
+      message: "You are already at your destination.",
+    });
+  }
 
-    if (!result || !result.route || result.route.length === 0) {
+  try {
+    // Calculate route.
+    const result = calculateAccessibleRoute(start, destination);
+
+    console.log("Navigation engine result:", {
+      resultExists: !!result,
+      routeIsArray: Array.isArray(result?.route),
+      routeLength: result?.route?.length,
+      distanceMeters: result?.distanceMeters,
+    });
+
+    if (!result || !Array.isArray(result.route) || result.route.length === 0) {
       return res.status(404).json({
         success: false,
         message: "No accessible route was found.",
+        debug: {
+          start,
+          destination,
+          result,
+        },
       });
     }
 
     const routeConnections = [];
 
-    // Build instructions for every route segment.
-    for (
-      let i = 0;
-      i < result.route.length - 1;
-      i++
-    ) {
+    // Build directional instructions.
+    for (let i = 0; i < result.route.length - 1; i++) {
       const from = result.route[i].id;
       const to = result.route[i + 1].id;
 
-      const connection = getConnections(from).find(
-        edge =>
-          (edge.from === from && edge.to === to) ||
-          (edge.from === to && edge.to === from)
+      const connection = getConnections(from).find(edge =>
+        (edge.from === from && edge.to === to) ||
+        (edge.from === to && edge.to === from)
       );
 
       if (!connection) {
@@ -127,21 +163,19 @@ app.get("/api/navigation/route", (req, res) => {
         );
       }
 
-      // Never return instructions for an inaccessible connection.
-      if (!connection.accessible) {
+      if (connection.accessible === false) {
         throw new Error(
           `Inaccessible connection between ${from} and ${to}.`
         );
       }
 
-      // Determine the direction of travel.
       const travellingForward = connection.from === from;
 
       const instruction = travellingForward
         ? connection.forwardInstruction
         : connection.reverseInstruction;
 
-      if (!instruction) {
+      if (typeof instruction !== "string" || !instruction.trim()) {
         throw new Error(
           `Instruction missing between ${from} and ${to}.`
         );
@@ -153,16 +187,27 @@ app.get("/api/navigation/route", (req, res) => {
         to,
         toName: locations[to].name,
         distance: connection.distance,
-        instruction,
-        accessible: connection.accessible,
+        instruction: instruction.trim(),
+        accessible: true,
       });
     }
 
-    // Return the complete route.
+    // Validate route instructions.
+    if (routeConnections.length !== result.route.length - 1) {
+      throw new Error("Route instructions are incomplete.");
+    }
+
+    // Return successful route.
     return res.json({
       success: true,
 
-      route: result.route,
+      route: result.route.map(location => ({
+        id: location.id,
+        name: location.name,
+        type: location.type,
+        floorId: location.floorId,
+        accessible: location.accessible !== false,
+      })),
 
       routeNames: result.route.map(location => ({
         id: location.id,
@@ -173,8 +218,7 @@ app.get("/api/navigation/route", (req, res) => {
       connections: routeConnections,
 
       distanceMeters: result.distanceMeters,
-
-      accessible: result.accessible,
+      accessible: result.accessible === true,
     });
 
   } catch (error) {
@@ -193,8 +237,8 @@ app.get("/api/navigation/route", (req, res) => {
 // ============================================================
 
 app.listen(PORT, () => {
-  console.log(
-    `UniAble backend running on http://localhost:${PORT}`
-  );
+  console.log("UniAble backend running on http://localhost:" + PORT);
+  console.log("Server file:", __filename);
+  console.log("Navigation locations loaded:", Object.keys(locations).length);
 });
 

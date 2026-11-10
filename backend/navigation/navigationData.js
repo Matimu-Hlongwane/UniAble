@@ -51,7 +51,6 @@ function addConnection(
     accessible,
   });
 }
-
 // ============================================================
 // LEVEL 1 — DESTINATIONS
 // ============================================================
@@ -86,23 +85,20 @@ addLocation("storeSafeL1", "Store & Safe", "storage", "level1");
 addLocation("liftL1", "Lifts", "elevator", "level1");
 
 // ============================================================
-// LEVEL 1 — INTERNAL NODES
+// LEVEL 1 — INTERNAL CORRIDORS AND JUNCTIONS
 // ============================================================
 
 [
   ["corridorL1Entry", "Entrance Corridor"],
   ["foyerL1", "Level 1 Foyer"],
   ["corridorL1Sensors", "Corridor Past the Sensors"],
-  ["corridorL1Junction", "Main Junction"],
-
-  // Additional junction for the Venue 4 route
-  ["corridorL1Venue4Junction", "Venue 4 Junction"],
-
+  ["corridorL1Junction", "Venue 1 and Auditorium Corridor"],
   ["corridorL1Venue1", "Venue 1 Approach"],
   ["corridorL1Second", "Second Corridor"],
   ["corridorL1Venue2", "Venue 2 Approach"],
   ["corridorL1Library", "Library Corridor"],
   ["corridorL1Venue4", "Venue 4 Approach"],
+  ["corridorL1Venue4Junction", "Venue 4 Junction"],
   ["corridorL1Venue5", "Venue 5 Corridor"],
   ["corridorL1Staff", "Staff Room Corridor"],
   ["corridorL1Advisor", "Student Advisor Corridor"],
@@ -130,225 +126,54 @@ addConnection(
   "corridorL1Entry",
   "foyerL1",
   8,
-  "Continue straight and pass through the glass doors into the Level 1 foyer.",
-  "Walk straight through the glass doors towards the main entrance."
+  "Continue straight through the glass doors into the Level 1 foyer.",
+  "Walk back through the glass doors towards the main entrance."
 );
 
 addConnection(
   "foyerL1",
   "corridorL1Sensors",
   6,
-  "Turn right and continue past the sensors.",
+  "Turn right and walk past the sensors.",
   "Walk back towards the foyer and turn left."
 );
 
+// ============================================================
+// LEVEL 1 — RIGHT BRANCH: VENUE 1 AND AUDITORIUM
+// ============================================================
+
 addConnection(
   "corridorL1Sensors",
   "corridorL1Junction",
   5,
-  "Continue past the sensors until you reach the junction.",
-  "Walk back towards the sensors and continue to the foyer."
+  "After passing the sensors, turn right and continue along the corridor towards Venue 1 and the Auditorium.",
+  "Walk back along the corridor towards the sensors."
 );
-
-// ============================================================
-// LEVEL 1 — ADDITIONAL VENUE 4 JUNCTION
-// ============================================================
-
-addConnection(
-  "corridorL1Sensors",
-  "corridorL1Venue4Junction",
-  3,
-  "After passing the sensors, turn left and walk a short distance to the junction.",
-  "Walk back from the Venue 4 junction towards the sensors."
-);
-
-addConnection(
-  "corridorL1Venue4Junction",
-  "lectureRoomL1E",
-  7,
-  "Turn right, continue straight towards the door ahead, and enter Venue 4.",
-  "Leave Venue 4 and walk back towards the junction."
-);
-
-// ============================================================
-// LEVEL 1 — VENUE 1 AND THE SECOND CORRIDOR
-// ============================================================
 
 addConnection(
   "corridorL1Junction",
   "corridorL1Venue1",
   3,
-  "Turn left towards the lecture room next to Reception.",
-  "Walk back towards the junction."
+  "Continue along the corridor towards Venue 1, next to Reception.",
+  "Walk back towards the corridor junction."
 );
 
+// Venue 1 is a destination branch, not a corridor.
 addConnection(
   "corridorL1Venue1",
   "lectureRoomL1A",
   3,
-  "Enter Venue 1.",
-  "Leave Venue 1 through the other door."
+  "Venue 1 is next to Reception. Enter the room on your left.",
+  "Leave Venue 1 and return to the corridor."
 );
 
+// Auditorium is the door next to Venue 1.
 addConnection(
-  "lectureRoomL1A",
-  "corridorL1Second",
-  4,
-  "Leave Venue 1 through its other door. You are now in the second corridor.",
-  "Enter Venue 1 through the opposite door."
-);
-
-// Venue 2 is across the second corridor from Venue 1.
-addConnection(
-  "corridorL1Second",
-  "lectureRoomL1C",
-  4,
-  "Cross the corridor to your right and enter Venue 2.",
-  "Leave Venue 2 and cross the corridor towards Venue 1."
-);
-
-// ============================================================
-// LEVEL 1 — VENUES 2, 3 AND 4
-// ============================================================
-
-addConnection(
-  "corridorL1Second",
-  "corridorL1Library",
-  4,
-  "Turn right and continue down the corridor.",
-  "Walk back down the corridor towards the second corridor."
-);
-
-addConnection(
-  "corridorL1Library",
-  "corridorL1Venue4",
-  5,
-  "Continue past the Student Advisor Office and the Library towards Venue 4.",
-  "Walk back past the Library towards the Student Advisor Office."
-);
-
-addConnection(
-  "corridorL1Library",
-  "studentAdvisorOfficeL1",
-  3,
-  "Turn right after the Library. The first room is the Student Advisor Office, Venue 3.",
-  "Leave the Student Advisor Office and return to the corridor."
-);
-
-addConnection(
-  "corridorL1Library",
-  "libraryStudyL1",
-  3,
-  "Enter the Library / Study area.",
-  "Leave the Library / Study area and return to the corridor."
-);
-
-addConnection(
-  "corridorL1Venue4",
-  "lectureRoomL1E",
-  3,
-  "Enter Venue 4 through the door ahead.",
-  "Leave Venue 4 and return to the corridor."
-);
-
-// ============================================================
-// LEVEL 1 — VENUE 5 AND STAFF ROOM
-// ============================================================
-
-addConnection(
-  "corridorL1Venue4",
-  "corridorL1Venue5",
-  5,
-  "Continue straight towards the Staff Room. Venue 5 is the door next to it.",
-  "Walk back towards Venue 4."
-);
-
-addConnection(
-  "corridorL1Venue5",
-  "lectureRoomL1B",
-  3,
-  "Enter Venue 5.",
-  "Leave Venue 5 and return to the corridor."
-);
-
-addConnection(
-  "corridorL1Venue5",
-  "staffOfficeL1",
-  3,
-  "Enter the Staff Room.",
-  "Leave the Staff Room. Venue 5 is the first door on your left."
-);
-
-// ============================================================
-// LEVEL 1 — STUDENT ADVISOR ROUTE FROM THE STAFF ROOM SIDE
-// ============================================================
-
-addConnection(
-  "corridorL1Junction",
-  "corridorL1Staff",
-  6,
-  "Turn left and continue in the direction of the Staff Room.",
-  "Walk back towards the main junction."
-);
-
-addConnection(
-  "corridorL1Staff",
-  "staffOfficeL1",
-  3,
-  "Enter the Staff Room.",
-  "Leave the Staff Room and return to the corridor."
-);
-
-addConnection(
-  "corridorL1Staff",
-  "corridorL1Venue5",
-  4,
-  "Turn right and continue down the corridor past Venue 5 and Venue 4.",
-  "Walk back towards the Staff Room."
-);
-
-addConnection(
-  "corridorL1Venue5",
-  "corridorL1Advisor",
-  5,
-  "Turn right and continue down the corridor past the Library.",
-  "Walk back past the Library towards Venue 4 and Venue 5."
-);
-
-addConnection(
-  "corridorL1Advisor",
-  "studentAdvisorOfficeL1",
-  3,
-  "The first room after the Library is the Student Advisor Office, Venue 3. Enter it.",
-  "Leave the Student Advisor Office and return to the corridor."
-);
-
-// ============================================================
-// LEVEL 1 — AUDITORIUM
-// ============================================================
-
-addConnection(
-  "corridorL1Junction",
-  "corridorL1Auditorium",
-  4,
-  "From the junction, go to your right and approach the door.",
-  "Leave the Auditorium and return to the junction."
-);
-
-addConnection(
-  "corridorL1Auditorium",
+  "corridorL1Venue1",
   "auditoriumL1",
   3,
-  "Enter the Auditorium through the door ahead.",
+  "The Auditorium is through the door next to Venue 1. Enter the Auditorium.",
   "Leave the Auditorium and return to the corridor."
-);
-
-addConnection(
-  "corridorL1Staff",
-  "corridorL1Auditorium",
-  5,
-  "Walk out of the Staff Room area and enter the Auditorium through the door facing you.",
-  "Leave the Auditorium and return towards the Staff Room."
 );
 
 // ============================================================
@@ -356,11 +181,11 @@ addConnection(
 // ============================================================
 
 addConnection(
-  "foyerL1",
+  "corridorL1Venue1",
   "corridorL1Reception",
-  5,
-  "Walk towards Reception.",
-  "Walk back towards the foyer."
+  4,
+  "Walk past Venue 1 and continue towards Reception.",
+  "Leave the Reception area and walk back towards Venue 1."
 );
 
 addConnection(
@@ -368,43 +193,179 @@ addConnection(
   "reception",
   3,
   "Enter Reception.",
-  "Leave Reception and turn right towards Venue 1."
-);
-
-addConnection(
-  "reception",
-  "lectureRoomL1A",
-  4,
-  "Leave Reception, turn right and enter the first room, Venue 1.",
-  "Leave Venue 1 and return towards Reception."
+  "Leave Reception and return to the corridor."
 );
 
 addConnection(
   "corridorL1Reception",
   "corridorL1MeetingPods",
   4,
-  "Continue down the passage towards the Meeting Pods.",
-  "Walk back towards Reception."
+  "Enter the Reception area and turn left. Continue towards the Meeting Pods behind Reception.",
+  "Walk back from the Meeting Pods towards Reception."
 );
 
 addConnection(
   "corridorL1MeetingPods",
   "meetingPods",
   3,
-  "Enter the Meeting Pods area.",
-  "Leave the Meeting Pods area and return to the passage."
+  "Enter the Meeting Pods area behind Reception.",
+  "Leave the Meeting Pods and return to the passage."
 );
 
 // ============================================================
-// LEVEL 1 — OTHER CONFIRMED ROOMS AND LIFTS
+// LEVEL 1 — LEFT BRANCH: STAFF ROOM AND VENUE 5
 // ============================================================
 
 addConnection(
-  "corridorL1Junction",
+  "corridorL1Sensors",
+  "corridorL1Staff",
+  5,
+  "After passing the sensors, turn left and continue towards the Staff Room.",
+  "Walk back along the corridor towards the sensors."
+);
+
+addConnection(
+  "corridorL1Staff",
+  "staffOfficeL1",
+  3,
+  "The Staff Room is straight ahead. Enter the room.",
+  "Leave the Staff Room and return to the corridor."
+);
+
+addConnection(
+  "corridorL1Staff",
+  "corridorL1Venue5",
+  4,
+  "Walk past the Staff Room without entering it. Continue towards Venue 5.",
+  "Walk back towards the Staff Room."
+);
+
+addConnection(
+  "corridorL1Venue5",
+  "lectureRoomL1B",
+  3,
+  "The venue next to the Staff Room is Venue 5. Enter Venue 5.",
+  "Leave Venue 5 and return to the corridor."
+);
+
+// ============================================================
+// LEVEL 1 — VENUE 4
+// ============================================================
+
+addConnection(
+  "corridorL1Venue5",
+  "corridorL1Venue4Junction",
+  5,
+  "Continue along the corridor past Venue 5. At the next junction, turn right towards Venue 4.",
+  "Walk back towards Venue 5."
+);
+
+addConnection(
+  "corridorL1Venue4Junction",
+  "corridorL1Venue4",
+  3,
+  "Continue straight towards the door ahead. This is Venue 4.",
+  "Leave Venue 4 and return to the junction."
+);
+
+addConnection(
+  "corridorL1Venue4",
+  "lectureRoomL1E",
+  3,
+  "Enter Venue 4.",
+  "Leave Venue 4 and return to the corridor."
+);
+
+// ============================================================
+// LEVEL 1 — LIBRARY
+// ============================================================
+
+addConnection(
+  "corridorL1Venue4Junction",
+  "corridorL1Library",
+  5,
+  "Continue along the corridor without entering Venue 4. Turn right towards the Library.",
+  "Walk back towards the Venue 4 junction."
+);
+
+addConnection(
+  "corridorL1Library",
+  "libraryStudyL1",
+  3,
+  "The first venue on your left is the Library. Enter the Library.",
+  "Leave the Library and return to the corridor."
+);
+
+// ============================================================
+// LEVEL 1 — VENUE 3: STUDENT ADVISOR OFFICE
+// ============================================================
+
+addConnection(
+  "corridorL1Library",
+  "corridorL1Second",
+  4,
+  "Walk past the Library without entering it. Continue towards the Student Advisor Office and Venue 2.",
+  "Walk back towards the Library."
+);
+
+addConnection(
+  "corridorL1Second",
+  "corridorL1Advisor",
+  3,
+  "Venue 3 is the Student Advisor Office. Turn towards the room and enter it.",
+  "Leave Venue 3 and return to the corridor."
+);
+
+addConnection(
+  "corridorL1Advisor",
+  "studentAdvisorOfficeL1",
+  2,
+  "Enter Venue 3 — the Student Advisor Office.",
+  "Leave the Student Advisor Office and return to the corridor."
+);
+
+// ============================================================
+// LEVEL 1 — VENUE 2
+// ============================================================
+
+addConnection(
+  "corridorL1Second",
+  "corridorL1Venue2",
+  4,
+  "Continue past Venue 3 without entering it. The next door on your left is Venue 2.",
+  "Walk back towards Venue 3."
+);
+
+addConnection(
+  "corridorL1Venue2",
+  "lectureRoomL1C",
+  3,
+  "Enter Venue 2.",
+  "Leave Venue 2 and return to the corridor."
+);
+
+// ============================================================
+// LEVEL 1 — VENUE 1 TO VENUES 2 AND 3
+// ============================================================
+
+addConnection(
+  "corridorL1Venue1",
+  "corridorL1Second",
+  5,
+  "From the corridor outside Venue 1, cross to your right towards the corridor beside Venue 3.",
+  "Cross back towards Venue 1."
+);
+
+// ============================================================
+// LEVEL 1 — LIFTS AND OTHER CONFIRMED ROOMS
+// ============================================================
+
+addConnection(
+  "corridorL1Sensors",
   "corridorL1Lift",
   5,
   "Continue towards the lift corridor.",
-  "Walk back towards the main junction."
+  "Walk back towards the sensors."
 );
 
 addConnection(
@@ -416,18 +377,34 @@ addConnection(
 );
 
 addConnection(
-  "corridorL1Reception",
+  "corridorL1Lift",
   "sickBayL1",
   5,
-  "Enter the Sick Bay.",
+  "Continue towards the Sick Bay and enter it.",
   "Leave the Sick Bay and return to the corridor."
+);
+
+addConnection(
+  "corridorL1Lift",
+  "serverRoomL1",
+  6,
+  "Continue towards the Server Room and enter it.",
+  "Leave the Server Room and return to the corridor."
+);
+
+addConnection(
+  "corridorL1Lift",
+  "storeSafeL1",
+  7,
+  "Continue towards the Store and Safe area and enter it.",
+  "Leave the Store and Safe area and return to the corridor."
 );
 
 addConnection(
   "corridorL1Reception",
   "officeL1A",
   4,
-  "Enter the office.",
+  "Continue towards the office and enter it.",
   "Leave the office and return to the corridor."
 );
 
@@ -435,7 +412,7 @@ addConnection(
   "corridorL1Reception",
   "officeL1B",
   5,
-  "Enter the office.",
+  "Continue towards the office and enter it.",
   "Leave the office and return to the corridor."
 );
 
@@ -443,7 +420,7 @@ addConnection(
   "corridorL1Staff",
   "syndicateRoomL1A",
   4,
-  "Enter the Syndicate Room.",
+  "Continue towards the Syndicate Room and enter it.",
   "Leave the Syndicate Room and return to the corridor."
 );
 
@@ -451,25 +428,10 @@ addConnection(
   "corridorL1Staff",
   "syndicateRoomL1B",
   6,
-  "Enter the Syndicate Room.",
+  "Continue towards the second Syndicate Room and enter it.",
   "Leave the Syndicate Room and return to the corridor."
 );
 
-addConnection(
-  "corridorL1Reception",
-  "serverRoomL1",
-  6,
-  "Enter the Server Room.",
-  "Leave the Server Room and return to the corridor."
-);
-
-addConnection(
-  "corridorL1Reception",
-  "storeSafeL1",
-  7,
-  "Enter the Store and Safe area.",
-  "Leave the Store and Safe area and return to the corridor."
-);
 
 // ============================================================
 // LEVEL 3 — DESTINATIONS
@@ -504,7 +466,9 @@ addLocation(
   ["corridorL3SecondSensors", "Second Section Sensors"],
   ["corridorL3Second", "Second Section Corridor"],
   ["corridorL3End", "End of Second Section Corridor"],
-  ["corridorL3Venue8", "Venue 8 and PC Lab 2 Corridor"],
+  ["corridorL3Venue8", "Venue 8 and Venue 9 Corridor"],
+  ["corridorL3Lab2Approach", "PC Lab 2 Approach"],
+  ["corridorL3Venue10Turn", "Venue 10 Corridor Turn"],
 ].forEach(([id, name]) =>
   addLocation(id, name, "corridor", "level3", true, false)
 );
@@ -562,82 +526,105 @@ addConnection(
 );
 
 // ============================================================
-// LEVEL 3 — ROUTE FROM VENUE 6 TO VENUE 11
+// LEVEL 3 — FOYER, COURTYARD AND SECTION 2
 // ============================================================
 
+// Bypass Section 1 when travelling to Section 2.
 addConnection(
-  "corridorL3FirstSensors",
+  "foyerL3",
   "corridorL3Courtyard",
-  8,
-  "Continue past the sensors into the foyer.",
-  "Walk back towards the first section sensors."
+  6,
+  "Walk straight through the Level 3 foyer, past the Courtyard.",
+  "Walk back past the Courtyard towards the Level 3 foyer."
 );
 
+// Enter Section 2 through the glass doors on the left.
 addConnection(
   "corridorL3Courtyard",
   "corridorL3GlassDoors",
-  7,
-  "Turn left and walk past the Courtyard. Enter the glass doors on your left.",
-  "Leave through the glass doors and walk back past the Courtyard."
+  4,
+  "After passing the Courtyard, turn left and enter Section 2 through the glass doors.",
+  "Leave Section 2 through the glass doors and walk back towards the Courtyard."
 );
 
+// Pass the sensors.
 addConnection(
   "corridorL3GlassDoors",
   "corridorL3SecondSensors",
   4,
-  "Pass through the second set of sensors.",
+  "Walk straight through Section 2 and pass the sensors.",
   "Walk back through the sensors towards the glass doors."
 );
 
+// ============================================================
+// LEVEL 3 — PC LAB 2
+// ============================================================
+
+// Continue straight towards PC Lab 2.
 addConnection(
   "corridorL3SecondSensors",
-  "corridorL3Second",
-  5,
-  "Once through the sensors, turn right and continue down the corridor.",
-  "Walk back towards the sensors."
-);
-
-addConnection(
-  "corridorL3Second",
-  "corridorL3End",
-  6,
-  "Continue down the corridor to the end.",
-  "Walk back along the corridor."
-);
-
-addConnection(
-  "corridorL3End",
-  "lectureRoomL3F",
+  "corridorL3Lab2Approach",
   3,
-  "Turn left at the end of the corridor. Enter Venue 11.",
-  "Leave Venue 11 and return to the end of the corridor."
+  "After passing the sensors, continue straight ahead towards PC Lab 2.",
+  "Walk back from the PC Lab 2 approach towards the sensors."
+);
+
+addConnection(
+  "corridorL3Lab2Approach",
+  "pcLabL3B",
+  2,
+  "PC Lab 2 is straight ahead. Enter the lab.",
+  "Leave PC Lab 2 and return to the corridor."
 );
 
 // ============================================================
-// LEVEL 3 — VENUES 8, 9 AND 10; PC LAB 2
+// LEVEL 3 — VENUE 10
+// ============================================================
+
+// Continue past the PC Lab 2 entrance and turn right.
+addConnection(
+  "corridorL3Lab2Approach",
+  "corridorL3Second",
+  5,
+  "Walk past the PC Lab 2 entrance. Turn right and continue down the corridor.",
+  "Walk back along the corridor towards PC Lab 2."
+);
+
+// Continue down the corridor and turn right.
+addConnection(
+  "corridorL3Second",
+  "corridorL3Venue10Turn",
+  6,
+  "Continue down the corridor. At the end, turn right towards Venue 10.",
+  "Walk back along the corridor towards the PC Lab 2 area."
+);
+
+// Enter Venue 10.
+addConnection(
+  "corridorL3Venue10Turn",
+  "lectureRoomL3E",
+  3,
+  "Enter Venue 10.",
+  "Leave Venue 10 and return to the corridor."
+);
+
+// ============================================================
+// LEVEL 3 — VENUES 8, 9 AND 11
 // ============================================================
 
 addConnection(
   "corridorL3Second",
   "corridorL3Venue8",
   4,
-  "Continue towards PC Lab 2 and Venue 8.",
+  "Continue towards Venue 8 and Venue 9.",
   "Walk back towards the second section corridor."
-);
-
-addConnection(
-  "corridorL3Venue8",
-  "pcLabL3B",
-  3,
-  "Enter PC Lab 2.",
-  "Leave PC Lab 2 and return to the corridor."
 );
 
 addConnection(
   "corridorL3Venue8",
   "lectureRoomL3C",
   3,
-  "Enter Venue 8, next to PC Lab 2.",
+  "Enter Venue 8.",
   "Leave Venue 8 and return to the corridor."
 );
 
@@ -650,6 +637,23 @@ addConnection(
 );
 
 addConnection(
+  "corridorL3Second",
+  "corridorL3End",
+  6,
+  "Continue down the corridor towards Venue 11.",
+  "Walk back along the corridor."
+);
+
+addConnection(
+  "corridorL3End",
+  "lectureRoomL3F",
+  3,
+  "Turn left at the end of the corridor. Enter Venue 11.",
+  "Leave Venue 11 and return to the end of the corridor."
+);
+
+// Venue 10 is directly across from Venue 11.
+addConnection(
   "lectureRoomL3F",
   "lectureRoomL3E",
   4,
@@ -657,8 +661,8 @@ addConnection(
   "Leave Venue 10 and cross back to Venue 11."
 );
 
-// Inaccessible escape stair is deliberately not connected
-// to an accessible route.
+
+
 
 // ============================================================
 // LEVEL 4 — DESTINATIONS
