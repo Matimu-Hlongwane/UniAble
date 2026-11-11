@@ -1,5 +1,5 @@
 import { translations, getLanguageLocale } from "./translations";
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 const SettingsContext = createContext(null);
 
@@ -31,7 +31,7 @@ export function SettingsProvider({ children }) {
   const [settings, setSettings] = useState(getSavedSettings);
   const { theme, language, fontSize, notifications, privacy } = settings;
   const spokenResponses = settings.spokenResponses !== false;
-  const t = (key) => translations[language]?.[key] || translations.English[key] || key;
+  const t = useCallback((key) => translations[language]?.[key] || translations.English[key] || key, [language]);
   const locale = getLanguageLocale(language);
 
   useEffect(() => {
@@ -56,7 +56,7 @@ export function SettingsProvider({ children }) {
   const value = useMemo(() => ({
     settings, theme, setTheme, language, setLanguage, locale, t,
     fontSize, setFontSize, spokenResponses, setSpokenResponses, notifications, setNotification, privacy, setPrivacy, resetSettings,
-  }), [settings, theme, language, locale, fontSize, notifications, privacy]);
+  }), [settings, theme, language, locale, fontSize, spokenResponses, notifications, privacy, t]);
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
 }

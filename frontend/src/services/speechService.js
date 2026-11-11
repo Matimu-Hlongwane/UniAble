@@ -1,4 +1,5 @@
-import { Capacitor, registerPlugin } from "@capacitor/core";
+﻿import { Capacitor } from "@capacitor/core";
+import { TextToSpeech as NativeTTS } from "@capacitor-community/text-to-speech";
 
 /*
  * UniPal spoken responses.
@@ -16,7 +17,7 @@ import { Capacitor, registerPlugin } from "@capacitor/core";
  * as text only.
  */
 
-const NativeTTS = registerPlugin("TextToSpeech");
+
 
 // Three-letter language codes some Android engines report -> two-letter base codes.
 const BASE_ALIASES = {
@@ -44,19 +45,19 @@ export function cleanForSpeech(text) {
   out = out.replace(/\[([^\]]+)\]\([^)]*\)/g, "$1");
   out = out.replace(/https?:\/\/\S+/g, " ");
   out = out.replace(/^\s{0,3}#{1,6}\s*/gm, "");
-  out = out.replace(/^\s*[-*•]\s+/gm, "");
+  out = out.replace(/^\s*[-*â€¢]\s+/gm, "");
   out = out.replace(/[*_~>|]+/g, " ");
   try {
     out = out.replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu, " ");
-  } catch (_) { /* very old engines: leave emoji in place */ }
+  } catch { /* very old engines: leave emoji in place */ }
   // Make line breaks sound like sentence breaks.
-  out = out.replace(/([^.!?…:;\s])\s*\n+\s*/g, "$1. ");
+  out = out.replace(/([^.!?â€¦:;\s])\s*\n+\s*/g, "$1. ");
   out = out.replace(/\s*\n+\s*/g, " ");
   return out.replace(/\s{2,}/g, " ").trim();
 }
 
 export function splitIntoChunks(text, maxLength = 220) {
-  const sentences = String(text || "").match(/[^.!?…]+[.!?…]+["')\]]*\s*|[^.!?…]+$/g) || [];
+  const sentences = String(text || "").match(/[^.!?â€¦]+[.!?â€¦]+["')\]]*\s*|[^.!?â€¦]+$/g) || [];
   const chunks = [];
   let current = "";
 
@@ -128,7 +129,7 @@ export function findBestLanguageTag(tags, locale) {
   );
 }
 
-function loadWebVoices(timeoutMs = 1500) {
+function loadWebVoices(timeoutMs = 4000) {
   return new Promise((resolve) => {
     const synth = typeof window !== "undefined" ? window.speechSynthesis : null;
     if (!synth) return resolve([]);
@@ -227,6 +228,36 @@ export function getSpeechDiagnostics() {
 /* ---------- playback ---------- */
 
 let session = null;
+let speechRequestId = 0;
+const speechPausedStorageKey = "uniableSpeechPausedForSession";
+
+function readSpeechPausedState() {
+  try {
+    return window.sessionStorage.getItem(speechPausedStorageKey) === "true";
+  } catch {
+    return false;
+  }
+}
+
+let speechPaused = readSpeechPausedState();
+
+export function isSpeechPaused() {
+  return speechPaused;
+}
+
+export function setSpeechPaused(paused) {
+  speechPaused = Boolean(paused);
+  try {
+    window.sessionStorage.setItem(speechPausedStorageKey, String(speechPaused));
+  } catch (error) {
+    console.warn("Could not save the temporary spoken-output preference:", error);
+  }
+  if (speechPaused) stopSpeaking();
+  window.dispatchEvent(new CustomEvent("uniable-speech-pause-change", {
+    detail: { paused: speechPaused },
+  }));
+  return speechPaused;
+}
 
 function endSession(target, error) {
   if (!target || target.ended) return;
@@ -238,14 +269,21 @@ function endSession(target, error) {
 
 /** Stops any speech that is currently playing. Safe to call at any time. */
 export function stopSpeaking() {
+  // Invalidate any support lookup still awaiting voices/plugin readiness. Without
+  // this guard, an older page can begin speaking after a newer route has loaded.
+  speechRequestId += 1;
   const current = session;
   session = null;
   if (current) {
     current.cancelled = true;
     endSession(current);
   }
-  try { window.speechSynthesis?.cancel?.(); } catch (_) {}
-  if (Capacitor.isNativePlatform() && Capacitor.isPluginAvailable("TextToSpeech")) {
+  try { window.speechSynthesis?.cancel?.(); } catch { /* Speech synthesis may already be stopped. */ }
+
+  // Do not issue a native stop command when the active session is web-based or
+  // absent; some Android TTS engines process stop asynchronously and can cancel
+  // a new utterance that starts immediately afterwards.
+  if (current?.engine === "native" && Capacitor.isNativePlatform() && Capacitor.isPluginAvailable("TextToSpeech")) {
     Promise.resolve(NativeTTS.stop()).catch(() => {});
   }
 }
@@ -256,16 +294,22 @@ export function stopSpeaking() {
  * unavailable, in which case nothing was spoken and the UI should show text only.
  * onStart / onEnd / onError are optional callbacks; onEnd fires on finish or stop.
  */
-export async function speak(text, { locale = "en-ZA", rate = 0.96, pitch = 1, onStart, onEnd, onError } = {}) {
+export async function speak(text, { locale = "en-ZA", rate = 0.96, pitch = 1, onStart, onEnd, onError, force = false } = {}) {
+  if (speechPaused && !force) {
+    onEnd?.();
+    return { started: false, reason: "paused" };
+  }
   stopSpeaking();
+  const requestId = ++speechRequestId;
 
   const clean = cleanForSpeech(text);
   if (!clean) return { started: false, reason: "empty" };
 
   const support = await getSpeechSupport(locale);
+  if (requestId !== speechRequestId) return { started: false, reason: "cancelled" };
   if (!support.supported) return { started: false, reason: support.reason };
 
-  const current = { cancelled: false, ended: false, onEnd, onError };
+  const current = { cancelled: false, ended: false, onEnd, onError, engine: support.engine };
   session = current;
 
   const run = support.engine === "native"
@@ -331,8 +375,10 @@ function playWeb(text, support, locale, { rate, pitch, current, onStart }) {
       }
     };
 
-    try { synth.cancel(); } catch (_) {}
-    next();
+    try { synth.cancel(); } catch { /* Continue the speech queue if cancellation is unavailable. */ }
+    // Edge/Chromium can drop an utterance submitted in the same task as cancel().
+    // Starting on the next task gives the speech queue time to reset.
+    window.setTimeout(next, 60);
   });
 }
 

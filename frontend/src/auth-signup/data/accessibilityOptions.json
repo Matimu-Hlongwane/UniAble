@@ -1,0 +1,30 @@
+[
+    {
+        "value": "",
+        "label": "Select an option"
+    },
+    {
+        "value": "None",
+        "label": "No accessibility needs"
+    },
+    {
+        "value": "Visual",
+        "label": "Visual"
+    },
+    {
+        "value": "Hearing",
+        "label": "Hearing"
+    },
+    {
+        "value": "Mobility",
+        "label": "Mobility"
+    },
+    {
+        "value": "Speech",
+        "label": "Speech"
+    },
+    {
+        "value": "Neurodiverse",
+        "label": "Neurodiverse"
+    }
+]

@@ -48,3 +48,6 @@ Thumbs.db
 
 # Local API test output containing tokens
 /api-check.txt
+
+# Firebase Admin SDK private keys
+*firebase-adminsdk*.json

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { HeartHandshake, MapPin, MessageCircle, Send, ShieldAlert, Users, CheckCircle2, Clock3 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../services/api";
@@ -22,7 +22,7 @@ export default function PeerAssistance() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
@@ -37,11 +37,11 @@ export default function PeerAssistance() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   const submitRequest = async (event) => {
     event.preventDefault();
