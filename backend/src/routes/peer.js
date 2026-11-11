@@ -100,22 +100,33 @@ router.patch("/requests/:id", async (req, res) => {
     }
 
     const isAdmin = role === "admin";
-    const isAssignedVolunteer = role === "volunteer" && item.assignedVolunteerId === uid;
-    const isLecturerRequest = role === "lecturer" && item.type === "Lecture assistance";
+    const isAssignedVolunteer =
+      role === "volunteer" && item.assignedVolunteerId === uid;
+    const canClaimOpenRequest =
+      role === "volunteer" &&
+      status === "accepted" &&
+      item.status === "open" &&
+      !item.assignedVolunteerId;
+    const canCompleteAssignedRequest =
+      isAssignedVolunteer && status === "completed";
+    const isLecturerRequest =
+      role === "lecturer" && item.type === "Lecture assistance";
     const isDisabilityOffice = role === "disability_office";
 
-    if (!isAdmin && !isAssignedVolunteer && !isLecturerRequest && !isDisabilityOffice) {
+    if (
+      !isAdmin &&
+      !canClaimOpenRequest &&
+      !canCompleteAssignedRequest &&
+      !isLecturerRequest &&
+      !isDisabilityOffice
+    ) {
       return res.status(403).json({ error: "You cannot update this request." });
     }
 
     const updates = { status, updatedAt: new Date().toISOString() };
 
-    if (role === "volunteer" && status === "accepted") {
+    if (canClaimOpenRequest) {
       updates.assignedVolunteerId = uid;
-    }
-
-    if (role === "volunteer" && status === "completed" && item.assignedVolunteerId !== uid) {
-      return res.status(403).json({ error: "You can only complete requests assigned to you." });
     }
 
     await ref.update(updates);
@@ -147,20 +158,39 @@ router.post("/volunteers/register", requireRole("student"), async (req, res) => 
 
     const ref = db().collection("volunteers").doc(uid);
     const existing = await ref.get();
+
+    if (existing.exists) {
+      const data = existing.data() || {};
+
+      if (data.active === true || data.status === "approved") {
+        return res.status(409).json({
+          error: "Your volunteer profile is already active."
+        });
+      }
+
+      if (data.status === "pending") {
+        return res.status(200).json({
+          application: { id: uid, ...data },
+          alreadyRegistered: true
+        });
+      }
+    }
+
     const volunteer = {
       name: name.slice(0, 120),
-      available: true,
-      active: true,
+      available: false,
+      active: false,
+      status: "pending",
       userId: uid,
+      createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
 
-    if (!existing.exists) volunteer.createdAt = new Date().toISOString();
     await ref.set(volunteer, { merge: true });
 
     return res.status(existing.exists ? 200 : 201).json({
-      volunteer: { id: uid, ...volunteer },
-      alreadyRegistered: existing.exists
+      application: { id: uid, ...volunteer },
+      alreadyRegistered: false
     });
   } catch (error) {
     console.error("Volunteer registration failed:", error.message);

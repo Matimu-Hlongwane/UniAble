@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { HeartHandshake, MapPin, MessageCircle, Send, ShieldAlert, Users, CheckCircle2, Clock3 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../services/api";
+import { getCurrentUser, getCurrentUserRole } from "../services/firebaseAuth";
 import { useSettings } from "../context/settingsContext/SettingsContext";
 
 const initialForm = {
@@ -21,6 +22,32 @@ export default function PeerAssistance() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [userRole, setUserRole] = useState(null);
+  const [currentUserId, setCurrentUserId] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadUserRole = async () => {
+      try {
+        const user = getCurrentUser();
+        const role = await getCurrentUserRole(user);
+
+        if (active) {
+          setCurrentUserId(user?.uid || null);
+          setUserRole(role);
+        }
+      } catch (error) {
+        console.error("Could not load user role:", error);
+      }
+    };
+
+    loadUserRole();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -56,7 +83,6 @@ export default function PeerAssistance() {
     setBusy(true);
     try {
       const result = await api.createRequest({
-        studentId: "student-001",
         type: form.type,
         detail: form.detail.trim(),
         location: form.location.trim() || "Campus",
@@ -94,6 +120,25 @@ export default function PeerAssistance() {
     }
   };
 
+  const registerVolunteer = async () => {
+    setBusy(true);
+    setMessage("");
+    setError("");
+
+    try {
+      const result = await api.registerVolunteer({});
+      setMessage(
+        result.alreadyRegistered
+          ? "Your volunteer application is already recorded. It is awaiting administrator approval."
+          : "Your volunteer application has been submitted and is awaiting administrator approval."
+      );
+    } catch (err) {
+      setError(err?.message || t("connectionProblem"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const openEmergency = () => navigate("/emergency");
 
   return (
@@ -126,7 +171,7 @@ export default function PeerAssistance() {
       )}
 
       <div className="peer-grid">
-        <form className="panel peer-request-form" onSubmit={submitRequest}>
+        <form className="panel peer-request-form" onSubmit={submitRequest} style={{ display: userRole === "student" ? "block" : "none" }}>
           <div className="panel-title">
             <h2>{t("requestHelp")}</h2>
           </div>
@@ -191,6 +236,18 @@ export default function PeerAssistance() {
           <div className="panel-title">
             <h2>{t("activeVolunteers")}</h2>
             <Users size={19} />
+            {userRole === "student" &&
+              currentUserId &&
+              !volunteers.some((volunteer) => volunteer.id === currentUserId) && (
+                <button
+                  className="secondary-btn"
+                  type="button"
+                  disabled={busy}
+                  onClick={registerVolunteer}
+                >
+                  {busy ? t("connecting") : "Register as a volunteer"}
+                </button>
+              )}
           </div>
 
           {loading ? (
@@ -206,13 +263,15 @@ export default function PeerAssistance() {
                     <strong>{volunteer.name}</strong>
                     <small>{volunteer.available ? t("available") : t("unavailable")}</small>
                   </div>
-                  <button
-                    className="secondary-btn"
-                    type="button"
-                    onClick={() => toggleAvailability(volunteer)}
-                  >
-                    {volunteer.available ? t("markUnavailable") : t("markAvailable")}
-                  </button>
+                  {userRole === "volunteer" && volunteer.id === currentUserId && (
+                    <button
+                      className="secondary-btn"
+                      type="button"
+                      onClick={() => toggleAvailability(volunteer)}
+                    >
+                      {volunteer.available ? t("markUnavailable") : t("markAvailable")}
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -252,16 +311,44 @@ export default function PeerAssistance() {
                     <span><CheckCircle2 size={14} />{request.status}</span>
                   </div>
                   <div className="request-actions">
-                    {request.status === "open" && (
-                      <>
-                        <button className="secondary-btn" type="button" onClick={() => updateRequest(request.id, "accepted")}>
-                          <CheckCircle2 size={15} /> {t("accept")}
+                    {request.status === "open" &&
+                      (
+                        userRole === "volunteer" ||
+                        userRole === "admin" ||
+                        userRole === "disability_office" ||
+                        (userRole === "lecturer" && request.type === "Lecture assistance")
+                      ) && (
+                        <>
+                          <button
+                            className="secondary-btn"
+                            type="button"
+                            onClick={() => updateRequest(request.id, "accepted")}
+                          >
+                            <CheckCircle2 size={15} /> {t("accept")}
+                          </button>
+                          {userRole !== "volunteer" && (
+                            <button
+                              className="secondary-btn"
+                              type="button"
+                              onClick={() => updateRequest(request.id, "declined")}
+                            >
+                              {t("decline")}
+                            </button>
+                          )}
+                        </>
+                      )}
+
+                    {userRole === "volunteer" &&
+                      request.status === "accepted" &&
+                      request.assignedVolunteerId === currentUserId && (
+                        <button
+                          className="secondary-btn"
+                          type="button"
+                          onClick={() => updateRequest(request.id, "completed")}
+                        >
+                          <CheckCircle2 size={15} /> Mark completed
                         </button>
-                        <button className="secondary-btn" type="button" onClick={() => updateRequest(request.id, "declined")}>
-                          {t("decline")}
-                        </button>
-                      </>
-                    )}
+                      )}
                     <button className="icon-text-btn" type="button">
                       <MessageCircle size={15} /> {t("message")}
                     </button>

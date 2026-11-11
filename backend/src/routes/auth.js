@@ -310,6 +310,30 @@ router.post("/staff/provision", requireRole("admin"), async (req, res) => {
       role
     });
 
+    if (role === "volunteer") {
+      const volunteerRef = db.collection("volunteers").doc(staffUser.uid);
+      const volunteerSnapshot = await volunteerRef.get();
+      const volunteerData = volunteerSnapshot.exists
+        ? volunteerSnapshot.data()
+        : {};
+
+      await volunteerRef.set({
+        name: String(
+          volunteerData.name ||
+          staffUser.displayName ||
+          staffUser.email ||
+          "Volunteer"
+        ).slice(0, 120),
+        userId: staffUser.uid,
+        active: true,
+        available: volunteerData.available === true,
+        status: "approved",
+        approvedAt: new Date().toISOString(),
+        approvedBy: req.firebaseToken.uid,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+    }
+
     return res.json({
       success: true,
       message: "Staff role assigned successfully.",

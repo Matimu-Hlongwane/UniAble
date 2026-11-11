@@ -71,9 +71,6 @@ export function getCurrentUser() {
 export async function getCurrentUserRole(user = auth?.currentUser) {
   if (!user) return null;
 
-  const tokenResult = await getIdTokenResult(user);
-  const role = String(tokenResult.claims?.role || "student").toLowerCase();
-
   const allowedRoles = new Set([
     "student",
     "admin",
@@ -83,7 +80,22 @@ export async function getCurrentUserRole(user = auth?.currentUser) {
     "lecturer",
   ]);
 
-  return allowedRoles.has(role) ? role : "student";
+  if (!db) return "student";
+
+  try {
+    const profileSnapshot = await getDoc(doc(db, "users", user.uid));
+
+    if (!profileSnapshot.exists()) return "student";
+
+    const role = String(
+      profileSnapshot.data()?.role || "student"
+    ).toLowerCase();
+
+    return allowedRoles.has(role) ? role : "student";
+  } catch (error) {
+    console.warn("Could not read the Firestore user role:", error);
+    return "student";
+  }
 }
 
 export function subscribeToAuth(callback) {
