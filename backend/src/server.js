@@ -6,6 +6,9 @@ import peerRoutes from "./routes/peer.js";
 import emergencyRoutes from "./routes/emergency.js";
 import accessibilityRoutes from "./routes/accessibility.js";
 import unipalRoutes from "./routes/unipal.js";
+import authRoutes from "./routes/auth.js";
+import dashboardRoutes from "./routes/dashboard.js";
+import academicsRoutes from "./routes/academics.js";
 
 const app = express();
 app.use(cors());
@@ -17,6 +20,9 @@ app.use("/api/peer", peerRoutes);
 app.use("/api/emergency", emergencyRoutes);
 app.use("/api/accessibility", accessibilityRoutes);
 app.use("/api/unipal", unipalRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/academics", academicsRoutes);
 
 const port = process.env.PORT || 4000;
 app.listen(port, ()=>console.log(`UniAble API running on http://localhost:${port}`));

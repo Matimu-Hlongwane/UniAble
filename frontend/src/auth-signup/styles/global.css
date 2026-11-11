@@ -1,0 +1,18 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body,
+#root {
+    width: 100%;
+    min-height: 100%;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #f4f4fa;
+}
+ h1, h2, h3, h4, h5, h6 { font-family: "Bricolage Grotesque", "Atkinson Hyperlegible", sans-serif; }

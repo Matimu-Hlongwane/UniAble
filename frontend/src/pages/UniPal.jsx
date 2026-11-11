@@ -2,12 +2,13 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Bot, Copy, Mic, Send, Square, Volume2, VolumeX } from "lucide-react";
 import { useSettings } from "../context/settingsContext/SettingsContext";
 import { api } from "../services/api";
-import { startNativeVoiceRecognition } from "../services/platformVoice";
+import { getUserAccessibilityProfile } from "../services/firebaseAuth";
+import { isNative, startNativeVoiceRecognition } from "../services/platformVoice";
 import { speak, stopSpeaking, resolveReplyLocale } from "../services/speechService";
 
 const DEFAULT_PROFILE = {
-  firstName: "Gundo",
-  lastName: "Dzivhani",
+  firstName: "",
+  lastName: "",
   email: "",
   phone: "",
   photo: "",
@@ -28,7 +29,7 @@ function loadProfile() {
   }
 }
 
-function loadAccessibilityProfile() {
+function loadLocalAccessibilityProfile() {
   try {
     return JSON.parse(localStorage.getItem("uniableAccessibilityProfile") || "null") || {};
   } catch {
@@ -37,7 +38,15 @@ function loadAccessibilityProfile() {
 }
 
 export default function UniPal() {
-  const { t, language, locale, theme, fontSize, spokenResponses } = useSettings();
+  const {
+    t,
+    language,
+    locale,
+    theme,
+    fontSize,
+    spokenResponses,
+    voiceAssistanceEnabled,
+  } = useSettings();
   const profile = useMemo(loadProfile, []);
   const [messages, setMessages] = useState([
     {
@@ -55,15 +64,21 @@ export default function UniPal() {
   const [notice, setNotice] = useState("");
   const noticedLanguages = useRef(new Set());
   const [copiedId, setCopiedId] = useState(null);
+  const voiceTranscriptRef = useRef("");
+  const voiceStopRef = useRef(null);
   const endRef = useRef(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, busy]);
 
-  useEffect(() => () => {
-    voiceStop?.();
+  useEffect(() => {
+    voiceStopRef.current = voiceStop;
   }, [voiceStop]);
+
+  useEffect(() => () => {
+    voiceStopRef.current?.();
+  }, []);
 
   // Never keep talking after the student leaves UniPal.
   useEffect(() => () => stopSpeaking(), []);
@@ -76,25 +91,26 @@ export default function UniPal() {
     }
   }, [spokenResponses]);
 
-  // Backend compatibility check: warn once if the server cannot answer in the chosen language.
+  // Show when UniPal is using its built-in guidance instead of the AI service.
   useEffect(() => {
-    if (language === "English") return undefined;
     let cancelled = false;
     api.getUniPalCapabilities()
       .then((caps) => {
-        if (!cancelled && caps?.features?.multilingualReplies === false) {
+        if (cancelled) return;
+
+        if (caps?.aiService !== "online" || caps?.aiConfigured === false) {
+          setNotice(t("unipalBuiltInNotice"));
+        } else if (language !== "English" && caps?.features?.multilingualReplies === false) {
           setNotice(t("unipalBackendOutdated").replace("{language}", language));
         }
       })
       .catch((err) => {
-        // A 404 means an older backend without the capabilities route.
-        if (!cancelled && String(err?.message || "").includes("(404)")) {
+        if (!cancelled && String(err?.message || "").includes("(404)") && language !== "English") {
           setNotice(t("unipalBackendOutdated").replace("{language}", language));
         }
       });
     return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [language]);
+  }, [language, t]);
 
   /*
    * Reads a message aloud with a voice that matches the language the text is written in.
@@ -131,6 +147,10 @@ export default function UniPal() {
   const sendMessage = async (rawText) => {
     const text = String(rawText || "").trim();
     if (!text || busy) return;
+    if (text.length > 1000) {
+      setError(t("unipalVoiceTooLong"));
+      return;
+    }
 
     setError("");
     setNotice("");
@@ -149,7 +169,9 @@ export default function UniPal() {
         locale,
         profile: {
           firstName: profile.firstName || "",
-          accessibility: loadAccessibilityProfile(),
+          accessibility: await getUserAccessibilityProfile()
+            .then((saved) => saved?.accessibilityProfile || loadLocalAccessibilityProfile())
+            .catch(() => loadLocalAccessibilityProfile()),
           preferences: { theme, fontSize },
         },
         messages: conversation.map(({ role, text: messageText }) => ({
@@ -164,6 +186,7 @@ export default function UniPal() {
         role: "assistant",
         text: reply,
         speechLocale: resolveReplyLocale(data, locale),
+        responseSource: data.source || "demo",
       };
       setMessages((current) => [...current, assistantMessage]);
 
@@ -173,7 +196,9 @@ export default function UniPal() {
       if (replyBase !== chosenBase) setNotice(t("unipalReplyNotTranslated"));
 
       // Automatic spoken response (Settings > Language & Region > Spoken responses).
-      if (spokenResponses && data.message) speakMessage(assistantMessage, { automatic: true });
+      if (spokenResponses && voiceAssistanceEnabled && data.message) {
+        speakMessage(assistantMessage, { automatic: true });
+      }
     } catch (err) {
       const message = err?.message || t("unipalGenericError");
       setError(message);
@@ -190,6 +215,18 @@ export default function UniPal() {
     }
   };
 
+  const setVoiceTranscript = (rawText) => {
+    const text = String(rawText || "").trim();
+    if (!text) return;
+    voiceTranscriptRef.current = text;
+    setInput(text);
+    if (text.length > 1000) {
+      setError(t("unipalVoiceTooLong"));
+      return;
+    }
+    setNotice(t("unipalVoiceTranscribed"));
+  };
+
   const handleVoice = async () => {
     if (voiceListening) {
       await voiceStop?.();
@@ -197,15 +234,51 @@ export default function UniPal() {
     }
 
     setError("");
+    setNotice("");
+    voiceTranscriptRef.current = "";
     // Stop UniPal talking so the microphone does not pick up its own voice.
     stopSpeaking();
     setSpeakingId(null);
     try {
+      if (!isNative()) {
+        const SpeechRecognition =
+          window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if (!SpeechRecognition) {
+          setError(t("unipalVoiceError"));
+          return;
+        }
+
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+        recognition.lang = locale || "en-ZA";
+        recognition.onresult = (event) => {
+          const text = String(event.results?.[0]?.[0]?.transcript || "").trim();
+          setVoiceTranscript(text);
+        };
+        recognition.onerror = (event) => {
+          setError(event.error === "not-allowed"
+            ? t("unipalMicrophoneDenied")
+            : t("unipalVoiceError"));
+          setVoiceListening(false);
+          setVoiceStop(null);
+        };
+        recognition.onend = () => {
+          setVoiceListening(false);
+          setVoiceStop(null);
+        };
+        recognition.start();
+        setVoiceStop(() => () => recognition.stop());
+        setVoiceListening(true);
+        return;
+      }
+
       const stop = await startNativeVoiceRecognition({
         language: locale || "en-ZA",
-        onResult: (text, isFinal) => {
-          setInput(text);
-          if (isFinal) sendMessage(text);
+        onResult: (text) => {
+          setVoiceTranscript(text);
         },
         onError: (err) => {
           setError(err?.message || t("unipalVoiceError"));
@@ -215,6 +288,9 @@ export default function UniPal() {
         onEnd: () => {
           setVoiceListening(false);
           setVoiceStop(null);
+          if (voiceTranscriptRef.current) {
+            setNotice(t("unipalVoiceTranscribed"));
+          }
         },
       });
       setVoiceStop(() => stop);
@@ -291,6 +367,9 @@ export default function UniPal() {
                       {copiedId === message.id && <span>{t("unipalCopied")}</span>}
                     </div>
                   )}
+                  {message.responseSource && message.responseSource !== "ai" && (
+                    <small className="unipal-response-source">{t("unipalBuiltInReply")}</small>
+                  )}
                 </div>
               </div>
             </div>
@@ -335,6 +414,7 @@ export default function UniPal() {
             onChange={(event) => setInput(event.target.value)}
             placeholder={t("unipalPlaceholder")}
             aria-label={t("unipalPlaceholder")}
+            maxLength={1000}
             disabled={busy}
           />
           <button
@@ -347,7 +427,7 @@ export default function UniPal() {
           >
             {voiceListening ? <Square size={18} fill="currentColor" /> : <Mic size={19} />}
           </button>
-          <button type="submit" className="unipal-send-button" disabled={busy || !input.trim()} aria-label={t("unipalSend")}>
+          <button type="submit" className="unipal-send-button" disabled={busy || !input.trim() || input.length > 1000} aria-label={t("unipalSend")}>
             <Send size={18} />
           </button>
         </form>

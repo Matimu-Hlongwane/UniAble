@@ -4,3 +4,4 @@ pydantic
 python-multipart
 httpx
 python-dotenv
+google-genai

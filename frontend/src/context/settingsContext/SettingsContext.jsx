@@ -1,5 +1,6 @@
 import { translations, getLanguageLocale } from "./translations";
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { stopSpeaking } from "../../services/speechService";
 
 const SettingsContext = createContext(null);
 
@@ -7,6 +8,7 @@ const DEFAULT_SETTINGS = {
   theme: "light",
   language: "English",
   fontSize: "medium",
+  voiceAssistanceEnabled: true,
   spokenResponses: true,
   notifications: { emergency: true, assistance: true, timetable: true, announcements: true, email: false, push: true },
   privacy: { location: true, activity: false, profileVisibility: true },
@@ -30,13 +32,18 @@ function getSavedSettings() {
 export function SettingsProvider({ children }) {
   const [settings, setSettings] = useState(getSavedSettings);
   const { theme, language, fontSize, notifications, privacy } = settings;
+  const voiceAssistanceEnabled = settings.voiceAssistanceEnabled !== false;
   const spokenResponses = settings.spokenResponses !== false;
-  const t = (key) => translations[language]?.[key] || translations.English[key] || key;
+  const t = useCallback((key) => translations[language]?.[key] || translations.English[key] || key, [language]);
   const locale = getLanguageLocale(language);
 
   useEffect(() => {
     localStorage.setItem("uniableSettings", JSON.stringify(settings));
   }, [settings]);
+
+  useEffect(() => {
+    if (!voiceAssistanceEnabled) stopSpeaking();
+  }, [voiceAssistanceEnabled]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -46,6 +53,10 @@ export function SettingsProvider({ children }) {
   }, [theme, fontSize, locale]);
 
   const setTheme = (newTheme) => setSettings((p) => ({ ...p, theme: newTheme === "dark" ? "dark" : "light" }));
+  const setVoiceAssistanceEnabled = useCallback(
+    (enabled) => setSettings((p) => ({ ...p, voiceAssistanceEnabled: Boolean(enabled) })),
+    []
+  );
   const setSpokenResponses = (enabled) => setSettings((p) => ({ ...p, spokenResponses: Boolean(enabled) }));
   const setLanguage = (newLanguage) => setSettings((p) => ({ ...p, language: newLanguage }));
   const setFontSize = (newFontSize) => setSettings((p) => ({ ...p, fontSize: newFontSize }));
@@ -55,8 +66,9 @@ export function SettingsProvider({ children }) {
 
   const value = useMemo(() => ({
     settings, theme, setTheme, language, setLanguage, locale, t,
+    voiceAssistanceEnabled, setVoiceAssistanceEnabled,
     fontSize, setFontSize, spokenResponses, setSpokenResponses, notifications, setNotification, privacy, setPrivacy, resetSettings,
-  }), [settings, theme, language, locale, fontSize, notifications, privacy]);
+  }), [settings, theme, language, locale, voiceAssistanceEnabled, setVoiceAssistanceEnabled, fontSize, spokenResponses, notifications, privacy, t]);
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
 }

@@ -25,6 +25,7 @@ const BASE_ALIASES = {
 };
 
 const SUPPORT_CACHE_MS = 60 * 1000;
+export const DEFAULT_SPEECH_RATE = 1.08;
 const supportCache = new Map();
 
 const normalise = (value) => String(value || "").replace(/_/g, "-").trim().toLowerCase();
@@ -48,7 +49,7 @@ export function cleanForSpeech(text) {
   out = out.replace(/[*_~>|]+/g, " ");
   try {
     out = out.replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu, " ");
-  } catch (_) { /* very old engines: leave emoji in place */ }
+  } catch { /* very old engines: leave emoji in place */ }
   // Make line breaks sound like sentence breaks.
   out = out.replace(/([^.!?…:;\s])\s*\n+\s*/g, "$1. ");
   out = out.replace(/\s*\n+\s*/g, " ");
@@ -128,7 +129,7 @@ export function findBestLanguageTag(tags, locale) {
   );
 }
 
-function loadWebVoices(timeoutMs = 1500) {
+function loadWebVoices(timeoutMs = 1000) {
   return new Promise((resolve) => {
     const synth = typeof window !== "undefined" ? window.speechSynthesis : null;
     if (!synth) return resolve([]);
@@ -227,10 +228,12 @@ export function getSpeechDiagnostics() {
 /* ---------- playback ---------- */
 
 let session = null;
+let speechRequestId = 0;
 
 function endSession(target, error) {
   if (!target || target.ended) return;
   target.ended = true;
+  target.interactionCleanup?.();
   if (session === target) session = null;
   if (error) target.onError?.(error);
   target.onEnd?.();
@@ -238,15 +241,46 @@ function endSession(target, error) {
 
 /** Stops any speech that is currently playing. Safe to call at any time. */
 export function stopSpeaking() {
+  // Invalidate any support lookup still awaiting voices/plugin readiness. Without
+  // this guard, an older page can begin speaking after a newer route has loaded.
+  speechRequestId += 1;
   const current = session;
   session = null;
   if (current) {
     current.cancelled = true;
     endSession(current);
   }
-  try { window.speechSynthesis?.cancel?.(); } catch (_) {}
-  if (Capacitor.isNativePlatform() && Capacitor.isPluginAvailable("TextToSpeech")) {
+  try { window.speechSynthesis?.cancel?.(); } catch { /* Speech synthesis may already be stopped. */ }
+
+  // Do not issue a native stop command when the active session is web-based or
+  // absent; some Android TTS engines process stop asynchronously and can cancel
+  // a new utterance that starts immediately afterwards.
+  if (current?.engine === "native" && Capacitor.isNativePlatform() && Capacitor.isPluginAvailable("TextToSpeech")) {
     Promise.resolve(NativeTTS.stop()).catch(() => {});
+  }
+}
+
+export function pauseSpeaking() {
+  if (!session || session.engine !== "web") return false;
+
+  try {
+    window.speechSynthesis?.pause?.();
+    return true;
+  } catch (error) {
+    console.warn("Could not pause spoken guidance:", error);
+    return false;
+  }
+}
+
+export function resumeSpeaking() {
+  if (!session || session.engine !== "web") return false;
+
+  try {
+    window.speechSynthesis?.resume?.();
+    return true;
+  } catch (error) {
+    console.warn("Could not resume spoken guidance:", error);
+    return false;
   }
 }
 
@@ -256,27 +290,109 @@ export function stopSpeaking() {
  * unavailable, in which case nothing was spoken and the UI should show text only.
  * onStart / onEnd / onError are optional callbacks; onEnd fires on finish or stop.
  */
-export async function speak(text, { locale = "en-ZA", rate = 0.96, pitch = 1, onStart, onEnd, onError } = {}) {
+export async function speak(text, { locale = "en-ZA", pitch = 1, onStart, onEnd, onError } = {}) {
   stopSpeaking();
+  const requestId = ++speechRequestId;
 
   const clean = cleanForSpeech(text);
   if (!clean) return { started: false, reason: "empty" };
 
   const support = await getSpeechSupport(locale);
+  if (requestId !== speechRequestId) return { started: false, reason: "cancelled" };
   if (!support.supported) return { started: false, reason: support.reason };
 
-  const current = { cancelled: false, ended: false, onEnd, onError };
+  const current = {
+    cancelled: false,
+    ended: false,
+    onEnd,
+    onError,
+    engine: support.engine,
+  };
+  attachInteractionPause(current);
   session = current;
 
   const run = support.engine === "native"
-    ? playNative(clean, support, { rate, pitch, current, onStart })
-    : playWeb(clean, support, locale, { rate, pitch, current, onStart });
+    ? playNative(clean, support, { pitch, current, onStart })
+    : playWeb(clean, support, locale, { pitch, current, onStart });
 
   run.catch((error) => endSession(current, error));
   return { started: true, reason: "ok", engine: support.engine };
 }
 
-async function playNative(text, support, { rate, pitch, current, onStart }) {
+function attachInteractionPause(current) {
+  if (current.engine !== "web") return;
+
+  let resumeTimer;
+  let pendingTapTimer;
+  let pointerStart;
+  let pointerMoved = false;
+  const pauseAndScheduleResume = () => {
+    if (session !== current || current.ended) return;
+    try {
+      window.speechSynthesis.pause();
+    } catch (error) {
+      console.warn("Could not pause spoken guidance:", error);
+      return;
+    }
+
+    window.clearTimeout(resumeTimer);
+    resumeTimer = window.setTimeout(() => {
+      if (session !== current || current.ended) return;
+      try {
+        window.speechSynthesis.resume();
+      } catch (error) {
+        console.warn("Could not resume spoken guidance:", error);
+      }
+    }, 3000);
+  };
+
+  const handlePointerDown = (event) => {
+    pointerStart = { x: event.clientX, y: event.clientY };
+    pointerMoved = false;
+    window.clearTimeout(pendingTapTimer);
+  };
+  const handlePointerMove = (event) => {
+    if (!pointerStart || pointerMoved) return;
+    if (Math.hypot(event.clientX - pointerStart.x, event.clientY - pointerStart.y) > 8) {
+      pointerMoved = true;
+      window.clearTimeout(pendingTapTimer);
+    }
+  };
+  const handlePointerUp = () => {
+    window.clearTimeout(pendingTapTimer);
+    if (pointerStart && !pointerMoved) {
+      pendingTapTimer = window.setTimeout(pauseAndScheduleResume, 0);
+    }
+    pointerStart = null;
+    pointerMoved = false;
+  };
+  const handlePointerCancel = () => {
+    window.clearTimeout(pendingTapTimer);
+    pointerStart = null;
+    pointerMoved = false;
+  };
+  const handleKeyDown = (event) => {
+    if (["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " "].includes(event.key)) return;
+    pauseAndScheduleResume();
+  };
+
+  window.addEventListener("pointerdown", handlePointerDown, true);
+  window.addEventListener("pointermove", handlePointerMove, true);
+  window.addEventListener("pointerup", handlePointerUp, true);
+  window.addEventListener("pointercancel", handlePointerCancel, true);
+  window.addEventListener("keydown", handleKeyDown, true);
+  current.interactionCleanup = () => {
+    window.clearTimeout(resumeTimer);
+    window.clearTimeout(pendingTapTimer);
+    window.removeEventListener("pointerdown", handlePointerDown, true);
+    window.removeEventListener("pointermove", handlePointerMove, true);
+    window.removeEventListener("pointerup", handlePointerUp, true);
+    window.removeEventListener("pointercancel", handlePointerCancel, true);
+    window.removeEventListener("keydown", handleKeyDown, true);
+  };
+}
+
+async function playNative(text, support, { pitch, current, onStart }) {
   const chunks = splitIntoChunks(text, 900);
   onStart?.();
   for (const chunk of chunks) {
@@ -284,7 +400,7 @@ async function playNative(text, support, { rate, pitch, current, onStart }) {
     await NativeTTS.speak({
       text: chunk,
       lang: support.lang,
-      rate,
+      rate: DEFAULT_SPEECH_RATE,
       pitch,
       volume: 1.0,
       category: "ambient",
@@ -294,7 +410,7 @@ async function playNative(text, support, { rate, pitch, current, onStart }) {
   endSession(current);
 }
 
-function playWeb(text, support, locale, { rate, pitch, current, onStart }) {
+function playWeb(text, support, locale, { pitch, current, onStart }) {
   return new Promise((resolve) => {
     const synth = window.speechSynthesis;
     const chunks = splitIntoChunks(text, 220);
@@ -310,7 +426,7 @@ function playWeb(text, support, locale, { rate, pitch, current, onStart }) {
       const utterance = new window.SpeechSynthesisUtterance(chunks[index]);
       utterance.lang = support.voice?.lang || support.lang || locale;
       if (support.voice) utterance.voice = support.voice;
-      utterance.rate = rate;
+      utterance.rate = DEFAULT_SPEECH_RATE;
       utterance.pitch = pitch;
       if (index === 0) utterance.onstart = () => onStart?.();
       index += 1;
@@ -331,8 +447,10 @@ function playWeb(text, support, locale, { rate, pitch, current, onStart }) {
       }
     };
 
-    try { synth.cancel(); } catch (_) {}
-    next();
+    try { synth.cancel(); } catch { /* Continue the speech queue if cancellation is unavailable. */ }
+    // Edge/Chromium can drop an utterance submitted in the same task as cancel().
+    // Starting on the next task gives the speech queue time to reset.
+    window.setTimeout(next, 60);
   });
 }
 

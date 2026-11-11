@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Check, Clock3, MapPin, Navigation, Accessibility, ArrowRight } from "lucide-react";
+import { Check, Clock3, MapPin, Navigation, ArrowRight } from "lucide-react";
 import { useSettings } from "../context/settingsContext/SettingsContext";
 
 const destinations = [

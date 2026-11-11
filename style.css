@@ -1,0 +1,423 @@
+/* Defines the shared colours, typography and spacing for UniAble. */
+:root {
+  /* Sets the main purple brand colour to match sign-up. */
+  --purple: #7129bf;
+  /* Sets the deeper purple used for hover states. */
+  --purple-dark: #48008f;
+  /* Defines the bright purple accent. */
+  --purple-light: #8d40db;
+  /* Sets the very light lavender page background. */
+  --lavender: #f2effb;
+  /* Sets the page background to match sign-up. */
+  --page-bg: #f7f5fb;
+  /* Sets the primary text colour. */
+  --text: #171725;
+  /* Sets the secondary text colour. */
+  --muted: #747184;
+  /* Sets the white card colour. */
+  --white: #ffffff;
+  /* Sets the shared rounded corner size. */
+  --radius: 20px;
+  /* Defines a consistent card shadow. */
+  --shadow: 0 8px 24px rgba(53, 28, 90, 0.1);
+}
+
+/* Includes borders and padding inside declared element dimensions. */
+* {
+  box-sizing: border-box;
+}
+
+/* Sets the overall page appearance. */
+body {
+  /* Removes the browser's default page margin. */
+  margin: 0;
+  /* Uses a clean modern font with fallbacks. */
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  /* Sets the page background colour. */
+  background: var(--page-bg);
+  /* Sets the default text colour. */
+  color: var(--text);
+  /* Improves readability on different screens. */
+  line-height: 1.5;
+  /* Ensures the page occupies at least the full screen height. */
+  min-height: 100vh;
+}
+
+/* Makes keyboard navigation easier to see and use. */
+button,
+a {
+  /* Keeps focus indicators visible. */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Provides a visible focus indicator for keyboard users. */
+button:focus-visible,
+a:focus-visible {
+  /* Highlights the selected control. */
+  outline: 3px solid #a987f1;
+  /* Separates the outline from the control itself. */
+  outline-offset: 4px;
+}
+
+/* Hides the skip link until keyboard users focus it. */
+.skip-link {
+  /* Positions the link above the normal page content. */
+  position: absolute;
+  /* Moves the link outside the visible area initially. */
+  left: -9999px;
+  /* Gives the link a readable appearance when focused. */
+  padding: 12px 16px;
+  /* Makes the link stand out. */
+  background: var(--white);
+  /* Uses the brand colour for the text. */
+  color: var(--purple-dark);
+  /* Places the link above other content. */
+  z-index: 10;
+}
+
+/* Reveals the skip link when it receives keyboard focus. */
+.skip-link:focus {
+  /* Returns the link to the visible screen. */
+  left: 12px;
+  /* Positions it near the top. */
+  top: 12px;
+}
+
+/* Centres the landing page content vertically and horizontally. */
+.welcome-screen {
+  /* Uses a vertical layout. */
+  display: flex;
+  /* Stacks the page sections. */
+  flex-direction: column;
+  /* Centres the content horizontally. */
+  align-items: center;
+  /* Keeps the layout from stretching excessively on desktop. */
+  width: min(100%, 520px);
+  /* Centres the container in the browser. */
+  margin: 0 auto;
+  /* Adds comfortable space around the content. */
+  padding: 42px 24px 24px;
+  /* Leaves enough room for mobile viewport variations. */
+  min-height: 100vh;
+}
+
+/* Styles the UniAble logo and introductory text. */
+.brand {
+  /* Centres the logo and text. */
+  text-align: center;
+  /* Adds space beneath the brand area. */
+  margin-bottom: 36px;
+}
+
+/* Creates the purple tile surrounding the brand symbol. */
+.brand-icon {
+  /* Centres the symbol inside the tile. */
+  display: grid;
+  /* Centres the symbol horizontally. */
+  place-items: center;
+  /* Sets the tile dimensions. */
+  width: 76px;
+  /* Keeps the tile square. */
+  height: 76px;
+  /* Rounds the tile corners. */
+  border-radius: 22px;
+  /* Matches the purple gradient used on sign-up. */
+  background: linear-gradient(130deg, #4b008d 0%, #7127c4 65%, #8c3cdb 100%);
+  /* Uses white for the symbol. */
+  color: var(--white);
+  /* Centres the tile above the brand name. */
+  margin: 0 auto 14px;
+  /* Adds a subtle brand shadow. */
+  box-shadow: 0 10px 24px rgba(113, 41, 191, 0.23);
+}
+
+/* Controls the accessibility symbol size. */
+.brand-icon svg {
+  /* Sets the symbol width. */
+  width: 35px;
+  /* Sets the symbol height. */
+  height: 35px;
+}
+
+/* Styles the UniAble brand name. */
+.brand h1 {
+  /* Removes the browser's default heading margin. */
+  margin: 0;
+  /* Sets a prominent but compact heading size. */
+  font-size: 29px;
+  /* Gives the brand name a strong weight. */
+  font-weight: 800;
+  /* Slightly tightens the heading. */
+  letter-spacing: -0.8px;
+}
+
+/* Styles the brand's supporting sentence. */
+.tagline {
+  /* Adds space above the tagline. */
+  margin: 2px 0 0;
+  /* Uses muted text for a quieter appearance. */
+  color: var(--muted);
+  /* Sets a readable text size. */
+  font-size: 14px;
+}
+
+/* Stacks the entry buttons with consistent spacing. */
+.entry-actions {
+  /* Uses a vertical flex layout. */
+  display: flex;
+  /* Stacks all actions. */
+  flex-direction: column;
+  /* Adds consistent gaps between actions. */
+  gap: 10px;
+  /* Uses the full available width. */
+  width: 100%;
+}
+
+/* Provides consistent sizing and alignment for all action buttons. */
+.action-button {
+  /* Aligns icons and labels. */
+  display: flex;
+  /* Centres content horizontally. */
+  align-items: center;
+  /* Centres content vertically. */
+  justify-content: center;
+  /* Adds space between an icon and its label. */
+  gap: 9px;
+  /* Gives buttons a comfortable tap target. */
+  min-height: 49px;
+  /* Adds internal horizontal space. */
+  padding: 12px 16px;
+  /* Uses rounded button corners. */
+  border-radius: 13px;
+  /* Uses the same font as the rest of the interface. */
+  font: inherit;
+  /* Sets readable button text. */
+  font-size: 14px;
+  /* Makes button labels prominent. */
+  font-weight: 700;
+  /* Changes the mouse pointer on interactive buttons. */
+  cursor: pointer;
+  /* Animates subtle hover effects. */
+  transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+/* Styles the main voice sign-up button. */
+.action-primary {
+  /* Removes the default border. */
+  border: 1px solid var(--purple);
+  /* Applies the main brand colour. */
+  background: var(--purple);
+  /* Uses white text for contrast. */
+  color: var(--white);
+}
+
+/* Darkens the main button when hovered. */
+.action-primary:hover {
+  /* Applies the deeper brand colour. */
+  background: var(--purple-dark);
+  /* Keeps the border in sync with the background. */
+  border-color: var(--purple-dark);
+}
+
+/* Styles the outlined secondary actions. */
+.action-outline {
+  /* Uses a white background. */
+  background: var(--white);
+  /* Adds a matching lavender border. */
+  border: 1px solid #cfc2e6;
+  /* Uses the brand colour for text. */
+  color: var(--purple);
+}
+
+/* Adds a subtle background when a secondary action is hovered. */
+.action-outline:hover {
+  /* Uses a light lavender hover colour. */
+  background: #faf8ff;
+}
+
+/* Styles the guest action as a lower-emphasis option. */
+.action-guest {
+  /* Uses a white background. */
+  background: rgba(255, 255, 255, 0.9);
+  /* Adds a subtle dashed border. */
+  border: 1px dashed #d3c6e4;
+  /* Uses muted text. */
+  color: var(--muted);
+}
+
+/* Adds a light hover effect to the guest action. */
+.action-guest:hover {
+  /* Uses a slightly stronger white background. */
+  background: var(--white);
+}
+
+/* Keeps the small action symbols aligned with the text. */
+.button-icon {
+  /* Uses a slightly larger symbol size. */
+  font-size: 16px;
+  /* Keeps symbols from shrinking. */
+  flex-shrink: 0;
+}
+
+/* Styles the language accessibility information card. */
+.information-card {
+  /* Places the symbol and message next to each other. */
+  display: flex;
+  /* Vertically centres the content. */
+  align-items: center;
+  /* Adds space between the symbol and the message. */
+  gap: 8px;
+  /* Adds internal space. */
+  padding: 14px 15px;
+  /* Adds space above the card. */
+  margin-top: 14px;
+  /* Uses the full content width. */
+  width: 100%;
+  /* Creates a white card. */
+  background: var(--white);
+  /* Rounds the card corners. */
+  border-radius: var(--radius);
+  /* Adds a subtle shadow. */
+  box-shadow: var(--shadow);
+}
+
+/* Styles the information symbol. */
+.info-symbol {
+  /* Uses muted text for the symbol. */
+  color: var(--muted);
+  /* Keeps the symbol from shrinking. */
+  flex-shrink: 0;
+}
+
+/* Styles the language information text. */
+.information-card p {
+  /* Removes default paragraph spacing. */
+  margin: 0;
+  /* Uses smaller supporting text. */
+  font-size: 12px;
+  /* Centres the message inside the card. */
+  text-align: center;
+  /* Uses muted text for the supporting message. */
+  color: var(--muted);
+}
+
+/* Styles the voice assistant information card. */
+.assistant-card {
+  /* Uses the same pale lavender background as sign-up. */
+  background: var(--lavender);
+  /* Uses rounded corners. */
+  border-radius: var(--radius);
+  /* Adds comfortable internal space. */
+  padding: 14px 12px;
+  /* Adds separation from the previous card. */
+  margin-top: 12px;
+  /* Uses the full content width. */
+  width: 100%;
+  /* Centres the message. */
+  text-align: center;
+}
+
+/* Styles the voice assistant heading. */
+.assistant-card strong {
+  /* Makes the heading stand out. */
+  display: block;
+  /* Sets a compact heading size. */
+  font-size: 13px;
+  /* Uses a bold heading weight. */
+  font-weight: 700;
+}
+
+/* Styles the voice assistant supporting message. */
+.assistant-card p {
+  /* Adds a small gap above the supporting message. */
+  margin: 3px 0 0;
+  /* Uses a muted text colour. */
+  color: var(--muted);
+  /* Sets a comfortable text size. */
+  font-size: 12px;
+}
+
+/* Provides a consistent area for action feedback. */
+.status-message {
+  /* Reserves room so feedback does not shift the page. */
+  min-height: 24px;
+  /* Adds a little separation from the information cards. */
+  margin: 12px 0 0;
+  /* Uses the brand colour for feedback. */
+  color: var(--purple);
+  /* Uses a readable compact size. */
+  font-size: 12px;
+  /* Centres the message. */
+  text-align: center;
+}
+
+/* Styles the footer text. */
+.page-footer {
+  /* Pushes the footer toward the bottom when space permits. */
+  margin-top: auto;
+  /* Adds space above the footer. */
+  padding-top: 20px;
+  /* Uses a subtle supporting colour. */
+  color: var(--muted);
+  /* Uses smaller footer text. */
+  font-size: 11px;
+  /* Centres the footer. */
+  text-align: center;
+}
+
+/* Removes the default paragraph margin from the footer. */
+.page-footer p {
+  /* Keeps the footer compact. */
+  margin: 0;
+}
+
+/* Adapts the page to shorter mobile screens. */
+@media (max-height: 760px) {
+  /* Reduces the top padding on shorter screens. */
+  .welcome-screen {
+    padding-top: 24px;
+  }
+
+  /* Reduces the space below the brand. */
+  .brand {
+    margin-bottom: 24px;
+  }
+
+  /* Reduces the logo tile dimensions. */
+  .brand-icon {
+    width: 64px;
+    height: 64px;
+  }
+
+  /* Reduces button heights slightly on short screens. */
+  .action-button {
+    min-height: 45px;
+  }
+}
+
+/* Gives the layout more breathing room on wider screens. */
+@media (min-width: 700px) {
+  /* Adds space around the desktop layout. */
+  .welcome-screen {
+    justify-content: center;
+    padding-top: 48px;
+    padding-bottom: 48px;
+  }
+
+  /* Adds extra space below the brand on desktop. */
+  .brand {
+    margin-bottom: 42px;
+  }
+}
+
+/* Respects users who prefer reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  /* Removes button transitions for reduced-motion preferences. */
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

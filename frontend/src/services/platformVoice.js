@@ -47,7 +47,7 @@ async function getNativeLanguage(preferredLanguage) {
     if (sameLanguage) return sameLanguage;
 
     return supported.find((item) => item.toLowerCase() === fallback.toLowerCase()) || supported[0];
-  } catch (_) {
+  } catch {
     return preferredLanguage || fallback;
   }
 }
@@ -73,12 +73,20 @@ export async function startNativeVoiceRecognition({
   try {
     const state = await SpeechRecognition.isListening();
     if (state.listening) await SpeechRecognition.stop();
-  } catch (_) {}
+  } catch {
+    // No active native recognition session needs stopping.
+  }
 
 
   const recognitionLanguage = await getNativeLanguage(language);
   let ended = false;
   let latestText = "";
+  let listeningTimeout;
+
+  const removeListeners = async () => {
+    window.clearTimeout(listeningTimeout);
+    await Promise.allSettled([resultListener.remove(), stateListener.remove()]);
+  };
 
   const resultListener = await SpeechRecognition.addListener("partialResults", (data) => {
     const matches = Array.isArray(data?.matches) ? data.matches : [];
@@ -93,7 +101,7 @@ export async function startNativeVoiceRecognition({
       ended = true;
       if (latestText) onResult?.(latestText, true);
       onEnd?.();
-      Promise.allSettled([resultListener.remove(), stateListener.remove()]).catch(() => {});
+      void removeListeners();
     }
   });
 
@@ -105,28 +113,37 @@ export async function startNativeVoiceRecognition({
       popup: false,
     });
   } catch (error) {
-    await resultListener.remove();
-    await stateListener.remove();
+    ended = true;
+    await removeListeners();
     onError?.(error);
     throw error;
   }
 
-  return async () => {
+  if (!ended) {
+    listeningTimeout = window.setTimeout(() => {
+      if (ended) return;
+      onError?.(new Error("Voice recognition timed out. Please try again."));
+      void stopRecognition();
+    }, 20000);
+  }
+
+  async function stopRecognition() {
     if (ended) return;
     try {
       await SpeechRecognition.stop();
     } catch (error) {
       console.warn("Speech recognition stop failed; cleaning up listeners.", error);
     } finally {
-      await resultListener.remove();
-      await stateListener.remove();
       if (!ended) {
         ended = true;
         if (latestText) onResult?.(latestText, true);
         onEnd?.();
       }
+      await removeListeners();
     }
-  };
+  }
+
+  return stopRecognition;
 }
 
 export { isNative };

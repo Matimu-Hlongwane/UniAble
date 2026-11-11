@@ -17,20 +17,15 @@ From `frontend`:
 npm install
 ```
 
-## 3. Create the native projects
+## 3. Native projects
 
-Run these commands once:
-
-```bash
-npx cap add android
-npx cap add ios
-```
-
-Then build and copy the React application into both native projects:
+The Android and iOS native projects are already included. Do not run `cap add` again. To build and copy the React application into both native projects:
 
 ```bash
 npm run mobile:sync
 ```
+
+Only run `npx cap add android` or `npx cap add ios` if you intentionally recreate a missing native project.
 
 ## 4. Configure voice permissions
 
@@ -55,19 +50,23 @@ The speech-recognition plugin normally contributes the required microphone permi
 
 ## 5. Configure the backend URL
 
-A phone cannot use `localhost:4000` to reach your computer's backend. In `frontend/.env`, set one of the following before building:
+A physical phone cannot use `localhost:4000` to reach your computer's backend. Set the API URLs in `frontend/.env` before building. `VITE_API_URL` includes `/api`; `VITE_API_BASE_URL` is the same server root without `/api` and is used by account verification.
 
-### Physical phone on the same Wi-Fi
-
-```env
-VITE_API_URL=http://YOUR_COMPUTER_LAN_IP:4000/api
-```
-
-For example:
+### iOS Simulator
 
 ```env
-VITE_API_URL=http://192.168.1.100:4000/api
+VITE_API_URL=http://localhost:4000/api
+VITE_API_BASE_URL=http://localhost:4000
 ```
+
+### Physical iPhone/iPad
+
+```env
+VITE_API_URL=https://your-api-domain.example/api
+VITE_API_BASE_URL=https://your-api-domain.example
+```
+
+Use a reachable HTTPS backend for iOS devices; an iPhone cannot use your Mac's `localhost`. For Android devices on the same Wi-Fi, a computer LAN address can be used if the backend/network allows HTTP traffic.
 
 ### Android emulator
 
@@ -77,13 +76,11 @@ VITE_API_URL=http://10.0.2.2:4000/api
 
 ### Production
 
-Use a deployed HTTPS API:
+Use your deployed HTTPS API:
 
 ```env
 VITE_API_URL=https://your-api-domain.example/api
 ```
-
-For a production iOS release, HTTPS is strongly recommended.
 
 ## 6. Run Android
 
@@ -106,14 +103,14 @@ Android Studio will open. Select an emulator or connected Android device and run
 
 ## 7. Run iOS
 
-On a Mac:
+See [frontend/IOS_SETUP.md](frontend/IOS_SETUP.md) for Xcode signing, simulator, and iPhone instructions. On a Mac, run:
 
 ```bash
 cd frontend
 npm run ios
 ```
 
-Xcode will open. Select a simulator or connected iPhone and run the app.
+Xcode opens the `App` workspace. Select a simulator or connected iPhone and run the app.
 
 ## Notes
 

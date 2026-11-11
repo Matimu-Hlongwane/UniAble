@@ -1,44 +1,398 @@
-import React from "react";
-import { Link } from "react-router-dom";
-import { Accessibility, ArrowRight, Brain, HeartHandshake, MapPin, ShieldAlert, Volume2, Users } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  Accessibility,
+  Mic,
+  Volume2,
+  Mail,
+  Eye,
+  Ear,
+  Accessibility as MobilityIcon,
+  MessageCircle,
+  Palette,
+  Brain,
+  Users,
+  Globe,
+  MapPin,
+  CalendarDays,
+  Menu,
+  X,
+} from "lucide-react";
+import {
+  speak,
+} from "../services/speechService";
+import { useSettings } from "../context/settingsContext/SettingsContext";
+import VoiceCommandButton from "../components/VoiceCommandButton";
+import VoiceAssistanceToggle from "../components/VoiceAssistanceToggle";
+import "./LandingPrototype.css";
 
-const features = [
-  [Accessibility, "Personalised accessibility", "Interfaces adapt to visual, hearing, mobility, speech and neurodiverse needs."],
-  [Brain, "Learning support", "Lecture summaries, smart assistance and personalised guidance help students stay independent."],
-  [MapPin, "Accessible campus navigation", "Step-free routes, accessible facilities and indoor navigation support safer movement."],
-  [HeartHandshake, "Peer assistance network", "Students can request or provide trusted peer support when they need it."],
-  [ShieldAlert, "Emergency SOS", "A simple emergency action can share the student's last known location with authorised responders and volunteers."],
-  [Volume2, "Voice-first interaction", "Voice commands and visible alternatives make core actions easier to access."],
-];
+const LANDING_WELCOME =
+  "Welcome to UniAble. Choose voice sign-up, voice login, or email login to get started. Touch or press a key to pause; I will continue after three seconds of inactivity.";
 
-export default function Landing() {
-  return <main className="landing-page">
-    <nav className="landing-nav">
-      <div className="brand landing-brand">UniAble <span>●</span></div>
-      <div className="landing-links"><a href="#features">Features</a><a href="#impact">Impact</a><Link to="/dashboard">Open demo</Link></div>
-    </nav>
+const dashboardTypes = [
+  {
+    title: "Visual",
+    description: "For students with visual impairments: use screen-reader-friendly content, text-to-speech, OCR to read printed material, large text and high-contrast settings to access learning and campus information.",
+    icon: Eye,
+    className: "visual",
+    features: ["Screen reader support", "Large text", "High contrast"],
+  },
+  {
+    title: "Hearing",
+    description: "For students who are deaf or hard of hearing: access visual notifications, captions, transcripts and written emergency alerts so important information is not communicated through sound alone.",
+    icon: Ear,
+    className: "hearing",
+    features: ["Live captions", "Visual alerts", "Transcripts"],
+  },
+  {
+    title: "Mobility",
+    description: "For students with mobility disabilities: find accessible campus routes and buildings, reduce unnecessary physical interaction, and use voice controls or assistance requests where available.",
+    icon: MobilityIcon,
+    className: "mobility",
+    features: ["Accessible routes", "Building access", "Route planning"],
+  },
+  {
+    title: "Speech",
+    description: "For students with speech disabilities: communicate through text, quick responses and alternative help requests without having to rely on spoken communication.",
+    icon: MessageCircle,
+    className: "speech",
+    features: ["Voice alternatives", "Quick responses", "Communication tools"],
+  },
+  {
+    title: "Colour vision",
+    description: "For students with colour-vision deficiencies: use strong contrast, readable labels and clear visual indicators so information is not communicated through colour alone.",
+    icon: Palette,
+    className: "colour",
+    features: ["Colour filters", "Contrast options", "Clear visual labels"],
+  },
+  {
+    title: "Neurodiverse",
+    description: "For students with dyslexia, ADHD, autism and Down syndrome: access reading support, text-to-speech, structured tasks, predictable navigation, clear instructions and adjustable layouts.",
+    icon: Brain,
+    className: "neuro",
+    features: ["Reduced distractions", "Reading support", "Personalised layout"],
+  },
+  {
+    title: "Dyslexia",
+    description: "Support reading and understanding with text-to-speech, read-aloud content, clear text presentation, adjustable reading options and AI-generated summaries.",
+    icon: Brain,
+    className: "dyslexia",
+    features: ["Text-to-speech", "Readable content options", "AI summaries"],
+  },
+  {
+    title: "ADHD",
+    description: "Help students organise their studies with structured tasks, reminders, clear priorities, manageable information and progress tracking.",
+    icon: Brain,
+    className: "adhd",
+    features: ["Task organisation", "Study reminders", "Progress tracking"],
+  },
+  {
+    title: "Autism",
+    description: "Offer a predictable and customisable experience through consistent navigation, clear instructions, reduced visual distractions and personal settings.",
+    icon: Brain,
+    className: "autism",
+    features: ["Consistent layouts", "Clear instructions", "Reduced distractions"],
+  },
+  {
+    title: "Down syndrome",
+    description: "Make learning and campus tasks easier to follow with simple navigation, step-by-step guidance, visual information and read-aloud support.",
+    icon: Brain,
+    className: "down-syndrome",
+    features: ["Step-by-step guidance", "Visual support", "Read-aloud tools"],
+  },
+  {
+    title: "Multiple disabilities",
+    description: "Allow students with more than one disability to combine accessibility tools and personalise settings to suit their individual requirements.",
+    icon: Brain,
+    className: "multiple",
+    features: ["Combined accessibility tools", "Personalised settings", "Flexible support"],
+  },];
 
-    <section className="landing-hero">
-      <div className="hero-copy">
-        <span className="proposal-badge"><Accessibility size={15}/> Accessible student platform for higher education</span>
-        <h1>Access without limits.<br/><span>Education for everyone.</span></h1>
-        <p>UniAble is a student-centred accessibility platform designed to improve learning, communication, campus navigation, safety and independence for students with disabilities.</p>
-        <div className="landing-actions"><Link className="primary-btn" to="/dashboard">Explore student dashboard <ArrowRight size={18}/></Link><Link className="secondary-btn" to="/accessibility">Accessibility settings</Link></div>
-        <div className="hero-proof"><Users size={18}/><span>Built for students, lecturers, disability offices, security teams and peer volunteers.</span></div>
+function DashboardPreview({ item }) {
+  const Icon = item.icon;
+
+  return (
+    <li className={`landing-disability-item landing-disability-${item.className}`}>
+      <div className="landing-disability-card-heading">
+        <span className="landing-disability-icon" aria-hidden="true">
+          <Icon size={25} />
+        </span>
+        <h3>{item.title}</h3>
       </div>
-      <div className="hero-preview">
-        <div className="preview-top"><span>UniAble Student Experience</span><span className="live-pill">● Live demo</span></div>
-        <div className="preview-main"><div className="preview-avatar">R</div><div><strong>Good morning, Relebohile</strong><p>How can UniAble assist you today?</p></div></div>
-        <div className="preview-card"><div className="preview-icon"><Accessibility/></div><div><strong>Adaptive Mode</strong><p>Personalised to your accessibility preferences</p></div><span className="preview-toggle">ON</span></div>
-        <div className="preview-grid"><div><MapPin/><strong>Navigate</strong><small>Step-free route</small></div><div><HeartHandshake/><strong>Peer Help</strong><small>Request assistance</small></div><div><ShieldAlert/><strong>Emergency</strong><small>One-tap SOS</small></div></div>
-      </div>
-    </section>
 
-    <section id="features" className="landing-section"><div className="section-intro"><span className="eyebrow">Core solution</span><h2>One platform, personalised to the student.</h2><p>Instead of forcing every student into the same interface, UniAble changes the experience around individual accessibility needs.</p></div><div className="feature-grid">{features.map(([Icon,title,desc])=><article className="feature-card" key={title}><div className="feature-icon"><Icon size={22}/></div><h3>{title}</h3><p>{desc}</p></article>)}</div></section>
+      <p className="landing-disability-description">{item.description}</p>
 
-    <section id="impact" className="impact-section"><div><span className="eyebrow">Project proposal</span><h2>Designed around inclusion, independence and safety.</h2><p>UniAble combines accessible UX, AI personalisation, campus services and peer support into one connected student experience. The prototype demonstrates the front-end journey while leaving clear integration points for the shared team backend.</p></div><div className="impact-list"><div><strong>10+</strong><span>adaptive accessibility experiences</span></div><div><strong>5</strong><span>key stakeholder groups</span></div><div><strong>1</strong><span>connected student platform</span></div></div></section>
-
-    <section className="landing-cta"><div><h2>See UniAble from every student's perspective.</h2><p>Choose accessibility preferences and personalise the UniAble experience.</p></div><Link className="primary-btn" to="/accessibility">Choose an accessibility profile <ArrowRight size={18}/></Link></section>
-    <footer className="landing-footer">UniAble • Inclusive higher education technology • Prototype</footer>
-  </main>;
+      <ul className="landing-disability-features">
+        {item.features.map((feature) => (
+          <li key={feature}>{feature}</li>
+        ))}
+      </ul>
+    </li>
+  );
 }
+export default function Landing() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [voiceStatus, setVoiceStatus] = useState("");
+  const { voiceAssistanceEnabled, locale } = useSettings();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    let active = true;
+
+    async function playWelcome() {
+      try {
+        const result = await speak(LANDING_WELCOME, {
+          locale: locale || "en-ZA",
+          onStart: () => {
+            if (active) setVoiceStatus("Welcome message is playing.");
+          },
+          onEnd: () => {
+            if (active) setVoiceStatus("");
+          },
+        });
+
+        if (active && !result.started) {
+          setVoiceStatus(
+            "Spoken welcome is unavailable. Use the Hear welcome button or your screen reader."
+          );
+        }
+      } catch (error) {
+        console.error("Landing page voice welcome failed:", error);
+        if (active) {
+          setVoiceStatus(
+            "Spoken welcome could not start. Use the Hear welcome button or your screen reader."
+          );
+        }
+      }
+    }
+
+    if (!voiceAssistanceEnabled) return undefined;
+    const startTimer = window.setTimeout(playWelcome, 100);
+
+    return () => {
+      active = false;
+      window.clearTimeout(startTimer);
+    };
+  }, [voiceAssistanceEnabled, locale]);
+
+  function handleLandingVoiceCommand(spokenText) {
+    const command = String(spokenText || "").toLowerCase();
+    if (command.includes("sign up") || command.includes("signup") || command.includes("register")) {
+      navigate("/signup");
+    } else if (command.includes("voice login")) {
+      navigate("/voice-login");
+    } else if (command.includes("login") || command.includes("sign in")) {
+      navigate("/login");
+    } else if (command.includes("campus") || command.includes("navigation") || command.includes("map")) {
+      navigate("/campus");
+    } else if (command.includes("schedule") || command.includes("timetable") || command.includes("classes")) {
+      navigate("/schedule");
+    } else if (command.includes("unipal") || command.includes("uni pal")) {
+      navigate("/unipal");
+    } else if (command.includes("peer assistance") || command.includes("peers")) {
+      navigate("/peer-assistance");
+    } else if (command.includes("emergency")) {
+      navigate("/emergency");
+    } else if (command.includes("accessibility")) {
+      navigate("/accessibility");
+    } else if (command.includes("settings")) {
+      navigate("/settings");
+    } else if (command.includes("dashboard") || command.includes("disability")) {
+      navigate("/dashboard");
+    } else if (command.includes("about")) {
+      document.getElementById("about")?.scrollIntoView({ behavior: "smooth" });
+    } else {
+      void speak(
+        "I did not recognize that destination. Say sign up, login, dashboard, campus navigation, schedule, UniPal, peer assistance, emergency, accessibility, settings, or about.",
+        { locale: locale || "en-ZA" }
+      );
+    }
+  }
+
+  return (
+    <main className="landing-page" id="main-content">
+      <a className="landing-skip-link" href="#landing-actions">
+        Skip to main content
+      </a>
+
+      <section className="landing-hero">
+        <header className="landing-header">
+          <Link to="/" className="landing-logo" aria-label="UniAble home">
+            <span className="landing-logo-icon">
+              <Accessibility size={25} aria-hidden="true" />
+            </span>
+            <span>UniAble</span>
+          </Link>
+
+          <button
+            className="landing-menu-toggle"
+            type="button"
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={mobileMenuOpen}
+            onClick={() => setMobileMenuOpen((open) => !open)}
+          >
+            {mobileMenuOpen ? <X size={23} /> : <Menu size={23} />}
+          </button>
+
+          <nav
+            className={`landing-nav ${mobileMenuOpen ? "is-open" : ""}`}
+            aria-label="Main navigation"
+          >
+            
+            <a href="#dashboards" onClick={() => setMobileMenuOpen(false)}>Disability Dashboards</a>
+            <a href="#about" onClick={() => setMobileMenuOpen(false)}>About</a>
+          </nav>
+
+
+        </header>
+
+        <div className="landing-hero-content">
+          <div className="landing-eyebrow">
+            
+            Inclusion starts with access
+          </div>
+
+          <h1>
+            Campus life that
+            <br />
+            <span>works for you,</span> your way.
+          </h1>
+
+          <p className="landing-hero-description">
+            Voice-first support for students with every kind of need.
+            Navigate campus, connect with peers and talk to UniPal in
+            your own language.
+          </p>
+
+          <div
+            className="landing-entry-actions"
+            id="landing-actions"
+            aria-label="Choose how to access UniAble"
+          >
+            <VoiceAssistanceToggle />
+
+            <Link className="landing-action-button landing-action-primary" to="/signup">
+              <Mic size={19} aria-hidden="true" />
+              Voice sign-up
+            </Link>
+
+            <Link className="landing-action-button landing-action-outline" to="/voice-login">
+              <Volume2 size={19} aria-hidden="true" />
+              Voice login
+            </Link>
+
+            <Link className="landing-action-button landing-action-outline" to="/login">
+              <Mail size={19} aria-hidden="true" />
+              Email login
+            </Link>
+          </div>
+          {voiceAssistanceEnabled && (
+            <VoiceCommandButton onCommand={handleLandingVoiceCommand} />
+          )}
+
+          <p className="landing-hero-note">
+            {voiceStatus ||
+              "Accessible tools. Personalised support. One campus community."}
+          </p>
+        </div>
+
+        <div className="landing-hero-bottom">
+          <div className="landing-hero-benefit">
+            <MapPin size={19} aria-hidden="true" />
+            <span>Campus navigation</span>
+          </div>
+          <div className="landing-hero-benefit">
+            <CalendarDays size={19} aria-hidden="true" />
+            <span>Smart schedule</span>
+          </div>
+          <div className="landing-hero-benefit">
+            <Users size={19} aria-hidden="true" />
+            <span>Peer assistance</span>
+          </div>
+          <div className="landing-hero-benefit">
+            <MessageCircle size={19} aria-hidden="true" />
+            <span>UniPal companion</span>
+          </div>
+        </div>
+      </section>
+
+      <section className="landing-dashboards" id="dashboards">
+        <div className="landing-section-heading">
+          <span className="landing-section-kicker">Designed around you</span>
+          <h2>Disability Dashboards</h2>
+          <p>
+            UniAble adapts its layout, colours, text and support tools
+            to your accessibility preferences.
+          </p>
+        </div>
+
+        <div className="landing-dashboard-grid">
+          {dashboardTypes.map((item) => (
+            <DashboardPreview item={item} key={item.title} />
+          ))}
+        </div>
+      </section>
+
+
+      <section className="landing-about" id="about">
+        
+          <div className="landing-about-brand" aria-label="UniAble app logo">
+            <span className="landing-about-brand-icon">
+              <Accessibility size={58} strokeWidth={2.2} aria-hidden="true" />
+            </span>
+            <span className="landing-about-brand-name">UniAble</span>
+            <span className="landing-about-brand-tagline">Access without limits</span>
+          </div><div className="landing-section-heading">
+          <span className="landing-section-kicker">About UniAble</span>
+          <h2>Access without limits. Education for everyone.</h2>
+          <p>
+            UniAble is an accessibility support platform designed to make higher
+            education more inclusive, accessible and supportive for every student.
+            It brings together accessible communication, campus navigation, peer
+            assistance, emergency support and personalised learning tools in one place.
+            The platform supports students with visual, hearing, mobility, speech,
+            colour-vision and neurodiverse accessibility needs. Students can use
+            accessible features to communicate their needs, access information,
+            navigate campus services and request assistance more independently.
+            UniAble also aims to connect students with lecturers, disability support
+            offices, peers and campus security. By bringing these services together,
+            UniAble seeks to reduce barriers to participation and help create a
+            higher education environment where every student has the opportunity
+            to learn, participate and succeed.
+          </p>
+        </div>
+      </section>
+            <section className="landing-language-strip" aria-labelledby="landing-language-title">
+        <span className="landing-language-symbol">
+          <Globe size={25} aria-hidden="true" />
+        </span>
+        <div>
+          <strong id="landing-language-title">Support in your language</strong>
+          <p>UniAble recognises South Africa&apos;s 11 official languages.</p>
+          <ul className="landing-language-list">
+            <li>isiZulu</li>
+            <li>isiXhosa</li>
+            <li>Afrikaans</li>
+            <li>English</li>
+            <li>Sepedi</li>
+            <li>Setswana</li>
+            <li>Sesotho</li>
+            <li>siSwati</li>
+            <li>Xitsonga</li>
+            <li>Tshivenda</li>
+            <li>isiNdebele</li>
+          </ul>
+        </div>
+      </section>
+
+      <footer className="landing-footer">
+        <Link to="/" className="landing-footer-brand">
+          <Accessibility size={19} aria-hidden="true" />
+          UniAble
+        </Link>
+        <p>Designed for access. Built for everyone.</p>
+      </footer>
+    </main>
+  );
+}
+
