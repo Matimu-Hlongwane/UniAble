@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { requireFirebaseUser } from "../middleware/authMiddleware.js";
 
 const router = Router();
 
@@ -39,7 +40,7 @@ router.get("/capabilities", async (_req, res) => {
 const SAFE_PROFILE_KEYS = ["firstName", "accessibility", "preferences"];
 const MAX_HISTORY = 10;
 
-router.post("/chat", async (req, res) => {
+router.post("/chat", requireFirebaseUser, async (req, res) => {
   const {
     message,
     profile = {},
@@ -136,7 +137,7 @@ function localFallback(text) {
   const q = text.toLowerCase();
 
   if (/(^|\s)(hi|hello|hey|good morning|good afternoon|good evening)(\s|!|$)/.test(q)) {
-    return "Hi! I’m UniPal, your UniAble Companion. I can help with UniAble, accessibility and student disability support.";
+    return "Hi! Iâ€™m UniPal, your UniAble Companion. I can help with UniAble, accessibility and student disability support.";
   }
 
   if (q.includes("accessibility") || q.includes("text size") || q.includes("font")) {
@@ -155,7 +156,7 @@ function localFallback(text) {
     return "Open Peer Assistance to request support or review available peer assistance options.";
   }
 
-  return "I’m UniPal, your UniAble Companion. I can help with UniAble, accessibility, campus navigation, study support for students with disabilities, peer assistance and emergency features.";
+  return "Iâ€™m UniPal, your UniAble Companion. I can help with UniAble, accessibility, campus navigation, study support for students with disabilities, peer assistance and emergency features.";
 }
 
 export default router;

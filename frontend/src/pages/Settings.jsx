@@ -1,14 +1,14 @@
-import React, { useEffect, useRef, useState } from "react";
+﻿import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   User, Bell, Shield, Palette, Globe, MapPin, Lock, LogOut, ChevronRight,
   Check, Moon, Sun, Mail, Smartphone, Trash2, Save, Settings as SettingsIcon,
-  Camera, KeyRound, Mic, PhoneCall, X, Volume2
+  Camera, KeyRound, Mic, Volume2
 } from "lucide-react";
 import { useSettings } from "../context/settingsContext/SettingsContext";
 import {
   firebaseConfigured, getCurrentUser, subscribeToAuth, sendVerificationEmail,
-  refreshCurrentUser, saveFirebaseProfile, sendPhoneOtp, verifyPhoneOtp,
+  saveFirebaseProfile,
   changeAccountPassword, signOutAccount, deleteAccount,
   getVoiceAuthenticationState, setVoiceAuthenticationState
 } from "../services/firebaseAuth";
@@ -16,13 +16,12 @@ import { getSpeechSupport } from "../services/speechService";
 import "../styles/Settings.css";
 
 const DEFAULT_PROFILE = {
-  firstName: "Gundo",
-  lastName: "Dzivhani",
-  email: "student@uniable.co.za",
+  firstName: "",
+  lastName: "",
+  email: "",
   phone: "",
   photo: "",
   emailVerified: false,
-  phoneVerified: false,
 };
 
 function loadProfile() {
@@ -47,9 +46,7 @@ function Settings() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [photoFile, setPhotoFile] = useState(null);
-  const [phoneOtp, setPhoneOtp] = useState("");
-  const [phoneConfirmation, setPhoneConfirmation] = useState(null);
-  const [phoneVerifier, setPhoneVerifier] = useState(null);
+
   const [passwordOpen, setPasswordOpen] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -84,7 +81,6 @@ function Settings() {
           ? `0${firebaseUser.phoneNumber.slice(3)}`
           : previous.phone,
         emailVerified: Boolean(firebaseUser.emailVerified),
-        phoneVerified: Boolean(firebaseUser.phoneNumber),
       }));
     }
   }, [firebaseUser]);
@@ -105,7 +101,7 @@ function Settings() {
 
   const handlePhoneChange = (value) => {
     const digits = value.replace(/\D/g, "").slice(0, 10);
-    persistProfile({ ...profile, phone: digits, phoneVerified: false });
+    persistProfile({ ...profile, phone: digits });
   };
 
   const saveProfile = async () => {
@@ -130,6 +126,12 @@ function Settings() {
 
       const next = { ...profile, photo };
       persistProfile(next);
+      window.dispatchEvent(new CustomEvent("uniable-profile-updated", {
+        detail: {
+          photoURL: photo,
+          displayName: `${profile.firstName} ${profile.lastName}`.trim(),
+        },
+      }));
       setPhotoFile(null);
       showStatus(t("profileSaved"));
     } catch (err) {
@@ -156,48 +158,9 @@ function Settings() {
     } finally { setBusy(false); }
   };
 
-  const sendOtp = async () => {
-    clearMessages();
-    if (!/^[0-9]{10}$/.test(profile.phone) || !profile.phone.startsWith("0")) {
-      showError(t("invalidPhone"));
-      return;
-    }
-    setBusy(true);
-    try {
-      if (!firebaseConfigured || !firebaseUser) throw new Error(t("phoneVerificationRequired"));
-      const result = await sendPhoneOtp(`+27${profile.phone.slice(1)}`, "phone-recaptcha");
-      setPhoneConfirmation(result.confirmation);
-      setPhoneVerifier(result.verifier);
-      showStatus(`${t("verificationSent")} ${t("otp")}.`);
-    } catch (err) {
-      showError(err.message || t("actionFailed"));
-    } finally { setBusy(false); }
-  };
-
-  const verifyOtp = async () => {
-    clearMessages();
-    if (!/^[0-9]{6}$/.test(phoneOtp)) {
-      showError("Enter the 6-digit OTP.");
-      return;
-    }
-    setBusy(true);
-    try {
-      const user = await verifyPhoneOtp(phoneConfirmation, phoneOtp, phoneVerifier);
-      const next = { ...profile, phoneVerified: true };
-      persistProfile(next);
-      setFirebaseUser(user);
-      setPhoneConfirmation(null);
-      setPhoneVerifier(null);
-      setPhoneOtp("");
-      showStatus(t("phoneVerified"));
-    } catch (err) {
-      showError(err.message || t("actionFailed"));
-    } finally { setBusy(false); }
-  };
-
   const updatePassword = async () => {
     clearMessages();
-    if (newPassword.length < 8 || !/[^\W_]/.test(newPassword) || !/[^A-Za-z0-9]/.test(newPassword)) {
+    if (newPassword.length < 8 || !/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) || !/[0-9]/.test(newPassword) || !/[^A-Za-z0-9]/.test(newPassword)) {
       showError(t("passwordTooWeak"));
       return;
     }
@@ -303,11 +266,7 @@ function Settings() {
               <input type="email" value={profile.email} onChange={(e)=>handleProfileChange("email",e.target.value)}/>
               <span className={`verification-badge ${profile.emailVerified || firebaseUser?.emailVerified ? "verified" : ""}`}>{profile.emailVerified || firebaseUser?.emailVerified ? <Check size={14}/> : <Mail size={14}/>} {profile.emailVerified || firebaseUser?.emailVerified ? t("emailVerified") : t("verifyEmail")}</span>
             </div><button type="button" className="secondary-button" onClick={verifyEmail} disabled={busy || Boolean(firebaseUser?.emailVerified)}><Mail size={16}/>{firebaseUser?.emailVerified ? t("emailVerified") : t("verifyEmail")}</button></div>
-            <div className="form-group verification-field"><label>{t("phoneNumber")}</label><div className="phone-input-row"><span>+27</span><input inputMode="numeric" maxLength={10} pattern="[0-9]{10}" value={profile.phone} onChange={(e)=>handlePhoneChange(e.target.value)} placeholder="0XXXXXXXXX"/></div><small>{t("phoneTenDigits")}</small>
-              <div className="verification-actions"><button type="button" className="secondary-button" onClick={sendOtp} disabled={busy || profile.phone.length !== 10 || profile.phoneVerified}><PhoneCall size={16}/>{t("sendOtp")}</button>
-              {phoneConfirmation && <><input className="otp-input" inputMode="numeric" maxLength={6} value={phoneOtp} onChange={(e)=>setPhoneOtp(e.target.value.replace(/\D/g,"").slice(0,6))} placeholder={t("otp")}/><button type="button" className="primary-button" onClick={verifyOtp} disabled={busy}><Check size={16}/>{t("verifyOtp")}</button></>}
-              {profile.phoneVerified && <span className="verification-badge verified"><Check size={14}/>{t("phoneVerified")}</span>}</div>
-              <div id="phone-recaptcha" className="recaptcha-host" />
+            <div className="form-group"><label htmlFor="profile-phone">{t("phoneNumber")} (optional)</label><div className="phone-input-row"><span>+27</span><input id="profile-phone" inputMode="numeric" maxLength={10} pattern="[0-9]{10}" value={profile.phone} onChange={(e)=>handlePhoneChange(e.target.value)} placeholder="0XXXXXXXXX"/></div><small>Optional contact detail only; it is not used for sign-in or account verification.</small>
             </div>
           </div>
           {photoFile && <p className="file-selected">{photoFile.name}</p>}
@@ -400,3 +359,6 @@ function AccessibilityIcon() {
 }
 
 export default Settings;
+
+
+

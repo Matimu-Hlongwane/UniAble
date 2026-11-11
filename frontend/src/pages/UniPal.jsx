@@ -2,12 +2,13 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Bot, Copy, Mic, Send, Square, Volume2, VolumeX } from "lucide-react";
 import { useSettings } from "../context/settingsContext/SettingsContext";
 import { api } from "../services/api";
+import { getUserAccessibilityProfile } from "../services/firebaseAuth";
 import { startNativeVoiceRecognition } from "../services/platformVoice";
 import { speak, stopSpeaking, resolveReplyLocale } from "../services/speechService";
 
 const DEFAULT_PROFILE = {
-  firstName: "Gundo",
-  lastName: "Dzivhani",
+  firstName: "",
+  lastName: "",
   email: "",
   phone: "",
   photo: "",
@@ -28,7 +29,7 @@ function loadProfile() {
   }
 }
 
-function loadAccessibilityProfile() {
+function loadLocalAccessibilityProfile() {
   try {
     return JSON.parse(localStorage.getItem("uniableAccessibilityProfile") || "null") || {};
   } catch {
@@ -128,7 +129,7 @@ export default function UniPal() {
     return false;
   };
 
-  const sendMessage = async (rawText) => {
+  const sendMessage = async (rawText, { voiceInput = false } = {}) => {
     const text = String(rawText || "").trim();
     if (!text || busy) return;
 
@@ -149,7 +150,9 @@ export default function UniPal() {
         locale,
         profile: {
           firstName: profile.firstName || "",
-          accessibility: loadAccessibilityProfile(),
+          accessibility: await getUserAccessibilityProfile()
+            .then((saved) => saved?.accessibilityProfile || loadLocalAccessibilityProfile())
+            .catch(() => loadLocalAccessibilityProfile()),
           preferences: { theme, fontSize },
         },
         messages: conversation.map(({ role, text: messageText }) => ({
@@ -172,8 +175,13 @@ export default function UniPal() {
       const chosenBase = String(locale || "en-ZA").split("-")[0];
       if (replyBase !== chosenBase) setNotice(t("unipalReplyNotTranslated"));
 
-      // Automatic spoken response (Settings > Language & Region > Spoken responses).
-      if (spokenResponses && data.message) speakMessage(assistantMessage, { automatic: true });
+      // Voice questions always receive a spoken answer; typed questions follow the spoken-response setting.
+      if ((spokenResponses || voiceInput) && data.message) {
+        const spokenMessage = voiceInput
+          ? { ...assistantMessage, text: `I heard you ask: ${text}. ${reply}` }
+          : assistantMessage;
+        speakMessage(spokenMessage, { automatic: true });
+      }
     } catch (err) {
       const message = err?.message || t("unipalGenericError");
       setError(message);
@@ -205,7 +213,16 @@ export default function UniPal() {
         language: locale || "en-ZA",
         onResult: (text, isFinal) => {
           setInput(text);
-          if (isFinal) sendMessage(text);
+          if (!isFinal) return;
+          const command = String(text || "").toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+          if (/^(please )?(stop|stop now|stop talking|stop speaking|stop reading|be quiet|quiet|silence|cancel speech|enough)$/.test(command)) {
+            stopSpeaking();
+            setSpeakingId(null);
+            setInput("");
+            setNotice("UniPal has stopped speaking.");
+            return;
+          }
+          sendMessage(text, { voiceInput: true });
         },
         onError: (err) => {
           setError(err?.message || t("unipalVoiceError"));
