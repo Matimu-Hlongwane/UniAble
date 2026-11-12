@@ -1,0 +1,83 @@
+.voice-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-3);
+}
+
+.voice-panel__mic-button {
+  border: none;
+  background: transparent;
+  color: var(--uni-violet-700);
+  font-weight: 700;
+  font-size: var(--text-base);
+  cursor: pointer;
+  padding: var(--space-2);
+}
+.voice-panel__mic-button:disabled { color: var(--uni-muted); cursor: not-allowed; }
+
+.voice-panel__status { color: var(--uni-muted); font-size: var(--text-sm); min-height: 1.4em; }
+
+.voice-panel__transcript {
+  font-size: var(--text-xs);
+  color: var(--uni-ink-soft);
+  font-family: var(--font-mono);
+  background: var(--uni-surface-sunken);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+}
+.voice-panel__transcript span { color: var(--uni-ink); }
+
+.voice-panel__result {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.voice-panel__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  background: var(--uni-success-tint);
+  color: var(--uni-success);
+  font-weight: 600;
+  font-size: var(--text-xs);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-pill);
+}
+
+.voice-panel__continue {
+  width: 100%;
+  border: none;
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--uni-success);
+  color: var(--uni-surface);
+  font-weight: 700;
+  font-size: var(--text-base);
+  cursor: pointer;
+}
+
+.voice-panel__retry {
+  border: 1.5px solid var(--uni-violet-600);
+  background: transparent;
+  color: var(--uni-violet-600);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+
+.voice-panel__fallback {
+  border: none;
+  background: transparent;
+  color: var(--uni-muted);
+  font-size: var(--text-sm);
+  text-decoration: underline;
+  cursor: pointer;
+  margin-top: var(--space-1);
+}
