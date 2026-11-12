@@ -1,4 +1,5 @@
-import { Capacitor, registerPlugin } from "@capacitor/core";
+﻿import { Capacitor } from "@capacitor/core";
+import { TextToSpeech as NativeTTS } from "@capacitor-community/text-to-speech";
 
 /*
  * UniPal spoken responses.
@@ -16,7 +17,7 @@ import { Capacitor, registerPlugin } from "@capacitor/core";
  * as text only.
  */
 
-const NativeTTS = registerPlugin("TextToSpeech");
+
 
 // Three-letter language codes some Android engines report -> two-letter base codes.
 const BASE_ALIASES = {
@@ -45,19 +46,19 @@ export function cleanForSpeech(text) {
   out = out.replace(/\[([^\]]+)\]\([^)]*\)/g, "$1");
   out = out.replace(/https?:\/\/\S+/g, " ");
   out = out.replace(/^\s{0,3}#{1,6}\s*/gm, "");
-  out = out.replace(/^\s*[-*•]\s+/gm, "");
+  out = out.replace(/^\s*[-*â€¢]\s+/gm, "");
   out = out.replace(/[*_~>|]+/g, " ");
   try {
     out = out.replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu, " ");
   } catch { /* very old engines: leave emoji in place */ }
   // Make line breaks sound like sentence breaks.
-  out = out.replace(/([^.!?…:;\s])\s*\n+\s*/g, "$1. ");
+  out = out.replace(/([^.!?â€¦:;\s])\s*\n+\s*/g, "$1. ");
   out = out.replace(/\s*\n+\s*/g, " ");
   return out.replace(/\s{2,}/g, " ").trim();
 }
 
 export function splitIntoChunks(text, maxLength = 220) {
-  const sentences = String(text || "").match(/[^.!?…]+[.!?…]+["')\]]*\s*|[^.!?…]+$/g) || [];
+  const sentences = String(text || "").match(/[^.!?â€¦]+[.!?â€¦]+["')\]]*\s*|[^.!?â€¦]+$/g) || [];
   const chunks = [];
   let current = "";
 

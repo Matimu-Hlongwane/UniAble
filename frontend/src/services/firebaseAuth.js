@@ -234,7 +234,6 @@ export async function sendPhoneOtp(phoneNumber, recaptchaContainerId) {
     clearPhoneRecaptchaVerifier();
     throw error;
   }
-}
 
 export async function verifyPhoneOtp(confirmation, code) {
   if (!confirmation) {

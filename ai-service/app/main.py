@@ -1,4 +1,4 @@
-import os
+﻿import os
 import re
 from typing import List, Tuple
 
@@ -268,13 +268,9 @@ def parse_language_header(output_text: str, language: str) -> Tuple[str, bool]:
 
 
 def is_in_scope(message: str) -> bool:
-    normalized = " ".join(message.lower().split())
-
-    if normalized in SAFE_SHORT_REQUESTS:
-        return True
-
-    return any(term in normalized for term in ALLOWED_TERMS)
-
+    # Allow questions to reach the existing AI.
+    # UniPal's system instructions determine whether a request is relevant.
+    return True
 
 def local_unipal_reply(message: str, language: str) -> str:
     q = message.lower()

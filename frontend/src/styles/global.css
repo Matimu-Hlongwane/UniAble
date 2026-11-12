@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;500;600;700;800&display=swap");
 :root {
   font-family: "Atkinson Hyperlegible", Arial, sans-serif;
 
@@ -2288,8 +2289,18 @@ html[data-theme="dark"] .main-content .voice-btn {
 
 html[data-theme="dark"] .profile-card,
 html[data-theme="dark"] .settings-intro,
-html[data-theme="dark"] .selected-profile {
+html[data-theme="dark"] .selected-profile,
+html[data-theme="dark"] .screen-reader-card {
   color: var(--text-primary);
+}
+
+html[data-theme="dark"] .screen-reader-card-icon {
+  background: var(--hover-bg);
+}
+
+html[data-theme="dark"] .screen-reader-switch-track {
+  border-color: #71717a;
+  background: #3f3f46;
 }
 
 html[data-theme="dark"] .availability.on,
@@ -2682,7 +2693,30 @@ html[data-theme="dark"] .student-badge {
   .route-summary,
   .support-detail {
     align-items: flex-start;
+
     flex-direction: column;
+  }
+
+  .screen-reader-card {
+    padding: 16px;
+  }
+
+  .screen-reader-card-icon {
+    flex-basis: 38px;
+    width: 38px;
+    height: 38px;
+  }
+
+  .screen-reader-card-heading {
+    gap: 12px;
+  }
+
+  .screen-reader-card-heading h2 {
+    font-size: 0.94rem;
+  }
+
+  .screen-reader-note {
+    margin-left: 0;
   }
 
   .route-summary .primary-btn,

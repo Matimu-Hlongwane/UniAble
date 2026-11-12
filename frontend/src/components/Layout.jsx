@@ -14,7 +14,8 @@ const links = [
   { to: "/schedule", label: "mySchedule", icon: CalendarDays },
   { to: "/scan-read", label: "Scan & Read", icon: ScanText },
   { to: "/peer-assistance", label: "peerAssistance", icon: Users },
-  { to: "/emergency", label: "emergency", icon: Siren }
+  { to: "/emergency", label: "emergency", icon: Siren },
+  { to: "/settings", label: "settings", icon: Settings },
 ];
 
 const routeGuidance = {
@@ -315,3 +316,6 @@ export default function Layout() {
 function isActivePath(pathname, target) {
   return pathname === target || pathname.startsWith(`${target}/`);
 }
+
+
+

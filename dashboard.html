@@ -1,0 +1,669 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Defines the character encoding so text and symbols display correctly. -->
+    <meta charset="UTF-8">
+
+    <!-- Keeps the dashboard responsive across desktop, tablet, and mobile screens. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Describes the UniAble Disability Office dashboard. -->
+    <meta
+        name="description"
+        content="UniAble Disability Office dashboard for reviewing student registrations, monitoring verification status, and managing student support."
+    >
+
+    <!-- Helps browsers display the correct application title. -->
+    <title>Disability Office Dashboard | UniAble</title>
+
+    <!-- Loads the existing dashboard stylesheet. -->
+    <link rel="stylesheet" href="dashboard.css">
+
+    <!-- Loads dashboard JavaScript after the HTML has been parsed. -->
+    <script src="dashboard.js" defer></script>
+</head>
+
+<body>
+    <!-- Main application layout: navigation sidebar and workspace. -->
+    <div class="app-layout">
+
+        <!-- ==================== SIDEBAR ==================== -->
+        <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+
+            <!-- UniAble branding links back to the landing page. -->
+            <a class="brand" href="../Landing_Page/index.html" aria-label="UniAble home">
+                <span class="brand-mark" aria-hidden="true">U</span>
+
+                <span class="brand-copy">
+                    <strong>UniAble</strong>
+                    <small>Easy Access Portal</small>
+                </span>
+            </a>
+
+            <!-- Demonstration staff identity.
+                 Replace this with the authenticated staff member after backend integration. -->
+            <div class="office-profile">
+                <div class="profile-avatar" aria-hidden="true">DO</div>
+
+                <div class="profile-copy">
+                    <strong>Disability Office</strong>
+                    <span>Staff workspace</span>
+                </div>
+            </div>
+
+            <!-- Navigation buttons switch between the dashboard sections. -->
+            <nav class="sidebar-nav" aria-label="Dashboard sections">
+                <p class="nav-heading">WORKSPACE</p>
+
+                <button
+                    class="nav-link active"
+                    type="button"
+                    data-section="dashboard"
+                    aria-current="page"
+                >
+                    <span class="nav-icon" aria-hidden="true">▦</span>
+                    <span>Dashboard</span>
+                </button>
+
+                <button
+                    class="nav-link"
+                    type="button"
+                    data-section="verifications"
+                >
+                    <span class="nav-icon" aria-hidden="true">✓</span>
+                    <span>Verifications</span>
+
+                    <!-- JavaScript replaces this initial value with the actual pending count. -->
+                    <span class="nav-count" id="verificationNavCount">0</span>
+                </button>
+
+                <button
+                    class="nav-link"
+                    type="button"
+                    data-section="accommodations"
+                >
+                    <span class="nav-icon" aria-hidden="true">♧</span>
+                    <span>Accommodations</span>
+                </button>
+
+                <button
+                    class="nav-link"
+                    type="button"
+                    data-section="reports"
+                >
+                    <span class="nav-icon" aria-hidden="true">▤</span>
+                    <span>Reports</span>
+                </button>
+
+                <p class="nav-heading nav-heading-secondary">SUPPORT</p>
+
+                <!-- Opens the guidance message implemented in dashboard.js. -->
+                <button
+                    class="nav-link"
+                    type="button"
+                    id="helpButton"
+                >
+                    <span class="nav-icon" aria-hidden="true">?</span>
+                    <span>Help &amp; guidance</span>
+                </button>
+            </nav>
+
+            <!-- Reminds staff to protect sensitive student information. -->
+            <div class="sidebar-footer">
+                <span class="security-dot" aria-hidden="true"></span>
+
+                <div>
+                    <strong>Staff workspace</strong>
+                    <small>Handle student data securely.</small>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ==================== MAIN WORKSPACE ==================== -->
+        <main class="main-content">
+
+            <!-- Top bar contains mobile navigation, breadcrumb, date, and staff indicator. -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button
+                        class="menu-toggle"
+                        id="menuToggle"
+                        type="button"
+                        aria-label="Open navigation menu"
+                        aria-controls="sidebar"
+                        aria-expanded="false"
+                    >
+                        <span aria-hidden="true">☰</span>
+                    </button>
+
+                    <div class="breadcrumb">
+                        <span>Workspace</span>
+                        <span aria-hidden="true">/</span>
+                        <strong id="breadcrumbCurrent">Dashboard</strong>
+                    </div>
+                </div>
+
+                <div class="topbar-right">
+                    <!-- JavaScript displays the current date. -->
+                    <span class="current-date" id="currentDate">Loading date...</span>
+
+                    <span class="topbar-avatar" aria-label="Demonstration staff account">
+                        DO
+                    </span>
+                </div>
+            </header>
+
+            <!-- Dashboard sections are switched by the navigation JavaScript. -->
+            <div class="page-content">
+
+                <!-- ==================== DASHBOARD OVERVIEW ==================== -->
+                <section
+                    class="page-section active"
+                    id="dashboard"
+                    aria-labelledby="dashboardTitle"
+                >
+                    <div class="page-heading">
+                        <div>
+                            <p class="eyebrow">DISABILITY OFFICE</p>
+
+                            <h1 id="dashboardTitle">Dashboard overview</h1>
+
+                            <p class="page-description">
+                                Monitor student registrations, review their current status,
+                                and manage support workflows.
+                            </p>
+                        </div>
+
+                        <button
+                            class="button button-primary"
+                            type="button"
+                            data-section="verifications"
+                        >
+                            <span aria-hidden="true">＋</span>
+                            Review registrations
+                        </button>
+                    </div>
+
+                    <!--
+                        These cards start at zero or show an empty metric.
+                        dashboard.js updates them using actual stored registrations.
+                        No illustrative approval percentages or processing times are displayed.
+                    -->
+                    <div class="stats-grid">
+
+                        <!-- Document uploads are not implemented yet, so this starts at zero. -->
+                        <article class="stat-card">
+                            <div class="stat-topline">
+                                <span class="stat-label">Documents awaiting review</span>
+
+                                <span
+                                    class="stat-icon icon-purple"
+                                    aria-hidden="true"
+                                >▤</span>
+                            </div>
+
+                            <p class="stat-value" id="pendingDocuments">0</p>
+
+                            <p class="stat-footnote">
+                                Updates when document submission is implemented.
+                            </p>
+                        </article>
+
+                        <!-- Actual registrations awaiting staff review. -->
+                        <article class="stat-card">
+                            <div class="stat-topline">
+                                <span class="stat-label">Awaiting verification</span>
+
+                                <span
+                                    class="stat-icon icon-orange"
+                                    aria-hidden="true"
+                                >◷</span>
+                            </div>
+
+                            <p class="stat-value" id="awaitingVerification">0</p>
+
+                            <p class="stat-footnote">
+                                Registrations currently awaiting review.
+                            </p>
+                        </article>
+
+                        <!-- Total registrations loaded from the shared registration store. -->
+                        <article class="stat-card">
+                            <div class="stat-topline">
+                                <span class="stat-label">Total registrations</span>
+
+                                <span
+                                    class="stat-icon icon-green"
+                                    aria-hidden="true"
+                                >✓</span>
+                            </div>
+
+                            <p class="stat-value" id="totalRegistrations">0</p>
+
+                            <p class="stat-footnote">
+                                Student registrations recorded in this prototype.
+                            </p>
+                        </article>
+
+                        <!-- Registrations that need further information or changes. -->
+                        <article class="stat-card">
+                            <div class="stat-topline">
+                                <span class="stat-label">Needs changes</span>
+
+                                <span
+                                    class="stat-icon icon-blue"
+                                    aria-hidden="true"
+                                >↻</span>
+                            </div>
+
+                            <p class="stat-value" id="needsChangesCount">0</p>
+
+                            <p class="stat-footnote">
+                                Registrations marked as needing changes.
+                            </p>
+                        </article>
+                    </div>
+
+                    <!-- Main dashboard panels. -->
+                    <div class="dashboard-grid">
+
+                        <!-- Recent registrations table, populated by dashboard.js. -->
+                        <section
+                            class="panel submissions-panel"
+                            aria-labelledby="submissionsTitle"
+                        >
+                            <div class="panel-header">
+                                <div>
+                                    <h2 id="submissionsTitle">Recent registrations</h2>
+
+                                    <p>
+                                        View student registration details and current review status.
+                                    </p>
+                                </div>
+
+                                <button
+                                    class="text-button"
+                                    type="button"
+                                    data-section="verifications"
+                                >
+                                    View all
+                                    <span aria-hidden="true">→</span>
+                                </button>
+                            </div>
+
+                            <!-- Search and status filtering for registration records. -->
+                            <div class="table-controls">
+                                <label class="search-field">
+                                    <span class="visually-hidden">
+                                        Search registrations
+                                    </span>
+
+                                    <span aria-hidden="true">⌕</span>
+
+                                    <input
+                                        id="submissionSearch"
+                                        type="search"
+                                        placeholder="Search student, email, or category..."
+                                        autocomplete="off"
+                                    >
+                                </label>
+
+                                <label
+                                    class="visually-hidden"
+                                    for="statusFilter"
+                                >
+                                    Filter registrations by status
+                                </label>
+
+                                <select id="statusFilter">
+                                    <option value="all">All statuses</option>
+                                    <option value="pending">Pending review</option>
+                                    <option value="approved">Approved</option>
+                                    <option value="rejected">Needs changes</option>
+                                </select>
+                            </div>
+
+                            <!-- Allows wide tables to scroll on small screens. -->
+                            <div class="table-scroll">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Student</th>
+                                            <th scope="col">Category</th>
+                                            <th scope="col">Document</th>
+                                            <th scope="col">Status</th>
+                                            <th scope="col">Action</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody id="submissionsTable">
+                                        <!-- Actual registration rows are inserted by dashboard.js. -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- JavaScript updates the result count and empty-state message. -->
+                            <p
+                                class="table-footer"
+                                id="submissionCount"
+                                aria-live="polite"
+                            >
+                                Loading registrations...
+                            </p>
+                        </section>
+
+                        <!-- Category distribution is calculated from stored registrations. -->
+                        <section
+                            class="panel category-panel"
+                            aria-labelledby="categoryTitle"
+                        >
+                            <div class="panel-header">
+                                <div>
+                                    <h2 id="categoryTitle">Registrations by category</h2>
+
+                                    <p>
+                                        Distribution of registered accessibility categories.
+                                    </p>
+                                </div>
+
+                                <span class="panel-icon" aria-hidden="true">▥</span>
+                            </div>
+
+                            <div
+                                class="category-chart"
+                                id="categoryChart"
+                                role="img"
+                                aria-label="Chart showing the number of registrations in each accessibility category"
+                            >
+                                <!-- Category bars are generated from actual registration records. -->
+                            </div>
+
+                            <p class="chart-note">
+                                Category totals reflect registrations available in this prototype.
+                            </p>
+                        </section>
+                    </div>
+
+                    <!--
+                        No wellbeing alerts are fabricated.
+                        Real alerts require a separately implemented and authorised workflow.
+                    -->
+                    <section
+                        class="panel alerts-panel"
+                        aria-labelledby="alertsTitle"
+                    >
+                        <div class="panel-header">
+                            <div>
+                                <h2 id="alertsTitle">Wellbeing alerts</h2>
+
+                                <p>
+                                    Alerts will appear here when an authorised alert workflow is implemented.
+                                </p>
+                            </div>
+
+                            <span class="alert-counter" id="alertCount">
+                                0 active alerts
+                            </span>
+                        </div>
+
+                        <div class="alerts-list" id="alertsList">
+                            <!-- dashboard.js displays the empty state until real alerts exist. -->
+                        </div>
+
+                        <p class="privacy-note">
+                            Only authorised staff should access sensitive wellbeing information.
+                        </p>
+                    </section>
+                </section>
+
+                <!-- ==================== VERIFICATIONS ==================== -->
+                <section
+                    class="page-section"
+                    id="verifications"
+                    aria-labelledby="verificationsTitle"
+                    hidden
+                >
+                    <div class="page-heading">
+                        <div>
+                            <p class="eyebrow">REGISTRATION REVIEW</p>
+
+                            <h1 id="verificationsTitle">Verifications</h1>
+
+                            <p class="page-description">
+                                Review registrations and update their current demonstration status.
+                                Document uploads and formal verification are not yet implemented.
+                            </p>
+                        </div>
+
+                        <button
+                            class="button button-secondary"
+                            type="button"
+                            data-section="dashboard"
+                        >
+                            ← Back to dashboard
+                        </button>
+                    </div>
+
+                    <section
+                        class="panel"
+                        aria-labelledby="verificationQueueTitle"
+                    >
+                        <div class="panel-header">
+                            <div>
+                                <h2 id="verificationQueueTitle">Registration review queue</h2>
+
+                                <p>
+                                    Use the available action beside a registration to change its
+                                    prototype review status.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="table-scroll">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Reference</th>
+                                        <th scope="col">Student</th>
+                                        <th scope="col">Category</th>
+                                        <th scope="col">Document</th>
+                                        <th scope="col">Status</th>
+                                        <th scope="col">Action</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody id="verificationTable">
+                                    <!-- Registration review rows are generated by dashboard.js. -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </section>
+
+                <!-- ==================== ACCOMMODATIONS ==================== -->
+                <section
+                    class="page-section"
+                    id="accommodations"
+                    aria-labelledby="accommodationsTitle"
+                    hidden
+                >
+                    <div class="page-heading">
+                        <div>
+                            <p class="eyebrow">STUDENT SUPPORT</p>
+
+                            <h1 id="accommodationsTitle">Accommodations</h1>
+
+                            <p class="page-description">
+                                Manage support arrangements when an accommodation workflow
+                                and verified student records are available.
+                            </p>
+                        </div>
+                    </div>
+
+                    <section
+                        class="panel"
+                        aria-labelledby="accommodationsTableTitle"
+                    >
+                        <div class="panel-header">
+                            <div>
+                                <h2 id="accommodationsTableTitle">Support arrangements</h2>
+
+                                <p>
+                                    No accommodation records are preloaded. Support arrangements
+                                    will appear when they are recorded in the system.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="table-scroll">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Student</th>
+                                        <th scope="col">Support category</th>
+                                        <th scope="col">Accommodation</th>
+                                        <th scope="col">Review date</th>
+                                        <th scope="col">Status</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody id="accommodationsTable">
+                                    <!-- Actual accommodation records will be rendered here. -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </section>
+
+                <!-- ==================== REPORTS ==================== -->
+                <section
+                    class="page-section"
+                    id="reports"
+                    aria-labelledby="reportsTitle"
+                    hidden
+                >
+                    <div class="page-heading">
+                        <div>
+                            <p class="eyebrow">INSIGHTS &amp; EXPORTS</p>
+
+                            <h1 id="reportsTitle">Reports</h1>
+
+                            <p class="page-description">
+                                Review registration totals and export the records available
+                                in this prototype.
+                            </p>
+                        </div>
+
+                        <button
+                            class="button button-primary"
+                            id="exportReport"
+                            type="button"
+                        >
+                            <span aria-hidden="true">↓</span>
+                            Export CSV
+                        </button>
+                    </div>
+
+                    <!-- Report statistics are populated from the registration store. -->
+                    <div class="stats-grid report-stats">
+
+                        <article class="stat-card">
+                            <div class="stat-topline">
+                                <span class="stat-label">Total registrations</span>
+
+                                <span
+                                    class="stat-icon icon-purple"
+                                    aria-hidden="true"
+                                >▤</span>
+                            </div>
+
+                            <p class="stat-value" id="reportTotal">0</p>
+
+                            <p class="stat-footnote">
+                                Registration records currently available.
+                            </p>
+                        </article>
+
+                        <article class="stat-card">
+                            <div class="stat-topline">
+                                <span class="stat-label">Approved records</span>
+
+                                <span
+                                    class="stat-icon icon-green"
+                                    aria-hidden="true"
+                                >✓</span>
+                            </div>
+
+                            <p class="stat-value" id="reportApproved">0</p>
+
+                            <p class="stat-footnote">
+                                Records currently marked approved.
+                            </p>
+                        </article>
+
+                        <article class="stat-card">
+                            <div class="stat-topline">
+                                <span class="stat-label">Pending records</span>
+
+                                <span
+                                    class="stat-icon icon-orange"
+                                    aria-hidden="true"
+                                >◷</span>
+                            </div>
+
+                            <p class="stat-value" id="reportPending">0</p>
+
+                            <p class="stat-footnote">
+                                Records awaiting review.
+                            </p>
+                        </article>
+                    </div>
+
+                    <section
+                        class="panel"
+                        aria-labelledby="reportChartTitle"
+                    >
+                        <div class="panel-header">
+                            <div>
+                                <h2 id="reportChartTitle">Registration categories</h2>
+
+                                <p>
+                                    Actual registration totals grouped by accessibility category.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div
+                            class="category-chart report-chart"
+                            id="reportCategoryChart"
+                            role="img"
+                            aria-label="Chart showing registration totals grouped by accessibility category"
+                        >
+                            <!-- Report chart is generated by dashboard.js. -->
+                        </div>
+                    </section>
+
+                    <p class="privacy-note report-privacy">
+                        Export only information you are authorised to handle.
+                        CSV exports may contain personal information and must be stored securely.
+                    </p>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!--
+        Accessible notification region for success, error, and information messages.
+        dashboard.js writes notifications here.
+    -->
+    <div
+        class="toast"
+        id="toast"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+    ></div>
+</body>
+</html>

@@ -313,6 +313,55 @@ export default function AccessibilitySettings() {
         </div>
       </div>
 
+      <p role="status" aria-live="polite" className="muted">
+        {statusText}
+      </p>
+
+      <section className="screen-reader-card" aria-labelledby="screen-reader-heading">
+        <span className="screen-reader-card-icon" aria-hidden="true">
+          <Volume2 size={22} />
+        </span>
+        <div className="screen-reader-card-copy">
+          <div className="screen-reader-card-heading">
+            <div>
+              <h2 id="screen-reader-heading">Screen reader &amp; spoken guidance</h2>
+              <p>
+                Enable UniAble&apos;s spoken page guidance and hands-free voice navigation.
+                Your device&apos;s screen reader remains under your control.
+              </p>
+            </div>
+            <label className="screen-reader-switch">
+              <span className="sr-only">Enable UniAble spoken guidance</span>
+              <input
+                type="checkbox"
+                role="switch"
+                checked={voiceFirstEnabled}
+                onChange={handleVoiceFirstToggle}
+                disabled={voicePreferenceSaving || !profileLoaded}
+                aria-describedby="screen-reader-status"
+              />
+              <span className="screen-reader-switch-track" aria-hidden="true" />
+            </label>
+          </div>
+          <div className="screen-reader-card-footer">
+            <span className={`screen-reader-state${voiceFirstEnabled ? " is-enabled" : ""}`}>
+              <span aria-hidden="true" />
+              {voiceFirstEnabled ? "On" : "Off"}
+            </span>
+            <p id="screen-reader-status" className="screen-reader-status" role="status" aria-live="polite">
+              {voicePreferenceSaving
+                ? "Saving preference…"
+                : voicePreferenceStatus || (voiceFirstEnabled ? "Spoken guidance is enabled." : "Spoken guidance is disabled.")}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <p className="screen-reader-note">
+        This setting controls UniAble&apos;s voice features only. It does not turn your operating system&apos;s screen reader on or off.
+        Microphone access is requested only when you choose a voice control.
+      </p>
+
       <div className="profile-grid">
         {profiles.map(([id, title, Icon, desc]) => (
           <button

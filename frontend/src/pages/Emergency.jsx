@@ -58,6 +58,11 @@ export default function Emergency() {
     }
   }
 
+  const acceptedCount = Number(delivery?.sent || 0);
+  const deliveryMessage = acceptedCount > 0
+    ? `UniAble submitted push notifications to Firebase Cloud Messaging for ${acceptedCount} responder device(s). This does not confirm that a person has seen or acknowledged the alert.`
+    : "Your SOS has been recorded, but no responder device confirmed notification submission. Contact campus security directly if you need immediate help.";
+
   return (
     <section className="page narrow">
       <CampusSecurityCall />
@@ -65,7 +70,7 @@ export default function Emergency() {
       <h1>{t("emergencySos")}</h1>
       <p className="muted">{t("emergencyDescription")}</p>
       <div className="sos-card">
-        <ShieldAlert size={48}/>
+        <ShieldAlert size={48} />
         <h2>{sent ? t("sosSent") : t("helpImmediate")}</h2>
         <p>{sent ? t("sosRecordedNotice") : t("genuineEmergency")}</p>
         {error && <p className="muted" role="alert">{error}</p>}
