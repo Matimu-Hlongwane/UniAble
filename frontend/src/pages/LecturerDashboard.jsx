@@ -5,10 +5,8 @@ import {
   Megaphone, MessageSquare, RefreshCw, Users, LogOut
 } from "lucide-react";
 import { api } from "../services/api";
-import { getCurrentUser } from "../services/firebaseAuth";
-import VoiceNavigationControls from "../components/VoiceNavigationControls";
-import { useSettings } from "../context/settingsContext/SettingsContext";
-import { speak } from "../services/speechService";
+import { RICHFIELD_QUALIFICATIONS, getQualificationLabel } from "../data/qualifications";
+import { getCurrentUser, signOutAccount } from "../services/firebaseAuth";
 import "./LecturerDashboard.css";
 
 const sections = [
@@ -155,6 +153,13 @@ export default function LecturerDashboard({ requests = [], onRefreshRequests }) 
             <label>Module name
               <input required value={moduleForm.name}
                 onChange={(e) => setModuleForm({ ...moduleForm, name: e.target.value })} />
+            </label>
+            <label>Qualification
+              <select required value={moduleForm.qualification}
+                onChange={(e) => setModuleForm({ ...moduleForm, qualification: e.target.value })}>
+                <option value="">Select qualification</option>
+                {RICHFIELD_QUALIFICATIONS.map((qualification) => <option key={qualification} value={qualification}>{getQualificationLabel(qualification)}</option>)}
+              </select>
             </label>
           </div>
           <label>Description

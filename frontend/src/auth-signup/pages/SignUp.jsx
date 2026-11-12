@@ -1,8 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../../services/api";
-import { Link, useNavigate } from "react-router-dom";
-import { useSettings } from "../../context/settingsContext/SettingsContext";
-import VoiceAssistanceToggle from "../../components/VoiceAssistanceToggle";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
     createAccountWithEmailPassword,
     startAccountVerification,
@@ -12,9 +10,7 @@ import {
     subscribeToAuth,
     sendEmailOtp,
     verifyEmailOtp,
-    sendPhoneOtp,
-    verifyPhoneOtp,
-    completePhoneVerification
+    cancelPendingRegistration
 } from "../../services/firebaseAuth";
 import { speak } from "../../services/speechService";
 
@@ -48,10 +44,10 @@ import {
 } from "../utils/emailUtils";
 
 import {
-    isValidEmail,
-    normalizeSouthAfricanMobile,
-    validateSignUpForm,
-    getRichfieldStudentEmail
+    isValidStudentNumber,
+    STUDENT_EMAIL_DOMAIN,
+    capitalizePersonName,
+    validateSignUpForm
 } from "../utils/validation";
 
 function phoneVerificationError(error, fallback) {
@@ -80,14 +76,8 @@ function phoneVerificationError(error, fallback) {
 
 
 function SignUp() {
+    const location = useLocation();
     const navigate = useNavigate();
-    const { voiceAssistanceEnabled, locale } = useSettings();
-    const speakText = useCallback(
-        (text) => voiceAssistanceEnabled
-            ? speak(text, { locale: locale || "en-ZA" })
-            : undefined,
-        [voiceAssistanceEnabled, locale]
-    );
 
     /* =========================================
        PAGE MODE
@@ -109,6 +99,7 @@ function SignUp() {
     const [phoneConfirmation, setPhoneConfirmation] = useState(null);
     const [phoneVerifier, setPhoneVerifier] = useState(null);
     const [verificationBusy, setVerificationBusy] = useState(false);
+    const [cancelBusy, setCancelBusy] = useState(false);
     const [verificationError, setVerificationError] = useState("");
 
 
@@ -183,11 +174,8 @@ function SignUp() {
             otherQualification: "",
 
             yearOfStudy: "",
-
-            modules: [],
-
-            otherModules: "",
-
+            dateOfBirth: "",
+            confirmPassword: "",
             accessibility: "",
 
             additionalNeeds: "",
@@ -321,22 +309,12 @@ function SignUp() {
                 );
                 const nextGenerated = getRichfieldStudentEmail(value);
 
-                const emailWasGenerated =
-                    !previousData.email ||
-                    previousData.email.trim().toLowerCase() ===
-                    previousGenerated.toLowerCase();
-
-                if (emailWasGenerated) {
-                    nextData.email = nextGenerated;
-                }
-            }
-
-            return nextData;
-        });
-
-        setErrors((previousErrors) => ({
-            ...previousErrors,
-            [name]: ""
+        setFormData((previousData) => ({
+            ...previousData,
+            [name]: ["fullName", "surname"].includes(name) ? capitalizePersonName(value) : value,
+            ...(name === "studentNumber"
+                ? { email: value.trim() ? `${value.trim()}@${STUDENT_EMAIL_DOMAIN}` : "" }
+                : {}),
         }));
     }
 
@@ -370,18 +348,7 @@ function SignUp() {
                 `${formData.fullName.trim()} ${formData.surname.trim()}`,
                 formData.accessibility,
                 formData.accountType,
-                {
-                    studentNumber: formData.studentNumber.trim(),
-                    qualification: formData.qualification === "Other IT qualification"
-                        ? formData.otherQualification.trim()
-                        : formData.qualification,
-                    yearOfStudy: formData.yearOfStudy,
-                    modules: [
-                        ...formData.modules,
-                        ...formData.otherModules.split(",").map((module) => module.trim()).filter(Boolean)
-                    ],
-                    surname: formData.surname.trim()
-                }
+                { surname: registrationData.surname, studentNumber: registrationData.studentNumber, institutionalEmail: registrationData.email, qualification: registrationData.qualification, yearOfStudy: registrationData.yearOfStudy, dateOfBirth: registrationData.dateOfBirth, modules: [] }
             );
 
             if (formData.accountType === "volunteer") {
@@ -495,6 +462,33 @@ function handleModuleChange(event) {
     async function handleResendCode() {
         if (verificationMethod === "email") return handleSendEmailCode();
         return handleSendPhoneCode();
+    }
+
+    async function handleCancelRegistration(action) {
+        if (cancelBusy) return;
+        setCancelBusy(true);
+        setVerificationError("");
+        try {
+            await cancelPendingRegistration();
+            setVerificationStage(null);
+            setVerificationCode("");
+            setVerificationError("");
+            setErrors({});
+            setRegistrationValidated(false);
+            if (action === "edit") {
+                setFormData((previous) => ({ ...previous, password: "", confirmPassword: "" }));
+                setMode("typing");
+                setMessages([{ speaker: "UNIABLE", text: "Your unverified account was removed. You can now edit your details and start sign-up again." }]);
+                window.requestAnimationFrame(() => document.getElementById("fullName")?.focus());
+            } else {
+                navigate("/", { replace: true });
+            }
+        } catch (error) {
+            console.error("Could not cancel pending UniAble sign-up:", error);
+            setVerificationError(error.message || "Could not cancel this unverified account. Please try again.");
+        } finally {
+            setCancelBusy(false);
+        }
     }
 
     /* =========================================
@@ -651,47 +645,13 @@ function handleModuleChange(event) {
            ===================================== */
 
         if (voiceStep === 2) {
-
-            const normalizedEmail =
-                normalizeSpokenEmail(
-                    answer
-                );
-
-
-            /*
-              Email could not be validated.
-            */
-
-            if (
-                !isValidEmail(
-                    normalizedEmail
-                )
-            ) {
-
-                const response =
-                    `I heard ${normalizedEmail || transcript}, but I couldn't confirm that as a valid email address. Please say it again slowly, for example, name at gmail dot com.`;
-
-
-                addMessage(
-                    "UNIABLE",
-                    response
-                );
-
-
-                setVoiceQuestion(
-                    "Please say your email address again"
-                );
-
-
-                speakText(
-                    response
-                );
-
-
-                /*
-                  Keep voiceStep at 2.
-                */
-
+            const digitWords = { zero: "0", oh: "0", one: "1", two: "2", three: "3", four: "4", five: "5", six: "6", seven: "7", eight: "8", nine: "9" };
+            const studentNumber = String(transcript || "").toLowerCase().split(/\s+/).map((part) => digitWords[part] ?? part).join("").replace(/[^0-9]/g, "");
+            if (!isValidStudentNumber(studentNumber)) {
+                const response = "A Richfield student number must be exactly nine digits and begin with 401 through 405. Please say the digits again, one at a time.";
+                addMessage("UNIABLE", response);
+                setVoiceQuestion("Please repeat your student number");
+                speakText(response);
                 return;
             }
 
@@ -967,6 +927,9 @@ function handleModuleChange(event) {
                             code={verificationCode}
                             setCode={setVerificationCode}
                             busy={verificationBusy}
+                            setupBusy={creationBusy}
+                            cancelBusy={cancelBusy}
+                            cancelDisabled={cancelBusy || creationBusy || verificationBusy}
                             error={verificationError}
                             email={formData.email || getCurrentUser()?.email || ""}
                             locale={locale || "en-ZA"}
@@ -975,7 +938,7 @@ function handleModuleChange(event) {
                             onVerify={handleVerifyCode}
                             onResend={handleResendCode}
                             onBack={() => { setVerificationStage("choose"); setVerificationCode(""); setVerificationError(""); }}
-                            onCancel={handleExitSignup}
+                            onCancel={handleCancelRegistration}
                         />
                     ) : mode === "voice" ? (
 

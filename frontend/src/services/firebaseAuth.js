@@ -578,6 +578,20 @@ export async function completePhoneVerification(phoneNumber) {
   return result;
 }
 
+export async function cancelPendingRegistration() {
+  const user = requireAuth();
+  await verificationApi("/registration/cancel", {});
+
+  try {
+    localStorage.removeItem(`uniableAccessibility:${user.uid}`);
+    localStorage.removeItem(`uniableVoiceFirst:${user.uid}`);
+  } catch (error) {
+    console.warn("Could not clear local preferences for the cancelled account:", error);
+  }
+
+  await signOut(auth);
+}
+
 async function ensureAccountVerified(user) {
   const { claims } = await getIdTokenResult(user, true);
 
@@ -610,9 +624,20 @@ export async function createAccountWithEmailPassword(
   studentDetails = {}
 ) {
   if (!firebaseConfigured || !auth) {
-    throw new Error(
-      "Firebase is not configured. Check the frontend environment variables."
-    );
+    throw new Error("Firebase is not configured. Check the frontend environment variables.");
+  }
+
+  const studentNumber = String(studentProfile.studentNumber || "").trim();
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+  const expectedEmail = `${studentNumber}@${STUDENT_EMAIL_DOMAIN}`;
+  const institutionalEmail = String(studentProfile.institutionalEmail || normalizedEmail).trim().toLowerCase();
+  const selectedAccessibility = accessibility?.trim() || ACCESSIBILITY_NONE;
+
+  if (!isValidStudentNumber(studentNumber) || normalizedEmail !== expectedEmail || institutionalEmail !== expectedEmail) {
+    throw new Error("Enter a nine-digit student number beginning with 401 through 405 and use its generated Richfield student email.");
+  }
+  if (!isSupportedAccessibilityCategory(selectedAccessibility)) {
+    throw new Error("Choose one of the supported accessibility categories or no accessibility needs.");
   }
 
   const credential = await createUserWithEmailAndPassword(
@@ -921,20 +946,7 @@ export async function sendPasswordlessSignInLink(email) {
     handleCodeInApp: true,
   };
 
-  await sendSignInLinkToEmail(
-    auth,
-    normalizedEmail,
-    actionCodeSettings
-  );
-
-  try {
-    window.sessionStorage.setItem(
-      "uniableEmailForSignIn",
-      normalizedEmail
-    );
-  } catch {
-    // The user can enter their email again after opening the link.
-  }
+  await sendSignInLinkToEmail(auth, normalizedEmail, actionCodeSettings);
 }
 
 export function isPasswordlessSignInLink(
@@ -972,12 +984,6 @@ export async function completePasswordlessSignIn(
     normalizedEmail,
     link
   );
-
-  try {
-    window.sessionStorage.removeItem("uniableEmailForSignIn");
-  } catch {
-    // Authentication has succeeded; storage cleanup is optional.
-  }
 
   return ensureAccountVerified(credential.user);
 }

@@ -127,6 +127,68 @@ router.post("/registration/start", async (req, res) => {
   }
 });
 
+router.post("/registration/cancel", async (req, res) => {
+  try {
+    const uid = req.firebaseToken.uid;
+    const auth = getAdminAuth();
+    const db = getAdminDb();
+    const user = await auth.getUser(uid);
+    const profileRef = db.collection("users").doc(uid);
+    const otpRef = db.collection("emailOtpChallenges").doc(uid);
+    const volunteerRef = db.collection("volunteers").doc(uid);
+    const [profileSnapshot, otpSnapshot, volunteerSnapshot] = await Promise.all([
+      profileRef.get(),
+      otpRef.get(),
+      volunteerRef.get()
+    ]);
+    const profile = profileSnapshot.data() || {};
+    const role = String(profile.role || user.customClaims?.role || "student").toLowerCase();
+    const isVolunteerRegistration = String(profile.accountType || "").toLowerCase() === "volunteer";
+
+    if (role !== "student") {
+      return res.status(403).json({ error: "Only a student sign-up can be cancelled here." });
+    }
+
+    if (user.emailVerified || user.customClaims?.accountVerified === true || profile.accountVerified === true) {
+      return res.status(409).json({ error: "This account is already verified and cannot be cancelled from sign-up." });
+    }
+
+    const batch = db.batch();
+    if (profileSnapshot.exists) batch.delete(profileRef);
+    if (otpSnapshot.exists) batch.delete(otpRef);
+    if (isVolunteerRegistration && volunteerSnapshot.exists) {
+      batch.delete(volunteerRef);
+    }
+    if (profileSnapshot.exists || otpSnapshot.exists || (isVolunteerRegistration && volunteerSnapshot.exists)) {
+      await batch.commit();
+    }
+
+    try {
+      await auth.deleteUser(uid);
+    } catch (deleteError) {
+      const restoreBatch = db.batch();
+      if (profileSnapshot.exists) restoreBatch.set(profileRef, profile);
+      if (otpSnapshot.exists) restoreBatch.set(otpRef, otpSnapshot.data());
+      if (isVolunteerRegistration && volunteerSnapshot.exists) {
+        restoreBatch.set(volunteerRef, volunteerSnapshot.data());
+      }
+      if (profileSnapshot.exists || otpSnapshot.exists || (isVolunteerRegistration && volunteerSnapshot.exists)) {
+        try {
+          await restoreBatch.commit();
+        } catch (restoreError) {
+          console.error("Could not restore sign-up data after account cancellation failed:", restoreError);
+        }
+      }
+      throw deleteError;
+    }
+
+    return res.json({ cancelled: true });
+  } catch (error) {
+    console.error("Could not cancel pending student registration:", error);
+    return res.status(500).json({ error: "Could not cancel this unverified account. Please try again." });
+  }
+});
+
 router.get("/verification-status", async (req, res) => {
   const claims = req.firebaseToken;
   return res.json({

@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import {
   startSpeechRecognition,
   speakText
@@ -39,10 +39,11 @@ function convertSpokenDigits(transcript) {
 }
 
 export default function AccountVerification({
-  stage, code, setCode, busy, error, email, onSendEmail, onVerify, onResend, onBack,
+  stage, code, setCode, busy, setupBusy, cancelBusy, cancelDisabled, error, email, onSendEmail, onVerify, onResend, onBack, onCancel,
 }) {
   const [isListening, setIsListening] = useState(false);
   const [voiceError, setVoiceError] = useState("");
+  const [cancelAction, setCancelAction] = useState(null);
 
   const inputStyle = {
     width: "100%",
@@ -59,14 +60,14 @@ export default function AccountVerification({
     padding: "12px 16px",
     borderRadius: 9,
     border: "1px solid currentColor",
-    cursor: busy || isListening ? "wait" : "pointer",
+    cursor: busy || setupBusy || cancelBusy || isListening ? "wait" : "pointer",
     fontSize: 15,
     fontWeight: 600,
     margin: "5px 6px 5px 0"
   };
 
   function startVoiceInput() {
-    if (busy || isListening) return;
+    if (busy || setupBusy || isListening) return;
 
     setVoiceError("");
 
@@ -141,7 +142,7 @@ export default function AccountVerification({
         type="button"
         style={buttonStyle}
         onClick={readInstructions}
-        disabled={busy || isListening}
+        disabled={busy || setupBusy || isListening}
       >
         Read instructions aloud
       </button>
@@ -153,7 +154,7 @@ export default function AccountVerification({
           <button
             type="button"
             style={buttonStyle}
-            disabled={busy || isListening}
+            disabled={busy || setupBusy || isListening}
             onClick={onSendEmail}
           >
             {busy ? "Sending..." : "Send code to my email"}
@@ -182,13 +183,13 @@ export default function AccountVerification({
               setCode(event.target.value.replace(/\D/g, "").slice(0, 6))
             }
             style={inputStyle}
-            disabled={busy || isListening}
+            disabled={busy || setupBusy || isListening}
           />
 
           <button
             type="button"
             style={buttonStyle}
-            disabled={busy || isListening}
+            disabled={busy || setupBusy || isListening}
             onClick={startVoiceInput}
           >
             {isListening ? "Listening..." : "Speak verification code"}
@@ -199,7 +200,7 @@ export default function AccountVerification({
           <button
             type="button"
             style={buttonStyle}
-            disabled={busy || isListening || code.length !== 6}
+            disabled={busy || setupBusy || isListening || code.length !== 6}
             onClick={onVerify}
           >
             {busy ? "Verifying..." : "Verify code"}
@@ -208,7 +209,7 @@ export default function AccountVerification({
           <button
             type="button"
             style={buttonStyle}
-            disabled={busy || isListening}
+            disabled={busy || setupBusy || isListening}
             onClick={onResend}
           >
             Send another code
@@ -217,13 +218,60 @@ export default function AccountVerification({
           <button
             type="button"
             style={buttonStyle}
-            disabled={busy || isListening}
+            disabled={busy || setupBusy || isListening}
             onClick={onBack}
           >
             Back to email verification
           </button>
         </>
       )}
+
+      <div style={{ marginTop: 22, paddingTop: 16, borderTop: "1px solid #ddd" }}>
+        <p>Need to change your details or stop? You can remove this unverified account.</p>
+        <button
+          type="button"
+          style={buttonStyle}
+          disabled={cancelDisabled || isListening}
+          onClick={() => setCancelAction("edit")}
+        >
+          Back to sign-up details
+        </button>
+        <button
+          type="button"
+          style={buttonStyle}
+          disabled={cancelDisabled || isListening}
+          onClick={() => setCancelAction("exit")}
+        >
+          Cancel sign-up
+        </button>
+        {cancelAction && (
+          <div role="group" aria-labelledby="cancel-signup-heading" style={{ marginTop: 12 }}>
+            <p id="cancel-signup-heading">
+              This permanently deletes the unverified account. You can then edit your details or leave sign-up.
+            </p>
+            <button
+              type="button"
+              style={buttonStyle}
+              disabled={cancelDisabled}
+              onClick={() => onCancel(cancelAction)}
+            >
+              {cancelBusy
+                ? "Cancelling..."
+                : cancelAction === "edit"
+                  ? "Delete account and edit details"
+                  : "Delete account and exit"}
+            </button>
+            <button
+              type="button"
+              style={buttonStyle}
+              disabled={cancelDisabled}
+              onClick={() => setCancelAction(null)}
+            >
+              Keep verifying
+            </button>
+          </div>
+        )}
+      </div>
 
       {voiceError && (
         <p role="status" aria-live="polite" style={{ color: "#b00020", marginTop: 12 }}>

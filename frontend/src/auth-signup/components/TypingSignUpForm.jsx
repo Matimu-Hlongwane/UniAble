@@ -2,8 +2,8 @@ import React from "react";
 import { useState } from "react";
 import accessibilityOptions
   from "../data/accessibilityOptions.json";
-import { RICHFIELD_QUALIFICATIONS } from "../../data/qualifications";
-import { STUDENT_EMAIL_DOMAIN } from "../utils/validation";
+import { RICHFIELD_QUALIFICATIONS, getQualificationLabel } from "../../data/qualifications";
+import { getLatestEligibleDateOfBirth, STUDENT_EMAIL_DOMAIN, YEARS_OF_STUDY } from "../utils/validation";
 
 
 function TypingSignUpForm({
@@ -60,6 +60,7 @@ function TypingSignUpForm({
             type="text"
             id="fullName"
             name="fullName"
+            autoCapitalize="words"
 
             placeholder="Enter your first name(s)"
 
@@ -85,8 +86,8 @@ function TypingSignUpForm({
         </div>
 
 
-        <div className="form-group"><label htmlFor="surname">Surname</label><input id="surname" name="surname" type="text" autoComplete="family-name" value={formData.surname || ""} onChange={onInputChange} required aria-invalid={Boolean(errors.surname)} />{errors.surname && <p className="form-error">{errors.surname}</p>}</div>
-        <div className="form-group"><label htmlFor="studentNumber">Student number</label><input id="studentNumber" name="studentNumber" inputMode="numeric" pattern="40[123][0-9]{6}" maxLength={9} value={formData.studentNumber || ""} onChange={onInputChange} required aria-invalid={Boolean(errors.studentNumber)} aria-describedby={errors.studentNumber ? "student-number-error" : "student-number-help"} /><small id="student-number-help">Enter exactly nine digits beginning with 401, 402 or 403.</small>{errors.studentNumber && <p id="student-number-error" className="form-error">{errors.studentNumber}</p>}</div>
+        <div className="form-group"><label htmlFor="surname">Surname</label><input id="surname" name="surname" type="text" autoCapitalize="words" autoComplete="family-name" value={formData.surname || ""} onChange={onInputChange} required aria-invalid={Boolean(errors.surname)} />{errors.surname && <p className="form-error">{errors.surname}</p>}</div>
+        <div className="form-group"><label htmlFor="studentNumber">Student number</label><input id="studentNumber" name="studentNumber" inputMode="numeric" pattern="40[1-5][0-9]{6}" maxLength={9} value={formData.studentNumber || ""} onChange={onInputChange} required aria-invalid={Boolean(errors.studentNumber)} aria-describedby={errors.studentNumber ? "student-number-error" : "student-number-help"} /><small id="student-number-help">Enter exactly nine digits beginning with 401 through 405.</small>{errors.studentNumber && <p id="student-number-error" className="form-error">{errors.studentNumber}</p>}</div>
 
         <div className="form-group">
           <label htmlFor="email">Richfield student email address</label>
@@ -105,10 +106,9 @@ function TypingSignUpForm({
           {errors.email && <p className="form-error">{errors.email}</p>}
         </div>
 
-        <div className="form-group"><label htmlFor="qualification">Richfield qualification</label><select id="qualification" name="qualification" value={formData.qualification || ""} onChange={onInputChange} required><option value="">Choose your qualification</option>{RICHFIELD_QUALIFICATIONS.map(q => <option key={q} value={q}>{q}</option>)}</select>{errors.qualification && <p className="form-error">{errors.qualification}</p>}</div>
-        <div className="form-group"><label htmlFor="dateOfBirth">Date of birth</label><input id="dateOfBirth" name="dateOfBirth" type="date" autoComplete="bday" max={new Date().toISOString().slice(0,10)} value={formData.dateOfBirth || ""} onChange={onInputChange} required aria-invalid={Boolean(errors.dateOfBirth)} />{errors.dateOfBirth && <p className="form-error">{errors.dateOfBirth}</p>}</div>
-        <div className="form-group"><label htmlFor="yearOfStudy">Year of study</label><select id="yearOfStudy" name="yearOfStudy" value={formData.yearOfStudy || ""} onChange={onInputChange} required><option value="">Choose year</option>{["2026","2027","2028","2029","2030","2031"].map(y => <option key={y} value={y}>{y}</option>)}</select>{errors.yearOfStudy && <p className="form-error">{errors.yearOfStudy}</p>}</div>
-<div className="form-group"><label htmlFor="phoneNumber">Cellphone number (optional)</label><input id="phoneNumber" name="phoneNumber" type="tel" autoComplete="tel" placeholder="+27821234567" value={formData.phoneNumber || ""} onChange={onInputChange} aria-invalid={Boolean(errors.phoneNumber)} /><small>Optional contact detail; it is not used for sign-in or account verification. Use international format, for example +27821234567.</small>{errors.phoneNumber && <p className="form-error">{errors.phoneNumber}</p>}</div>
+        <div className="form-group"><label htmlFor="qualification">Richfield qualification</label><select id="qualification" name="qualification" value={formData.qualification || ""} onChange={onInputChange} required aria-invalid={Boolean(errors.qualification)}><option value="">Choose your qualification</option>{RICHFIELD_QUALIFICATIONS.map(q => <option key={q} value={q}>{getQualificationLabel(q)}</option>)}</select>{errors.qualification && <p className="form-error">{errors.qualification}</p>}</div>
+        <div className="form-group"><label htmlFor="dateOfBirth">Date of birth</label><input id="dateOfBirth" name="dateOfBirth" type="date" autoComplete="bday" max={getLatestEligibleDateOfBirth()} value={formData.dateOfBirth || ""} onChange={onInputChange} required aria-invalid={Boolean(errors.dateOfBirth)} />{errors.dateOfBirth && <p className="form-error">{errors.dateOfBirth}</p>}<small>You must be older than 16 to create an account.</small></div>
+        <div className="form-group"><label htmlFor="yearOfStudy">Year of study</label><select id="yearOfStudy" name="yearOfStudy" value={formData.yearOfStudy || ""} onChange={onInputChange} required aria-invalid={Boolean(errors.yearOfStudy)}><option value="">Choose year</option>{YEARS_OF_STUDY.map(year => <option key={year} value={year}>{year} year</option>)}</select>{errors.yearOfStudy && <p className="form-error">{errors.yearOfStudy}</p>}</div>
 
         {/* ACCOUNT TYPE */}
 
