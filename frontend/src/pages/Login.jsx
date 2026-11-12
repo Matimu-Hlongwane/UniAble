@@ -34,13 +34,6 @@ export default function Login() {
     setMode("email-link");
     setEmailLinkCallback(true);
     setNotice("A sign-in link was detected. Enter the email address that received it to finish signing in.");
-
-    try {
-      const savedEmail = window.sessionStorage.getItem("uniableEmailForSignIn");
-      if (savedEmail) setEmail(savedEmail);
-    } catch {
-      // The email can be entered manually if session storage is unavailable.
-    }
   }, []);
 
   useEffect(() => {

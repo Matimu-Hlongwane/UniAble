@@ -10,6 +10,12 @@ router.use(requireFirebaseUser);
 
 const db = () => getAdminDb();
 const now = () => new Date().toISOString();
+const supportedQualifications = new Set([
+  "Bachelor of Science in Information Technology (BSc IT)",
+  "Bachelor of Commerce (BCom)",
+]);
+const isSupportedQualification = (qualification) =>
+  supportedQualifications.has(String(qualification || "").trim());
 
 async function getUserProfile(uid) {
   const user = await db().collection("users").doc(uid).get();
@@ -26,6 +32,7 @@ async function getModule(moduleId, uid, role) {
   if (!snapshot.exists) return null;
 
   const item = { id: snapshot.id, ...snapshot.data() };
+  if (!isSupportedQualification(item.qualification)) return null;
 
   let studentQualification = "";
   if (role === "student") {
@@ -56,7 +63,9 @@ router.get("/modules", async (req, res) => {
     let query = db().collection("modules");
     if (role === "lecturer") query = query.where("lecturerId", "==", uid);
     const snapshot = await query.get();
-    let modules = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    let modules = snapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(item => isSupportedQualification(item.qualification));
 
     if (role === "student") {
       const profile = await getUserProfile(uid);
@@ -81,7 +90,7 @@ router.post("/modules", requireRole("admin", "lecturer"), async (req, res) => {
     const { code, name, description = "", lecturerId = "", studentIds = [], qualification = "" } = req.body;
     const assignedLecturerId = role === "lecturer" ? uid : String(lecturerId).trim();
 
-    if (!code?.trim() || !name?.trim() || !Array.isArray(studentIds)) {
+    if (!code?.trim() || !name?.trim() || !Array.isArray(studentIds) || !isSupportedQualification(qualification)) {
       return res.status(400).json({ error: "Valid module details are required." });
     }
 
@@ -150,6 +159,9 @@ router.patch("/modules/:id", requireRole("admin", "lecturer"), async (req, res) 
     }
     if (changes.qualification !== undefined) {
       changes.qualification = String(changes.qualification).trim();
+      if (!isSupportedQualification(changes.qualification)) {
+        return res.status(400).json({ error: "Choose BSc IT or BCOM for the module qualification." });
+      }
     }
 
     changes.updatedAt = now();

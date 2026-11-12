@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { api } from "../services/api";
 import { uploadAcademicMaterialFile } from "../services/firebaseAuth";
-import { RICHFIELD_QUALIFICATIONS } from "../data/qualifications";
+import { RICHFIELD_QUALIFICATIONS, getQualificationLabel } from "../data/qualifications";
 
 export default function AdminAcademicWorkspace() {
   const [modules, setModules] = useState([]);
@@ -87,14 +87,14 @@ export default function AdminAcademicWorkspace() {
       {notice && <p className="aw-notice" role="status">{notice}</p>}
       <form className="aw-form" onSubmit={createModule}>
         <h3>Add a module to a qualification</h3>
-        <label>Qualification<select required value={moduleForm.qualification} onChange={(event) => setModuleForm({ ...moduleForm, qualification: event.target.value })}><option value="">Choose qualification</option>{RICHFIELD_QUALIFICATIONS.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
+        <label>Qualification<select required value={moduleForm.qualification} onChange={(event) => setModuleForm({ ...moduleForm, qualification: event.target.value })}><option value="">Choose qualification</option>{RICHFIELD_QUALIFICATIONS.map((item) => <option key={item} value={item}>{getQualificationLabel(item)}</option>)}</select></label>
         <label>Assigned lecturer<select value={moduleForm.lecturerId} onChange={(event) => setModuleForm({ ...moduleForm, lecturerId: event.target.value })}><option value="">No lecturer assigned yet</option>{lecturers.map((person) => <option key={person.uid} value={person.uid}>{person.displayName || person.email}</option>)}</select></label>
         <label>Module code<input required value={moduleForm.code} onChange={(event) => setModuleForm({ ...moduleForm, code: event.target.value })} /></label>
         <label>Module name<input required value={moduleForm.name} onChange={(event) => setModuleForm({ ...moduleForm, name: event.target.value })} /></label>
         <label>Description<textarea value={moduleForm.description} onChange={(event) => setModuleForm({ ...moduleForm, description: event.target.value })} /></label>
         <button type="submit" disabled={saving}>Add module</button>
       </form>
-      <div className="aw-table-wrap"><table className="aw-table"><thead><tr><th>Qualification</th><th>Code</th><th>Module</th><th>Assign / update</th></tr></thead><tbody>{modules.map((item) => <tr key={item.id}><td>{item.qualification || "Not assigned"}</td><td>{item.code}</td><td>{item.name}</td><td><select aria-label={`Qualification for ${item.code}`} value={qualificationAssignments[item.id] ?? item.qualification ?? ""} onChange={(event) => setQualificationAssignments({ ...qualificationAssignments, [item.id]: event.target.value })}><option value="">Choose qualification</option>{RICHFIELD_QUALIFICATIONS.map((qualification) => <option key={qualification} value={qualification}>{qualification}</option>)}</select><button type="button" className="aw-button" disabled={saving || !(qualificationAssignments[item.id] ?? item.qualification)} onClick={() => assignQualification(item.id)}>Save</button></td></tr>)}</tbody></table>{!modules.length && !loading && <p>No modules have been added yet.</p>}{loading && <p>Loading module catalogue…</p>}</div>
+      <div className="aw-table-wrap"><table className="aw-table"><thead><tr><th>Qualification</th><th>Code</th><th>Module</th><th>Assign / update</th></tr></thead><tbody>{modules.map((item) => <tr key={item.id}><td>{getQualificationLabel(item.qualification) || "Not assigned"}</td><td>{item.code}</td><td>{item.name}</td><td><select aria-label={`Qualification for ${item.code}`} value={qualificationAssignments[item.id] ?? item.qualification ?? ""} onChange={(event) => setQualificationAssignments({ ...qualificationAssignments, [item.id]: event.target.value })}><option value="">Choose qualification</option>{RICHFIELD_QUALIFICATIONS.map((qualification) => <option key={qualification} value={qualification}>{getQualificationLabel(qualification)}</option>)}</select><button type="button" className="aw-button" disabled={saving || !(qualificationAssignments[item.id] ?? item.qualification)} onClick={() => assignQualification(item.id)}>Save</button></td></tr>)}</tbody></table>{!modules.length && !loading && <p>No modules have been added yet.</p>}{loading && <p>Loading module catalogue…</p>}</div>
       <form className="aw-form" onSubmit={uploadMaterial}>
         <h3>Upload and publish study material</h3>
         <p>Only upload materials Richfield has authorised UniAble to distribute. Private Moodle resources should remain in Moodle and be linked there instead.</p>

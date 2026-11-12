@@ -1,22 +1,10 @@
 export const RICHFIELD_QUALIFICATIONS = [
-  "Higher Certificate in Business Administration (HCBA)",
-  "Higher Certificate in Local Government Management (HCLGM)",
-  "Higher Certificate in Office Administration (HCOA)",
-  "Higher Certificate in Recognition of Prior Learning Activities (RPLA)",
-  "Higher Certificate in Information Technology (HCIT)",
-  "Higher Certificate in Computer Forensics (HCCF)",
-  "Diploma in Information Technology (DIT)",
-  "Diploma in Business Administration (DBA)",
-  "Diploma in Local Government Management (DLGM)",
   "Bachelor of Science in Information Technology (BSc IT)",
   "Bachelor of Commerce (BCom)",
-  "Bachelor of Commerce (AGA)",
-  "Bachelor of Commerce (AGA IT)",
-  "Bachelor of Business Administration (BBA)",
-  "Bachelor of Public Management (BPM)",
-  "BSc Honours in Information Technology",
-  "BSc Honours in IT Bridging Programme",
-  "BCom (AGA IT) Bridging Programme",
-  "Postgraduate Diploma in Management",
-  "Master of Business Administration (MBA)"
 ];
+
+export function getQualificationLabel(qualification) {
+  if (qualification === RICHFIELD_QUALIFICATIONS[0]) return "BSc IT";
+  if (qualification === RICHFIELD_QUALIFICATIONS[1]) return "BCOM";
+  return qualification;
+}

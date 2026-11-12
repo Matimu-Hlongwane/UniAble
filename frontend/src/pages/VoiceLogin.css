@@ -78,6 +78,35 @@
     box-shadow: 0 0 0 4px rgba(101,70,181,.13);
 }
 
+.voice-login-email-help {
+    margin: -4px 0 0;
+    font-size: .9rem;
+}
+
+.voice-login-confirmation {
+    display: grid;
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid #dedbea;
+    border-radius: 12px;
+    background: #f8f6fc;
+}
+
+.voice-login-confirmation p {
+    margin: 0;
+}
+
+.voice-login-confirmation strong {
+    overflow-wrap: anywhere;
+    color: #252947;
+}
+
+.voice-login-confirmation [data-voice-change-email] {
+    border: 1px solid #6546b5;
+    background: #fff;
+    color: #503493;
+}
+
 .voice-login-card button {
     min-height: 49px;
     padding: 12px 18px;

@@ -307,6 +307,20 @@ export async function verifyEmailOtp(code) {
   return result;
 }
 
+export async function cancelPendingRegistration() {
+  const user = requireAuth();
+  await verificationApi("/registration/cancel", {});
+
+  try {
+    localStorage.removeItem(`uniableAccessibility:${user.uid}`);
+    localStorage.removeItem(`uniableVoiceFirst:${user.uid}`);
+  } catch (error) {
+    console.warn("Could not clear local preferences for the cancelled account:", error);
+  }
+
+  await signOut(auth);
+}
+
 async function ensureAccountVerified(user) {
   const status = await verificationApi("/verification-status");
   if (status.required && !status.verified) {
@@ -335,7 +349,7 @@ export async function createAccountWithEmailPassword(
   const selectedAccessibility = accessibility?.trim() || ACCESSIBILITY_NONE;
 
   if (!isValidStudentNumber(studentNumber) || normalizedEmail !== expectedEmail || institutionalEmail !== expectedEmail) {
-    throw new Error("Enter a nine-digit student number beginning with 401, 402 or 403 and use its generated Richfield student email.");
+    throw new Error("Enter a nine-digit student number beginning with 401 through 405 and use its generated Richfield student email.");
   }
   if (!isSupportedAccessibilityCategory(selectedAccessibility)) {
     throw new Error("Choose one of the supported accessibility categories or no accessibility needs.");
@@ -543,16 +557,6 @@ export async function sendPasswordlessSignInLink(email) {
   };
 
   await sendSignInLinkToEmail(auth, normalizedEmail, actionCodeSettings);
-
-  // Session-only storage; never store a password here.
-  try {
-    window.sessionStorage.setItem(
-      "uniableEmailForSignIn",
-      normalizedEmail
-    );
-  } catch {
-    // The user can enter their email again after opening the link.
-  }
 }
 
 export function isPasswordlessSignInLink(link = window.location.href) {
@@ -574,12 +578,6 @@ export async function completePasswordlessSignIn(email, link = window.location.h
   }
 
   const credential = await signInWithEmailLink(auth, normalizedEmail, link);
-
-  try {
-    window.sessionStorage.removeItem("uniableEmailForSignIn");
-  } catch {
-    // Authentication has succeeded; storage cleanup is optional.
-  }
 
   return ensureAccountVerified(credential.user);
 }
