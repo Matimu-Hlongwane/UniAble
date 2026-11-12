@@ -1,0 +1,348 @@
+.smart-navigation {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  color: var(--text-primary);
+}
+
+.smart-navigation-heading,
+.smart-navigation-section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.smart-navigation-heading h2 {
+  margin: 3px 0 5px;
+  font-size: 1.55rem;
+}
+
+.smart-navigation-heading p,
+.smart-navigation-note {
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.smart-navigation-eyebrow {
+  display: block;
+  color: var(--primary);
+  font-size: 0.73rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.smart-navigation-accessible,
+.smart-navigation-distance {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.smart-navigation-selection {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.smart-navigation-card {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--border-color);
+  border-radius: 15px;
+  background: var(--bg-card);
+  box-shadow: 0 2px 8px rgb(15 23 42 / 3%);
+}
+
+.smart-navigation-selection .smart-navigation-card {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.smart-navigation-card label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+}
+
+.smart-navigation-card select {
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 9px;
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font: inherit;
+}
+
+.smart-navigation-card small {
+  color: var(--text-secondary);
+}
+
+.smart-navigation-primary,
+.smart-navigation-secondary,
+.smart-navigation-reset {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  min-height: 43px;
+  padding: 10px 15px;
+  border: 0;
+  border-radius: 10px;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+.smart-navigation-primary {
+  background: var(--primary);
+  color: #fff;
+}
+
+.smart-navigation-secondary {
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+.smart-navigation-reset {
+  align-self: center;
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.smart-navigation-primary:disabled,
+.smart-navigation-secondary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.smart-navigation-message,
+.smart-navigation-error,
+.smart-navigation-arrival {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 14px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 11px;
+  background: var(--bg-card);
+}
+
+.smart-navigation-message p {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.smart-navigation-error {
+  color: #b42318;
+  border-color: #f2c7c4;
+  background: #fff8f7;
+}
+
+.smart-navigation-status,
+.smart-navigation-speech-status {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.smart-navigation-section-heading {
+  margin-bottom: 14px;
+}
+
+.smart-navigation-section-heading h3 {
+  margin: 3px 0 0;
+  font-size: 1.15rem;
+}
+
+.smart-navigation-distance {
+  white-space: nowrap;
+}
+
+.smart-navigation-note {
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.smart-navigation-route-list {
+  display: flex;
+  flex-direction: column;
+  margin-top: 18px;
+}
+
+.smart-navigation-route-stop {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  min-height: 64px;
+  padding: 8px 0;
+}
+
+.smart-navigation-route-stop:not(:last-child)::after {
+  position: absolute;
+  top: 39px;
+  bottom: -4px;
+  left: 16px;
+  width: 2px;
+  background: var(--border-color);
+  content: "";
+}
+
+.smart-navigation-stop-number,
+.smart-navigation-direction > span {
+  z-index: 1;
+  display: grid;
+  flex: 0 0 33px;
+  width: 33px;
+  height: 33px;
+  place-items: center;
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-weight: 800;
+}
+
+.smart-navigation-route-stop.active .smart-navigation-stop-number {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #fff;
+}
+
+.smart-navigation-route-stop.completed .smart-navigation-stop-number {
+  color: #16834a;
+}
+
+.smart-navigation-route-stop > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 2px;
+}
+
+.smart-navigation-current-label {
+  color: var(--primary) !important;
+  font-weight: 800;
+}
+
+.smart-navigation-floor-image {
+  overflow: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 11px;
+  background: var(--bg-secondary);
+  text-align: center;
+}
+
+.smart-navigation-floor-image img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 650px;
+  object-fit: contain;
+}
+
+.smart-navigation-directions {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.smart-navigation-direction {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--bg-secondary);
+}
+
+.smart-navigation-direction.active {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.smart-navigation-direction.completed > span {
+  color: #16834a;
+}
+
+.smart-navigation-direction p {
+  margin: 4px 0 0;
+  line-height: 1.5;
+}
+
+.smart-navigation-arrival {
+  flex-direction: row;
+  align-items: center;
+  margin-top: 14px;
+  color: #16834a;
+  font-weight: 750;
+}
+
+.smart-navigation-controls,
+.smart-navigation-step-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.smart-navigation-step-controls {
+  justify-content: space-between;
+}
+
+.smart-navigation-speech-status {
+  min-height: 20px;
+  margin-bottom: 0;
+}
+
+@media (max-width: 700px) {
+  .smart-navigation-selection {
+    grid-template-columns: 1fr;
+  }
+
+  .smart-navigation-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .smart-navigation-section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .smart-navigation-distance {
+    white-space: normal;
+  }
+
+  .smart-navigation-card {
+    padding: 16px;
+  }
+
+  .smart-navigation-controls > button {
+    flex: 1 1 calc(50% - 10px);
+  }
+
+  .smart-navigation-step-controls > button {
+    flex: 1;
+  }
+}
+
+html[data-theme="dark"] .smart-navigation-error {
+  color: #ffb4ab;
+  border-color: #713b36;
+  background: #271715;
+}
