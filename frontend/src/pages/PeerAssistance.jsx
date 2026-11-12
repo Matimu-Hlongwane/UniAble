@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { HeartHandshake, MapPin, MessageCircle, Send, ShieldAlert, Users, CheckCircle2, Clock3 } from "lucide-react";
+import { HeartHandshake, MapPin, Send, ShieldAlert, Users, CheckCircle2, Clock3 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../services/api";
 import { getCurrentUser, getCurrentUserRole } from "../services/firebaseAuth";
@@ -140,6 +140,7 @@ export default function PeerAssistance() {
   };
 
   const openEmergency = () => navigate("/emergency");
+  const currentVolunteer = volunteers.find(item => item.id === currentUserId);
 
   return (
     <section className="page peer-page">
@@ -149,10 +150,12 @@ export default function PeerAssistance() {
           <h1>{t("peerAssistance")}</h1>
           <p className="muted">{t("peerDescription")}</p>
         </div>
-        <span className="availability on">
-          <span className="availability-dot" />
-          {t("available")}
-        </span>
+        {userRole === "volunteer" && currentVolunteer && (
+          <span className={`availability ${currentVolunteer.available ? "on" : "off"}`}>
+            <span className="availability-dot" />
+            {currentVolunteer.available ? t("available") : t("unavailable")}
+          </span>
+        )}
       </div>
 
       <div className="peer-hero">
@@ -307,7 +310,7 @@ export default function PeerAssistance() {
                   <p>{request.detail}</p>
                   <div className="request-meta">
                     <span><MapPin size={14} />{request.location}</span>
-                    <span><Clock3 size={14} />{request.time}</span>
+                    <span><Clock3 size={14} />{request.createdAt ? new Date(request.createdAt).toLocaleString() : "Time unavailable"}</span>
                     <span><CheckCircle2 size={14} />{request.status}</span>
                   </div>
                   <div className="request-actions">
@@ -349,9 +352,6 @@ export default function PeerAssistance() {
                           <CheckCircle2 size={15} /> Mark completed
                         </button>
                       )}
-                    <button className="icon-text-btn" type="button">
-                      <MessageCircle size={15} /> {t("message")}
-                    </button>
                   </div>
                 </div>
               </article>

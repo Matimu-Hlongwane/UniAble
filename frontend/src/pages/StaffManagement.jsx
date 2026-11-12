@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { api } from "../services/api";
 import "./StaffManagement.css";
+import VolunteerApplications from "./VolunteerApplications";
 
 const ROLE_OPTIONS = [
   { value: "volunteer", label: "Volunteer" },
@@ -128,6 +129,7 @@ export default function StaffManagement() {
 
   return (
     <section className="staff-management">
+      <VolunteerApplications />
       <div className="staff-management-summary">
         <article>
           <span>Total registered staff</span>

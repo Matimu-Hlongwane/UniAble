@@ -88,6 +88,13 @@ export const api = {
     }),
 
   getVolunteers: () => request("/peer/volunteers"),
+  getVolunteerApplications: () => request("/peer/volunteers/applications"),
+
+  reviewVolunteerApplication: (id, decision) =>
+    request(`/peer/volunteers/${encodeURIComponent(id)}/review`, {
+      method: "PATCH",
+      body: JSON.stringify({ decision }),
+    }),
 
   registerVolunteer: (payload) =>
     request("/peer/volunteers/register", {
