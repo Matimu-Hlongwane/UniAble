@@ -1,0 +1,150 @@
+<!-- Matimu Hlongwane. -->
+<!-- Sign Up Page -->
+
+<!DOCTYPE html>
+<!-- Declares this page as an HTML5 document. -->
+<html lang="en">
+<!-- Sets the language for assistive technologies. -->
+<head>
+  <!-- Defines the character encoding. -->
+  <meta charset="UTF-8">
+  <!-- Makes the layout adapt to mobile and desktop screens. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Describes the accessible registration experience. -->
+  <meta name="description" content="Create your UniAble student account using voice guidance or typing.">
+  <!-- Sets the browser tab title. -->
+  <title>Voice-Guided Sign-Up | UniAble</title>
+  <!-- Connects to the Google Fonts host. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <!-- Connects to the font file host. -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Loads the Inter font. -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Loads the sign-up page styles. -->
+  <link rel="stylesheet" href="signup.css">
+  <!-- Loads the sign-up interaction logic after the HTML is parsed. -->
+  <script src="signup.js" defer></script>
+</head>
+<!-- Contains the visible sign-up experience. -->
+<body>
+  <!-- Provides a keyboard shortcut to the main form. -->
+  <a class="skip-link" href="#signup-main">Skip to sign-up form</a>
+  <!-- Wraps the complete registration experience. -->
+  <main class="signup-shell" id="signup-main">
+    <!-- Displays the purple sign-up introduction. -->
+    <header class="signup-header">
+      <!-- Returns the user to the welcome screen. -->
+      <a class="back-link" href="../Landing_Page/index.html" aria-label="Return to UniAble welcome page">← Back</a>
+      <!-- Identifies the current feature. -->
+      <p class="eyebrow">UNIABLE ACCESS</p>
+      <!-- Names the registration experience. -->
+      <h1>Voice-Guided Sign-Up</h1>
+      <!-- Shows the current step and its purpose. -->
+      <p class="step-caption" id="step-caption">Step 1 of 5 · Personal Information</p>
+      <!-- Shows whether the microphone is listening. -->
+      <p class="listening-status" id="listening-status" role="status" aria-live="polite">Voice and typing are ready</p>
+    </header>
+
+    <!-- Contains the form, microphone and progress information. -->
+    <section class="signup-card" aria-labelledby="question-title">
+      <!-- Shows the current registration progress. -->
+      <div class="progress-area">
+        <!-- Labels the progress indicator. -->
+        <div class="progress-labels">
+          <!-- Names the progress measurement. -->
+          <span>Progress</span>
+          <!-- Shows the current completion percentage. -->
+          <span id="progress-percentage">20%</span>
+        </div>
+        <!-- Exposes the completion value to assistive technologies. -->
+        <div class="progress-track" id="progress-track" role="progressbar" aria-label="Registration progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="20">
+          <!-- Visually fills the progress track. -->
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+      </div>
+
+      <!-- Contains the active registration question and response controls. -->
+      <div class="question-area">
+        <!-- Shows a large microphone button for supported browsers. -->
+        <button class="microphone-button" id="microphone-button" type="button" aria-label="Start voice input">
+          <!-- Draws a microphone icon using SVG. -->
+          <svg viewBox="0 0 48 48" aria-hidden="true">
+            <!-- Draws the microphone body. -->
+            <rect x="18" y="5" width="12" height="24" rx="6"></rect>
+            <!-- Draws the microphone outer curve. -->
+            <path d="M11 22v2a13 13 0 0 0 26 0v-2"></path>
+            <!-- Draws the microphone stand. -->
+            <path d="M24 37v6M17 43h14"></path>
+          </svg>
+        </button>
+        <!-- Tells users what to do at the current step. -->
+        <p class="microphone-hint" id="microphone-hint">Tap the microphone and say your full name.</p>
+        <!-- Displays the question for the current step. -->
+        <h2 id="question-title">What is your full name?</h2>
+        <!-- Explains the voice interaction. -->
+        <p class="question-description" id="question-description">Speak clearly, or switch to typing whenever you prefer.</p>
+
+        <!-- Provides the text-input alternative to speech recognition. -->
+        <form id="answer-form" novalidate>
+          <!-- Groups the label and text input for the current answer. -->
+          <div class="input-group" id="input-group">
+            <!-- Labels the active text field. -->
+            <label id="answer-label" for="answer-input">Full name</label>
+            <!-- Collects the current step's answer. -->
+            <input id="answer-input" name="answer" type="text" autocomplete="name" placeholder="Enter your full name">
+            <!-- Displays validation messages. -->
+            <p class="field-error" id="field-error" role="alert"></p>
+          </div>
+          <!-- Submits the typed answer. -->
+          <button class="button button-primary input-submit" id="input-submit" type="submit">Save answer</button>
+        </form>
+
+        <!-- Toggles between voice-first and typing modes. -->
+        <button class="button button-secondary" id="typing-toggle" type="button">⌨ Switch to Typing</button>
+      </div>
+
+      <!-- Shows the conversation between the user and UniAble. -->
+      <section class="conversation-card" aria-labelledby="conversation-heading">
+        <!-- Labels the conversation history. -->
+        <h3 id="conversation-heading">Your conversation</h3>
+        <!-- Holds the messages created during this session. -->
+        <div class="conversation-messages" id="conversation-messages" aria-live="polite">
+          <!-- Shows the initial assistant greeting. -->
+          <article class="message assistant-message">
+            <!-- Identifies the speaker. -->
+            <strong>UniAble</strong>
+            <!-- Displays the initial instruction. -->
+            <p>Welcome! Let's set up your account together. What's your full name?</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- Shows information detected or entered so far. -->
+      <section class="detected-card" aria-labelledby="detected-heading">
+        <!-- Identifies the detected-information section. -->
+        <h3 id="detected-heading">✓ Detected so far</h3>
+        <!-- Displays the current answer chips. -->
+        <div class="detected-chips" id="detected-chips">
+          <!-- Displays an initial helper chip. -->
+          <span class="empty-chip">Your answers will appear here</span>
+        </div>
+      </section>
+
+      <!-- Holds the controls for moving through the registration steps. -->
+      <div class="navigation-actions">
+        <!-- Lets the user repeat the voice prompt. -->
+        <button class="button button-primary" id="continue-speaking" type="button">♬ Continue Speaking</button>
+        <!-- Moves to the previous registration step. -->
+        <button class="button button-quiet" id="previous-step" type="button" disabled>Previous</button>
+        <!-- Saves the answer and moves forward. -->
+        <button class="button button-primary" id="continue-step" type="button">Continue</button>
+      </div>
+
+      <!-- Explains that users can switch input methods at any time. -->
+      <p class="privacy-note">You can switch between voice and typing at any time.</p>
+      <!-- Provides a place for general feedback. -->
+      <p class="general-status" id="general-status" role="status" aria-live="polite"></p>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,738 @@
+
+/* Defines the colours shared across the sign-up experience. */
+:root {
+  /* Defines the main brand purple. */
+  --purple: #7129bf;
+  /* Defines the deeper purple for gradients. */
+  --purple-dark: #48008f;
+  /* Defines the bright purple accent. */
+  --purple-light: #8d40db;
+  /* Defines the pale lavender background. */
+  --lavender: #f2effb;
+  /* Defines the primary text colour. */
+  --text: #171725;
+  /* Defines the secondary text colour. */
+  --muted: #747184;
+  /* Defines the white card background. */
+  --white: #ffffff;
+  /* Defines the shared card border radius. */
+  --radius: 20px;
+}
+
+/* Uses predictable sizing for every element. */
+* {
+  /* Includes padding and borders in element dimensions. */
+  box-sizing: border-box;
+}
+
+/* Styles the page background and default text. */
+body {
+  /* Removes the browser's default page margin. */
+  margin: 0;
+  /* Applies a clean sans-serif font. */
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  /* Sets the page text colour. */
+  color: var(--text);
+  /* Sets the page background. */
+  background: #f7f5fb;
+  /* Improves text readability. */
+  line-height: 1.5;
+}
+
+/* Makes keyboard navigation visible. */
+button,
+a,
+input {
+  /* Inherits the page font. */
+  font: inherit;
+}
+
+/* Provides a clear keyboard focus outline. */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  /* Highlights the focused element. */
+  outline: 3px solid #a987f1;
+  /* Separates the outline from the control. */
+  outline-offset: 3px;
+}
+
+/* Hides the skip link until it receives keyboard focus. */
+.skip-link {
+  /* Positions the link outside the visible screen initially. */
+  position: absolute;
+  /* Moves the link outside the normal viewport. */
+  left: -9999px;
+  /* Places the link above other content when revealed. */
+  z-index: 10;
+  /* Gives the link readable spacing. */
+  padding: 12px;
+  /* Uses a white background. */
+  background: var(--white);
+  /* Uses a contrasting text colour. */
+  color: var(--purple-dark);
+}
+
+/* Reveals the skip link for keyboard users. */
+.skip-link:focus {
+  /* Returns the link to the visible viewport. */
+  left: 12px;
+  /* Places the link near the top. */
+  top: 12px;
+}
+
+/* Centres the main sign-up panel. */
+.signup-shell {
+  /* Limits the width for comfortable reading. */
+  width: min(100%, 540px);
+  /* Centres the shell horizontally. */
+  margin: 0 auto;
+  /* Keeps the shell at least as tall as the screen. */
+  min-height: 100vh;
+  /* Adds spacing around the page content. */
+  padding: 24px 18px 32px;
+}
+
+/* Styles the purple sign-up header. */
+.signup-header {
+  /* Positions the header contents vertically. */
+  display: flex;
+  /* Stacks the header elements. */
+  flex-direction: column;
+  /* Aligns the content to the left. */
+  align-items: flex-start;
+  /* Adds space around the header content. */
+  padding: 24px 22px;
+  /* Rounds the top corners. */
+  border-radius: 24px 24px 0 0;
+  /* Creates the signature purple gradient. */
+  background: linear-gradient(130deg, #4b008d 0%, #7127c4 65%, #8c3cdb 100%);
+  /* Makes the header text white. */
+  color: var(--white);
+}
+
+/* Styles the back navigation link. */
+.back-link {
+  /* Keeps the link compact. */
+  margin-bottom: 16px;
+  /* Uses white text. */
+  color: var(--white);
+  /* Removes the default underline. */
+  text-decoration: none;
+  /* Sets a readable compact size. */
+  font-size: 13px;
+  /* Makes the link easy to identify. */
+  font-weight: 600;
+}
+
+/* Styles the small header eyebrow. */
+.eyebrow {
+  /* Removes default paragraph spacing. */
+  margin: 0 0 4px;
+  /* Uses a subtle white tint. */
+  color: #e5d4ff;
+  /* Adds spacing between letters. */
+  letter-spacing: 2px;
+  /* Sets the small label size. */
+  font-size: 10px;
+  /* Makes the label prominent. */
+  font-weight: 800;
+}
+
+/* Styles the main sign-up heading. */
+.signup-header h1 {
+  /* Removes default heading margins. */
+  margin: 0;
+  /* Sets the heading size. */
+  font-size: clamp(22px, 5vw, 28px);
+  /* Uses a strong heading weight. */
+  font-weight: 800;
+  /* Tightens the heading slightly. */
+  letter-spacing: -0.8px;
+}
+
+/* Styles the step caption. */
+.step-caption {
+  /* Adds a small gap above the caption. */
+  margin: 6px 0 10px;
+  /* Uses a softer white colour. */
+  color: #f0e6ff;
+  /* Sets a readable text size. */
+  font-size: 13px;
+}
+
+/* Styles the listening status badge. */
+.listening-status {
+  /* Removes default paragraph spacing. */
+  margin: 0;
+  /* Adds internal badge spacing. */
+  padding: 4px 10px;
+  /* Creates a translucent badge background. */
+  background: rgba(255, 255, 255, 0.16);
+  /* Rounds the badge. */
+  border-radius: 999px;
+  /* Sets a compact label size. */
+  font-size: 11px;
+}
+
+/* Styles the main white sign-up card. */
+.signup-card {
+  /* Adds spacing inside the card. */
+  padding: 25px 22px 22px;
+  /* Rounds the lower corners. */
+  border-radius: 0 0 24px 24px;
+  /* Sets the card background. */
+  background: var(--white);
+  /* Adds a subtle card shadow. */
+  box-shadow: 0 15px 38px rgba(53, 28, 90, 0.1);
+}
+
+/* Creates spacing around the progress indicator. */
+.progress-area {
+  /* Adds space below the progress area. */
+  margin-bottom: 26px;
+}
+
+/* Places the progress label and percentage at opposite ends. */
+.progress-labels {
+  /* Uses a horizontal layout. */
+  display: flex;
+  /* Separates the two labels. */
+  justify-content: space-between;
+  /* Aligns labels vertically. */
+  align-items: center;
+  /* Adds a small gap below the labels. */
+  margin-bottom: 8px;
+  /* Uses muted text. */
+  color: var(--muted);
+  /* Sets the label size. */
+  font-size: 12px;
+}
+
+/* Creates the pale progress track. */
+.progress-track {
+  /* Defines the track height. */
+  height: 8px;
+  /* Hides the fill overflow. */
+  overflow: hidden;
+  /* Rounds the track ends. */
+  border-radius: 999px;
+  /* Sets the track background. */
+  background: #e5d7f3;
+}
+
+/* Shows the completed portion of the progress track. */
+.progress-fill {
+  /* Uses the full track height. */
+  height: 100%;
+  /* Starts at the first-step progress. */
+  width: 20%;
+  /* Uses a purple gradient. */
+  background: linear-gradient(90deg, #6723b5, #8b3fd1);
+  /* Animates progress changes. */
+  transition: width 220ms ease;
+}
+
+/* Centres the question and microphone. */
+.question-area {
+  /* Uses a vertical layout. */
+  display: flex;
+  /* Stacks the question controls. */
+  flex-direction: column;
+  /* Centres the content. */
+  align-items: center;
+  /* Sets the alignment. */
+  text-align: center;
+}
+
+/* Styles the large circular microphone control. */
+.microphone-button {
+  /* Centres the microphone icon. */
+  display: grid;
+  /* Places the icon in the centre. */
+  place-items: center;
+  /* Sets the circular button dimensions. */
+  width: 116px;
+  height: 116px;
+  /* Removes the default border. */
+  border: 0;
+  /* Makes the control circular. */
+  border-radius: 50%;
+  /* Applies the purple microphone gradient. */
+  background: linear-gradient(145deg, #812bd0, #5b17ac);
+  /* Makes the icon white. */
+  color: var(--white);
+  /* Adds a soft glow around the microphone. */
+  box-shadow: 0 12px 26px rgba(113, 41, 191, 0.23);
+  /* Indicates the button is interactive. */
+  cursor: pointer;
+  /* Adds a subtle transition. */
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+/* Gives the microphone a subtle hover effect. */
+.microphone-button:hover {
+  /* Slightly enlarges the control. */
+  transform: scale(1.03);
+  /* Strengthens the microphone shadow. */
+  box-shadow: 0 15px 30px rgba(113, 41, 191, 0.3);
+}
+
+/* Shows a visual listening state. */
+.microphone-button.is-listening {
+  /* Adds a visible purple outline around the microphone. */
+  outline: 9px solid #e8ddff;
+  /* Separates the outline from the button. */
+  outline-offset: 4px;
+}
+
+/* Sets the microphone icon dimensions. */
+.microphone-button svg {
+  /* Sets the icon width. */
+  width: 45px;
+  /* Sets the icon height. */
+  height: 45px;
+  /* Shows the icon strokes. */
+  fill: none;
+  /* Sets the stroke colour. */
+  stroke: currentColor;
+  /* Sets the stroke thickness. */
+  stroke-width: 3;
+  /* Rounds the line endings. */
+  stroke-linecap: round;
+  /* Rounds line intersections. */
+  stroke-linejoin: round;
+}
+
+/* Styles the short microphone instruction. */
+.microphone-hint {
+  /* Adds space above the instruction. */
+  margin: 20px 0 8px;
+  /* Uses the brand colour. */
+  color: var(--purple);
+  /* Sets a compact text size. */
+  font-size: 12px;
+  /* Makes the instruction prominent. */
+  font-weight: 700;
+}
+
+/* Styles the active registration question. */
+.question-area h2 {
+  /* Removes default heading margins. */
+  margin: 0;
+  /* Sets a comfortable heading size. */
+  font-size: 21px;
+  /* Uses a strong heading weight. */
+  font-weight: 800;
+  /* Tightens the heading slightly. */
+  letter-spacing: -0.5px;
+}
+
+/* Styles the supporting question description. */
+.question-description {
+  /* Limits the line width. */
+  max-width: 330px;
+  /* Adds space around the description. */
+  margin: 8px 0 18px;
+  /* Uses muted text. */
+  color: var(--muted);
+  /* Sets the supporting text size. */
+  font-size: 13px;
+}
+
+/* Makes the answer form fill the available card width. */
+#answer-form {
+  /* Uses the available width. */
+  width: 100%;
+  /* Adds a small gap between form elements. */
+  margin-bottom: 12px;
+}
+
+/* Hides the typing form until the user chooses typing mode. */
+.input-group {
+  /* Keeps the form hidden initially. */
+  display: none;
+  /* Aligns the label and input to the left. */
+  text-align: left;
+}
+
+/* Reveals the form in typing mode. */
+.input-group.is-visible {
+  /* Shows the form field. */
+  display: flex;
+  /* Stacks the label, input and error message. */
+  flex-direction: column;
+  /* Adds spacing between form elements. */
+  gap: 7px;
+}
+
+/* Styles the text input label. */
+.input-group label {
+  /* Sets a compact label size. */
+  font-size: 12px;
+  /* Makes the label readable. */
+  font-weight: 700;
+}
+
+/* Styles the answer input. */
+.input-group input {
+  /* Uses the full form width. */
+  width: 100%;
+  /* Sets a comfortable input height. */
+  min-height: 48px;
+  /* Adds horizontal input spacing. */
+  padding: 12px 14px;
+  /* Adds a subtle border. */
+  border: 1px solid #ddd5eb;
+  /* Rounds the input corners. */
+  border-radius: 12px;
+  /* Uses dark input text. */
+  color: var(--text);
+  /* Uses a white input background. */
+  background: #fff;
+}
+
+/* Styles validation messages. */
+.field-error {
+  /* Removes default paragraph spacing. */
+  margin: 0;
+  /* Uses an error colour. */
+  color: #b42318;
+  /* Sets a compact error size. */
+  font-size: 12px;
+}
+
+/* Hides empty error messages. */
+.field-error:empty {
+  /* Prevents empty messages from taking up space. */
+  display: none;
+}
+
+/* Defines the shared button appearance. */
+.button {
+  /* Centres button content. */
+  display: inline-flex;
+  /* Aligns button content vertically. */
+  align-items: center;
+  /* Centres content horizontally. */
+  justify-content: center;
+  /* Sets the minimum button height. */
+  min-height: 49px;
+  /* Adds internal spacing. */
+  padding: 12px 16px;
+  /* Rounds the button corners. */
+  border-radius: 13px;
+  /* Uses a pointer cursor. */
+  cursor: pointer;
+  /* Makes button labels prominent. */
+  font-size: 13px;
+  /* Sets the button font weight. */
+  font-weight: 700;
+  /* Adds a subtle hover transition. */
+  transition: background 160ms ease, transform 160ms ease;
+}
+
+/* Styles the primary purple button. */
+.button-primary {
+  /* Removes the default border. */
+  border: 1px solid var(--purple);
+  /* Uses the brand colour. */
+  background: var(--purple);
+  /* Uses white text. */
+  color: var(--white);
+}
+
+/* Darkens the primary button on hover. */
+.button-primary:hover {
+  /* Uses the deeper brand colour. */
+  background: var(--purple-dark);
+}
+
+/* Styles the secondary typing control. */
+.button-secondary {
+  /* Uses a pale lavender background. */
+  background: #faf8ff;
+  /* Uses a subtle lavender border. */
+  border: 1px solid #e0d6ee;
+  /* Uses dark text. */
+  color: var(--text);
+  /* Uses the full available width. */
+  width: 100%;
+  /* Adds a subtle shadow. */
+  box-shadow: 0 3px 7px rgba(40, 25, 70, 0.06);
+}
+
+/* Styles the quiet navigation control. */
+.button-quiet {
+  /* Uses a white background. */
+  background: var(--white);
+  /* Uses a thin purple border. */
+  border: 1px solid #cfc2e6;
+  /* Uses the brand colour. */
+  color: var(--purple);
+}
+
+/* Indicates that a button is unavailable. */
+.button:disabled {
+  /* Reduces contrast for the disabled control. */
+  opacity: 0.45;
+  /* Prevents the pointer from implying interactivity. */
+  cursor: not-allowed;
+}
+
+/* Hides the save-answer button while voice mode is active. */
+.input-submit {
+  /* Uses the full available width. */
+  width: 100%;
+  /* Adds space above the button. */
+  margin-top: 12px;
+  /* Hides the button until typing mode is selected. */
+  display: none;
+}
+
+/* Reveals the save-answer button in typing mode. */
+.input-submit.is-visible {
+  /* Displays the submit control. */
+  display: inline-flex;
+}
+
+/* Styles the conversation history card. */
+.conversation-card {
+  /* Adds internal spacing. */
+  padding: 15px;
+  /* Adds space above the conversation card. */
+  margin-top: 24px;
+  /* Uses a pale lavender background. */
+  background: #f8f6fc;
+  /* Adds a subtle border. */
+  border: 1px solid #eee8f6;
+  /* Rounds the card corners. */
+  border-radius: 16px;
+  /* Uses the full available width. */
+  width: 100%;
+  /* Aligns content to the left. */
+  text-align: left;
+}
+
+/* Styles section headings. */
+.conversation-card h3,
+.detected-card h3 {
+  /* Removes default heading margins. */
+  margin: 0 0 10px;
+  /* Sets a compact heading size. */
+  font-size: 13px;
+  /* Uses a bold heading weight. */
+  font-weight: 800;
+}
+
+/* Stacks the conversation messages. */
+.conversation-messages {
+  /* Uses a vertical layout. */
+  display: flex;
+  /* Stacks messages. */
+  flex-direction: column;
+  /* Adds space between messages. */
+  gap: 10px;
+}
+
+/* Styles each conversation message. */
+.message {
+  /* Adds internal spacing. */
+  padding: 10px 11px;
+  /* Rounds the message corners. */
+  border-radius: 11px;
+  /* Sets a compact readable size. */
+  font-size: 12px;
+}
+
+/* Styles messages spoken by UniAble. */
+.assistant-message {
+  /* Uses a white background. */
+  background: var(--white);
+}
+
+/* Styles messages from the user. */
+.user-message {
+  /* Uses a light purple background. */
+  background: #eee7ff;
+}
+
+/* Styles the speaker name. */
+.message strong {
+  /* Shows the speaker name on its own line. */
+  display: block;
+  /* Uses the brand colour. */
+  color: var(--purple);
+  /* Adds a small gap below the speaker name. */
+  margin-bottom: 3px;
+  /* Sets the name size. */
+  font-size: 11px;
+}
+
+/* Styles conversation message text. */
+.message p {
+  /* Removes default paragraph margins. */
+  margin: 0;
+  /* Allows long words to wrap. */
+  overflow-wrap: anywhere;
+}
+
+/* Styles the detected-information card. */
+.detected-card {
+  /* Adds internal spacing. */
+  padding: 15px;
+  /* Adds space above the detected card. */
+  margin-top: 14px;
+  /* Uses a white background. */
+  background: var(--white);
+  /* Adds a subtle border. */
+  border: 1px solid #eee8f6;
+  /* Rounds the card corners. */
+  border-radius: 16px;
+  /* Uses the full available width. */
+  width: 100%;
+  /* Aligns content to the left. */
+  text-align: left;
+}
+
+/* Lays out the detected-information chips. */
+.detected-chips {
+  /* Allows chips to wrap on smaller screens. */
+  display: flex;
+  /* Wraps overflowing chips to the next line. */
+  flex-wrap: wrap;
+  /* Adds space between chips. */
+  gap: 7px;
+}
+
+/* Styles each detected-information chip. */
+.detected-chip {
+  /* Keeps the chip compact. */
+  display: inline-flex;
+  /* Aligns text vertically. */
+  align-items: center;
+  /* Adds space inside the chip. */
+  padding: 6px 10px;
+  /* Rounds the chip ends. */
+  border-radius: 999px;
+  /* Uses a pale lavender background. */
+  background: #eee8ff;
+  /* Uses the brand colour. */
+  color: #5d2ca8;
+  /* Sets a compact chip size. */
+  font-size: 11px;
+  /* Makes chip text prominent. */
+  font-weight: 700;
+}
+
+/* Styles the placeholder chip when no answer is recorded. */
+.empty-chip {
+  /* Uses muted text. */
+  color: var(--muted);
+  /* Sets a compact size. */
+  font-size: 12px;
+}
+
+/* Stacks the navigation controls. */
+.navigation-actions {
+  /* Uses a vertical layout. */
+  display: flex;
+  /* Stacks the controls. */
+  flex-direction: column;
+  /* Adds consistent space between buttons. */
+  gap: 10px;
+  /* Adds space above the controls. */
+  margin-top: 20px;
+}
+
+/* Makes navigation buttons fill the available width. */
+.navigation-actions .button {
+  /* Uses the full card width. */
+  width: 100%;
+}
+
+/* Styles the privacy and switching guidance. */
+.privacy-note {
+  /* Adds space above the note. */
+  margin: 16px 0 0;
+  /* Uses muted text. */
+  color: var(--muted);
+  /* Centres the note. */
+  text-align: center;
+  /* Sets a compact readable size. */
+  font-size: 11px;
+}
+
+/* Styles the general feedback area. */
+.general-status {
+  /* Reserves space for feedback. */
+  min-height: 20px;
+  /* Adds a small top gap. */
+  margin: 8px 0 0;
+  /* Uses the brand colour. */
+  color: var(--purple);
+  /* Sets a compact size. */
+  font-size: 12px;
+  /* Centres the feedback. */
+  text-align: center;
+}
+
+/* Uses a wider layout on desktop screens. */
+@media (min-width: 760px) {
+  /* Gives the sign-up card more space. */
+  .signup-shell {
+    /* Limits the content width. */
+    width: min(100%, 620px);
+    /* Adds extra top and bottom space. */
+    padding-top: 36px;
+    padding-bottom: 36px;
+  }
+
+  /* Adds more breathing room to the header. */
+  .signup-header {
+    /* Increases horizontal padding. */
+    padding: 28px 30px;
+  }
+
+  /* Adds more space inside the card. */
+  .signup-card {
+    /* Increases internal padding. */
+    padding: 30px;
+  }
+}
+
+/* Adapts the interface to short mobile screens. */
+@media (max-height: 760px) {
+  /* Reduces vertical page spacing. */
+  .signup-shell {
+    padding-top: 12px;
+  }
+
+  /* Reduces the microphone size. */
+  .microphone-button {
+    width: 90px;
+    height: 90px;
+  }
+
+  /* Reduces the space around the progress area. */
+  .progress-area {
+    margin-bottom: 18px;
+  }
+
+  /* Reduces space above the conversation history. */
+  .conversation-card {
+    margin-top: 16px;
+  }
+}
+
+/* Respects reduced-motion preferences. */
+@media (prefers-reduced-motion: reduce) {
+  /* Removes animated transitions for users who request reduced motion. */
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
