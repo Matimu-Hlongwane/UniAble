@@ -1,6 +1,8 @@
-﻿/* =========================================
+/* =========================================
    UNIABLE FORM VALIDATION
    ========================================= */
+
+export const STUDENT_EMAIL_DOMAIN = "my.richfield.ac.za";
 
 export function isValidEmail(email) {
     const emailPattern =
@@ -9,26 +11,24 @@ export function isValidEmail(email) {
     return emailPattern.test(email);
 }
 
-export function normalizeSouthAfricanMobile(phoneNumber) {
-    const enteredNumber = String(phoneNumber || "").trim();
-    const compactNumber = enteredNumber.replace(/[\s()-]/g, "");
-    let nationalNumber;
+export function isValidStudentNumber(studentNumber) {
+    return /^40[123]\d{6}$/.test(String(studentNumber || "").trim());
+}
 
-    if (/^\+27[0-9]{9}$/.test(compactNumber)) {
-        nationalNumber = compactNumber.slice(3);
-    } else if (/^27[0-9]{9}$/.test(compactNumber)) {
-        nationalNumber = compactNumber.slice(2);
-    } else if (/^0[0-9]{9}$/.test(compactNumber)) {
-        nationalNumber = compactNumber.slice(1);
-    } else if (/^[0-9]{9}$/.test(compactNumber)) {
-        nationalNumber = compactNumber;
-    } else {
-        return null;
+export function isValidStudentEmail(email) {
+    const [studentNumber, domain, extra] = String(email || "").trim().toLowerCase().split("@");
+    return !extra && domain === STUDENT_EMAIL_DOMAIN && isValidStudentNumber(studentNumber);
+}
+
+export function validateInstitutionalStudentEmail(email) {
+    const normalizedEmail = String(email || "").trim().toLowerCase();
+    if (
+        normalizedEmail.endsWith(`@${STUDENT_EMAIL_DOMAIN}`) &&
+        !isValidStudentEmail(normalizedEmail)
+    ) {
+        throw new Error("Richfield student email must use a nine-digit student number beginning with 401, 402 or 403.");
     }
-
-    return /^[6-8][0-9]{8}$/.test(nationalNumber)
-        ? `+27${nationalNumber}`
-        : null;
+    return normalizedEmail;
 }
 
 
@@ -42,45 +42,28 @@ export function validateSignUpForm(formData) {
     if (!formData.fullName.trim()) {
 
         errors.fullName =
-            "Please enter your first and middle names.";
+            "Please enter your full name.";
 
     }
 
     else if (formData.fullName.trim().length < 2) {
 
         errors.fullName =
-            "Please enter a valid first name.";
+            "Please enter a valid full name.";
 
     }
 
-    if (!String(formData.surname || "").trim()) {
-        errors.surname = "Please enter your surname.";
-    }
 
-    if (!String(formData.studentNumber || "").trim()) {
-        errors.studentNumber = "Please enter your student number.";
-    }
-
-    if (!String(formData.qualification || "").trim()) {
-        errors.qualification = "Please select your qualification.";
-    } else if (
-        formData.qualification === "Other IT qualification" &&
-        !String(formData.otherQualification || "").trim()
-    ) {
-        errors.otherQualification = "Please enter your IT qualification.";
-    }
-
-    if (!String(formData.yearOfStudy || "").trim()) {
-        errors.yearOfStudy = "Please select your year of study.";
-    }
-
-    if (
-        !Array.isArray(formData.modules) ||
-        (!formData.modules.length && !String(formData.otherModules || "").trim())
-    ) {
-        errors.modules = "Select or enter at least one IT module.";
-    }
-
+    if (!formData.surname?.trim()) errors.surname = "Please enter your surname.";
+    if (!isValidStudentNumber(formData.studentNumber)) errors.studentNumber = "Enter a nine-digit student number beginning with 401, 402 or 403.";
+    if (!formData.qualification) errors.qualification = "Choose your Richfield qualification.";
+    if (!formData.yearOfStudy || !/^20\d{2}$/.test(String(formData.yearOfStudy))) errors.yearOfStudy = "Choose a valid year of study.";
+    if (!formData.dateOfBirth || Number.isNaN(Date.parse(formData.dateOfBirth)) || new Date(formData.dateOfBirth) >= new Date()) errors.dateOfBirth = "Enter a valid date of birth in the past.";
+    if (formData.phoneNumber?.trim() && !/^\+?[1-9]\d{7,14}$/.test(String(formData.phoneNumber).replace(/[\s()-]/g, ""))) errors.phoneNumber = "Enter a valid international cellphone number, e.g. +27821234567 (do not add the leading 0).";
+    const expectedStudentEmail = `${String(formData.studentNumber || "").trim()}@${STUDENT_EMAIL_DOMAIN}`;
+    if (!formData.email?.trim() || formData.email.trim().toLowerCase() !== expectedStudentEmail.toLowerCase()) errors.email = "Your student email must be generated from your student number.";
+    if (!formData.confirmPassword) errors.confirmPassword = "Please confirm your password.";
+    else if (formData.confirmPassword !== formData.password) errors.confirmPassword = "Passwords do not match.";
 
     /* ACCESSIBILITY */
 
@@ -88,23 +71,6 @@ export function validateSignUpForm(formData) {
 
         errors.accessibility =
             "Please select an accessibility option.";
-
-    }
-
-
-    /* EMAIL */
-
-    if (!formData.email.trim()) {
-
-        errors.email =
-            "Please enter your email address.";
-
-    }
-
-    else if (!isValidEmail(formData.email)) {
-
-        errors.email =
-            "Please enter a valid email address.";
 
     }
 
@@ -134,12 +100,40 @@ export function validateSignUpForm(formData) {
         errors.password = "Password must contain at least one special character.";
     }
 
-    if (!formData.confirmPassword) {
-        errors.confirmPassword = "Please confirm your password.";
-    } else if (formData.password !== formData.confirmPassword) {
-        errors.confirmPassword = "Passwords do not match.";
-    }
-
 
     return errors;
+}
+
+
+export function isRichfieldStudentNumber(value) {
+    return isValidStudentNumber(value);
+}
+
+export function getRichfieldStudentEmail(value) {
+    const number = String(value || "").trim();
+    return isValidStudentNumber(number)
+        ? `${number}@${STUDENT_EMAIL_DOMAIN}`
+        : "";
+}
+
+export function normalizeSouthAfricanMobile(phoneNumber) {
+    const enteredNumber = String(phoneNumber || "").trim();
+    const compactNumber = enteredNumber.replace(/[\\s()-]/g, "");
+    let nationalNumber;
+
+    if (/^\\+27[0-9]{9}$/.test(compactNumber)) {
+        nationalNumber = compactNumber.slice(3);
+    } else if (/^27[0-9]{9}$/.test(compactNumber)) {
+        nationalNumber = compactNumber.slice(2);
+    } else if (/^0[0-9]{9}$/.test(compactNumber)) {
+        nationalNumber = compactNumber.slice(1);
+    } else if (/^[0-9]{9}$/.test(compactNumber)) {
+        nationalNumber = compactNumber;
+    } else {
+        return null;
+    }
+
+    return /^[6-8][0-9]{8}$/.test(nationalNumber)
+        ? `+27${nationalNumber}`
+        : null;
 }

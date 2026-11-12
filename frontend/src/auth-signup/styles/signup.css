@@ -1,3 +1,4 @@
+﻿@import url("https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;500;600;700;800&display=swap");
 /* =========================================
    UNIABLE SIGN-UP PAGE
    ========================================= */
@@ -124,7 +125,6 @@
 
 
 .progress-bar {
-    width: 40%;
     height: 100%;
 
     background: #503be0;
@@ -420,6 +420,47 @@
     padding: 42px 22px 30px;
 }
 
+.signup-mode-switch {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px;
+    margin: 0 0 22px;
+    padding: 5px;
+    border: 1px solid #e0deed;
+    border-radius: 13px;
+    background: #eeedf5;
+}
+
+.signup-mode-switch button {
+    min-height: 44px;
+    padding: 9px 12px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: #55566a;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.signup-mode-switch button.selected {
+    background: #fff;
+    color: #4938c8;
+    box-shadow: 0 2px 8px #25204a14;
+}
+
+.signup-mode-switch button:disabled,
+.typing-actions button:disabled {
+    cursor: wait;
+    opacity: 0.65;
+}
+
+.signup-mode-switch button:focus-visible,
+.microphone-stop-button:focus-visible {
+    outline: 3px solid #a99cff;
+    outline-offset: 3px;
+}
+
 
 /* =========================================
    MICROPHONE SECTION
@@ -522,6 +563,18 @@
     font-weight: 700;
 
     line-height: 1.4;
+}
+
+.microphone-stop-button {
+    min-height: 42px;
+    padding: 9px 16px;
+    border: 1px solid #d6d3e2;
+    border-radius: 10px;
+    background: #fff;
+    color: #454455;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
 }
 
 
@@ -840,46 +893,6 @@
     width: 100%;
 
     margin-bottom: 18px;
-}
-
-.signup-module-options {
-    box-sizing: border-box;
-    padding: 14px;
-    border: 1px solid #d9d9e7;
-    border-radius: 11px;
-}
-
-.signup-module-options legend {
-    padding: 0 6px;
-    color: #343342;
-    font-size: 13px;
-    font-weight: 700;
-}
-
-.signup-module-options p {
-    margin: 0 0 10px;
-    color: #555466;
-    font-size: 13px;
-}
-
-.signup-module-options .signup-module-option {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin: 10px 0;
-    font-weight: 400;
-}
-
-.signup-module-options input[type="checkbox"] {
-    width: 20px;
-    min-width: 20px;
-    height: 20px;
-    margin: 0;
-    accent-color: #5942df;
-}
-
-.signup-module-options > input[type="text"] {
-    margin-top: 6px;
 }
 
 

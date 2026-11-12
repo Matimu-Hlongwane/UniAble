@@ -109,7 +109,7 @@ export default function RoleDashboard() {
   }, [backendRole]);
 
   useEffect(() => {
-    if (!["volunteer", "security"].includes(normalRole)) return;
+    if (!["volunteer", "security", "lecturer"].includes(normalRole)) return;
     loadDashboard();
   }, [loadDashboard, normalRole]);
 

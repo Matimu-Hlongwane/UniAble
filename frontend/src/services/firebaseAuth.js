@@ -580,7 +580,7 @@ export async function completePhoneVerification(phoneNumber) {
 }
 
 async function ensureAccountVerified(user) {
-  const { claims } = await getIdTokenResult(user);
+  const { claims } = await getIdTokenResult(user, true);
 
   if (
     claims.accountVerificationRequired === true &&

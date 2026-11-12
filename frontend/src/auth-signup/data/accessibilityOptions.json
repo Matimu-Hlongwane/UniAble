@@ -8,31 +8,23 @@
         "label": "No accessibility needs"
     },
     {
-        "value": "Visual Impairment",
-        "label": "Visual impairment"
+        "value": "Visual",
+        "label": "Visual"
     },
     {
-        "value": "Hearing Impairment",
-        "label": "Hearing impairment"
+        "value": "Hearing",
+        "label": "Hearing"
     },
     {
-        "value": "Mobility Support",
-        "label": "Mobility support"
+        "value": "Mobility",
+        "label": "Mobility"
     },
     {
-        "value": "Speech Support",
-        "label": "Speech support"
+        "value": "Speech",
+        "label": "Speech"
     },
     {
-        "value": "Colour Vision",
-        "label": "Colour-vision support"
-    },
-    {
-        "value": "Neurodiverse Support",
-        "label": "Neurodiverse support"
-    },
-    {
-        "value": "Other",
-        "label": "Other"
+        "value": "Neurodiverse",
+        "label": "Neurodiverse"
     }
 ]

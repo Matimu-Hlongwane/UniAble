@@ -9,6 +9,7 @@ import {
 import "./AdminDashboard.css";
 import { api } from "../services/api";
 import StaffManagement from "./StaffManagement";
+import AdminWorkspace from "./AdminWorkspace";
 import VoiceNavigationControls from "../components/VoiceNavigationControls";
 import { useSettings } from "../context/settingsContext/SettingsContext";
 import { speak } from "../services/speechService";
@@ -407,6 +408,12 @@ export default function AdminDashboard({ staffRole = "admin" }) {
             renderSupportRequests()
           ) : active === "accessibility" ? (
             renderAccessibilityServices()
+          ) : ["users", "departments", "approvals", "analytics", "settings", "audit"].includes(active) && !isDisabilityOffice ? (
+            <AdminWorkspace
+              section={active}
+              search={search}
+              onError={setDashboardError}
+            />
           ) : active === "overview" ? (
             <>
               <section className="admin-welcome">

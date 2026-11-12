@@ -260,6 +260,11 @@ export function stopSpeaking() {
   }
 }
 
+export function isSpeechPaused() {
+  return typeof window !== "undefined" &&
+    Boolean(window.speechSynthesis?.paused);
+}
+
 export function pauseSpeaking() {
   if (!session || session.engine !== "web") return false;
 

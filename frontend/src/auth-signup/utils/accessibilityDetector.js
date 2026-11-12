@@ -1,3 +1,5 @@
+import { ACCESSIBILITY_NONE } from "../../data/accessibilityCategories";
+
 export function detectAccessibility(text) {
     const answer = String(text || "").toLowerCase();
 
@@ -6,33 +8,28 @@ export function detectAccessibility(text) {
         answer.includes("blind") ||
         answer.includes("eyesight") ||
         answer.includes("sight")
-    ) return "Visual Impairment";
+    ) return "Visual";
 
     if (
         answer.includes("hearing") ||
         answer.includes("deaf") ||
         answer.includes("hard of hearing")
-    ) return "Hearing Impairment";
+    ) return "Hearing";
 
     if (
         answer.includes("mobility") ||
         answer.includes("wheelchair") ||
         answer.includes("walking") ||
         answer.includes("physical movement")
-    ) return "Mobility Support";
+    ) return "Mobility";
 
     if (
         answer.includes("speech") ||
         answer.includes("speaking") ||
         answer.includes("communication")
-    ) return "Speech Support";
+    ) return "Speech";
 
-    if (
-        answer.includes("colour blind") ||
-        answer.includes("color blind") ||
-        answer.includes("colour vision") ||
-        answer.includes("color vision")
-    ) return "Colour Vision";
+    if (answer.includes("colour") || answer.includes("color")) return "Visual";
 
     if (
         answer.includes("neurodiverse") ||
@@ -42,7 +39,7 @@ export function detectAccessibility(text) {
         answer.includes("dyslexia") ||
         answer.includes("down syndrome") ||
         answer.includes("down's syndrome")
-    ) return "Neurodiverse Support";
+    ) return "Neurodiverse";
 
     if (
         answer === "no" ||
@@ -51,7 +48,7 @@ export function detectAccessibility(text) {
         answer.includes("nothing") ||
         answer.includes("i don't") ||
         answer.includes("i do not")
-    ) return "None";
+    ) return ACCESSIBILITY_NONE;
 
-    return "Other";
+    return null;
 }

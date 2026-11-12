@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../../services/api";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useSettings } from "../../context/settingsContext/SettingsContext";
 import VoiceAssistanceToggle from "../../components/VoiceAssistanceToggle";
 import {
@@ -8,6 +8,7 @@ import {
     startAccountVerification,
     getVerificationStatus,
     getCurrentUser,
+    signOutAccount,
     subscribeToAuth,
     sendEmailOtp,
     verifyEmailOtp,
@@ -49,7 +50,8 @@ import {
 import {
     isValidEmail,
     normalizeSouthAfricanMobile,
-    validateSignUpForm
+    validateSignUpForm,
+    getRichfieldStudentEmail
 } from "../utils/validation";
 
 function phoneVerificationError(error, fallback) {
@@ -78,6 +80,7 @@ function phoneVerificationError(error, fallback) {
 
 
 function SignUp() {
+    const navigate = useNavigate();
     const { voiceAssistanceEnabled, locale } = useSettings();
     const speakText = useCallback(
         (text) => voiceAssistanceEnabled
@@ -304,45 +307,57 @@ function SignUp() {
        ========================================= */
 
     function handleInputChange(event) {
+        const { name, value } = event.target;
 
-        const {
-            name,
-            value
-        } = event.target;
-
-
-        setFormData(
-            (previousData) => ({
-
+        setFormData((previousData) => {
+            const nextData = {
                 ...previousData,
-
                 [name]: value
+            };
 
-            })
-        );
+            if (name === "studentNumber") {
+                const previousGenerated = getRichfieldStudentEmail(
+                    previousData.studentNumber
+                );
+                const nextGenerated = getRichfieldStudentEmail(value);
 
+                const emailWasGenerated =
+                    !previousData.email ||
+                    previousData.email.trim().toLowerCase() ===
+                    previousGenerated.toLowerCase();
 
-        /*
-          Remove the error for the field
-          once the user starts correcting it.
-        */
+                if (emailWasGenerated) {
+                    nextData.email = nextGenerated;
+                }
+            }
 
-        setErrors(
-            (previousErrors) => ({
+            return nextData;
+        });
 
-                ...previousErrors,
-
-                [name]: ""
-
-            })
-        );
-
+        setErrors((previousErrors) => ({
+            ...previousErrors,
+            [name]: ""
+        }));
     }
 
-
-    /* =========================================
-       FRONTEND ACCOUNT VALIDATION
-       ========================================= */
+    async function handleExitSignup() {
+        if (verificationBusy) return;
+        setVerificationBusy(true);
+        setVerificationError("");
+        try {
+            phoneVerifier?.clear?.();
+            await signOutAccount();
+            setPhoneConfirmation(null);
+            setPhoneVerifier(null);
+            setVerificationCode("");
+            setVerificationStage(null);
+            navigate("/", { replace: true });
+        } catch (error) {
+            console.error("Could not safely exit UniAble verification:", error);
+            setVerificationError("We could not sign you out. Please try again.");
+            setVerificationBusy(false);
+        }
+    }
 
     async function handleCreateAccount() {
         const validationErrors = validateSignUpForm(formData);
@@ -408,7 +423,7 @@ function SignUp() {
         }
     }
 
-    function handleModuleChange(event) {
+function handleModuleChange(event) {
         const { checked, value } = event.target;
         setFormData((previousData) => ({
             ...previousData,
@@ -960,6 +975,7 @@ function SignUp() {
                             onVerify={handleVerifyCode}
                             onResend={handleResendCode}
                             onBack={() => { setVerificationStage("choose"); setVerificationCode(""); setVerificationError(""); }}
+                            onCancel={handleExitSignup}
                         />
                     ) : mode === "voice" ? (
 
@@ -1063,7 +1079,7 @@ function SignUp() {
                     )}
                 </div>
                 <p className="signup-landing-link" style={{ textAlign: "center", marginTop: 20 }}>
-                    <Link to="/" style={{ textDecoration: "underline", fontWeight: 600 }}>
+                    <Link to="/" onClick={(event) => { if (verificationStage) { event.preventDefault(); void handleExitSignup(); } }} style={{ textDecoration: "underline", fontWeight: 600 }}>
                         Back to landing page
                     </Link>
                 </p>

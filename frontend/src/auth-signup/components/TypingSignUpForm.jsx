@@ -2,20 +2,35 @@ import React from "react";
 import { useState } from "react";
 import accessibilityOptions
   from "../data/accessibilityOptions.json";
+import { RICHFIELD_QUALIFICATIONS } from "../../data/qualifications";
+import { STUDENT_EMAIL_DOMAIN } from "../utils/validation";
 
 
 function TypingSignUpForm({
   formData,
   errors,
   onInputChange,
-  onModuleChange,
-  onReturnToVoice,
-  onCreateAccount
+  onCreateAccount,
+  isCreating
 }) {
   const [showPassword, setShowPassword] = useState(false);
+  const passwordChecks = [
+    ["At least 8 characters", formData.password.length >= 8],
+    ["At least one uppercase letter", /[A-Z]/.test(formData.password)],
+    ["At least one lowercase letter", /[a-z]/.test(formData.password)],
+    ["At least one number", /[0-9]/.test(formData.password)],
+    ["At least one special character", /[^A-Za-z0-9]/.test(formData.password)],
+  ];
 
   return (
-    <div className="typing-signup">
+    <form
+      className="typing-signup"
+      noValidate
+      onSubmit={(event) => {
+        event.preventDefault();
+        onCreateAccount();
+      }}
+    >
 
       <div className="typing-heading">
 
@@ -33,144 +48,67 @@ function TypingSignUpForm({
       <div className="typing-card">
 
 
-        {/* STUDENT DETAILS */}
+        {/* FULL NAME */}
 
         <div className="form-group">
 
-          <label htmlFor="fullName">First and middle names</label>
+          <label htmlFor="fullName">
+            First name(s)
+          </label>
 
           <input
             type="text"
             id="fullName"
             name="fullName"
-            placeholder="Enter your first and middle names"
+
+            placeholder="Enter your first name(s)"
+
             value={formData.fullName}
+
             onChange={onInputChange}
-            autoComplete="given-name"
-            aria-invalid={Boolean(errors.fullName)}
+
+            autoComplete="name"
+
+            aria-invalid={
+              Boolean(errors.fullName)
+            }
           />
 
-          {errors.fullName && <p className="form-error">{errors.fullName}</p>}
+          {errors.fullName && (
+
+            <p className="form-error">
+              {errors.fullName}
+            </p>
+
+          )}
 
         </div>
 
+
+        <div className="form-group"><label htmlFor="surname">Surname</label><input id="surname" name="surname" type="text" autoComplete="family-name" value={formData.surname || ""} onChange={onInputChange} required aria-invalid={Boolean(errors.surname)} />{errors.surname && <p className="form-error">{errors.surname}</p>}</div>
+        <div className="form-group"><label htmlFor="studentNumber">Student number</label><input id="studentNumber" name="studentNumber" inputMode="numeric" pattern="40[123][0-9]{6}" maxLength={9} value={formData.studentNumber || ""} onChange={onInputChange} required aria-invalid={Boolean(errors.studentNumber)} aria-describedby={errors.studentNumber ? "student-number-error" : "student-number-help"} /><small id="student-number-help">Enter exactly nine digits beginning with 401, 402 or 403.</small>{errors.studentNumber && <p id="student-number-error" className="form-error">{errors.studentNumber}</p>}</div>
+
         <div className="form-group">
-          <label htmlFor="surname">Surname</label>
+          <label htmlFor="email">Richfield student email address</label>
           <input
-            type="text"
-            id="surname"
-            name="surname"
-            placeholder="Enter your surname"
-            value={formData.surname}
-            onChange={onInputChange}
-            autoComplete="family-name"
-            aria-invalid={Boolean(errors.surname)}
+            type="email"
+            id="email"
+            name="email"
+            value={formData.email || (formData.studentNumber ? `${formData.studentNumber}@${STUDENT_EMAIL_DOMAIN}` : "")}
+            readOnly
+            aria-readonly="true"
+            autoComplete="email"
+            placeholder="Your student number will generate this address"
+            aria-invalid={Boolean(errors.email)}
           />
-          {errors.surname && <p className="form-error">{errors.surname}</p>}
+          <p className="signup-password-help">UniAble creates this address automatically from your student number. Verification messages will be sent to this address.</p>
+          {errors.email && <p className="form-error">{errors.email}</p>}
         </div>
 
-        <div className="form-group">
-          <label htmlFor="studentNumber">Student number</label>
-          <input
-            type="text"
-            id="studentNumber"
-            name="studentNumber"
-            placeholder="Enter your student number"
-            value={formData.studentNumber}
-            onChange={onInputChange}
-            autoComplete="off"
-            aria-invalid={Boolean(errors.studentNumber)}
-          />
-          {errors.studentNumber && <p className="form-error">{errors.studentNumber}</p>}
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="qualification">IT qualification</label>
-          <select
-            id="qualification"
-            name="qualification"
-            value={formData.qualification}
-            onChange={onInputChange}
-            aria-invalid={Boolean(errors.qualification)}
-          >
-            <option value="">Select your IT qualification</option>
-            <option value="Bachelor of Information Technology">Bachelor of Information Technology</option>
-            <option value="Diploma in Information Technology">Diploma in Information Technology</option>
-            <option value="Higher Certificate in Information Technology">Higher Certificate in Information Technology</option>
-            <option value="Other IT qualification">Other IT qualification</option>
-          </select>
-          {errors.qualification && <p className="form-error">{errors.qualification}</p>}
-        </div>
-
-        {formData.qualification === "Other IT qualification" && (
-          <div className="form-group">
-            <label htmlFor="otherQualification">Qualification name</label>
-            <input
-              type="text"
-              id="otherQualification"
-              name="otherQualification"
-              value={formData.otherQualification}
-              onChange={onInputChange}
-              aria-invalid={Boolean(errors.otherQualification)}
-            />
-            {errors.otherQualification && <p className="form-error">{errors.otherQualification}</p>}
-          </div>
-        )}
-
-        <div className="form-group">
-          <label htmlFor="yearOfStudy">Year of study</label>
-          <select
-            id="yearOfStudy"
-            name="yearOfStudy"
-            value={formData.yearOfStudy}
-            onChange={onInputChange}
-            aria-invalid={Boolean(errors.yearOfStudy)}
-          >
-            <option value="">Select your year</option>
-            <option value="Year 1">Year 1</option>
-            <option value="Year 2">Year 2</option>
-            <option value="Year 3">Year 3</option>
-            <option value="Year 4">Year 4</option>
-            <option value="Postgraduate">Postgraduate</option>
-            <option value="Other">Other</option>
-          </select>
-          {errors.yearOfStudy && <p className="form-error">{errors.yearOfStudy}</p>}
-        </div>
-
-        <fieldset className="form-group signup-module-options" aria-describedby="modules-help">
-          <legend>IT modules</legend>
-          <p id="modules-help">Select every module you are taking.</p>
-          {[
-            "Programming",
-            "Web Development",
-            "Database Systems",
-            "Systems Analysis",
-            "Computer Networks",
-            "Information Security",
-          ].map((module) => (
-            <label className="signup-module-option" key={module}>
-              <input
-                type="checkbox"
-                name="modules"
-                value={module}
-                checked={formData.modules.includes(module)}
-                onChange={onModuleChange}
-              />
-              {module}
-            </label>
-          ))}
-          <label htmlFor="otherModules">Other module names (optional)</label>
-          <input
-            type="text"
-            id="otherModules"
-            name="otherModules"
-            placeholder="Separate module names with commas"
-            value={formData.otherModules}
-            onChange={onInputChange}
-            aria-invalid={Boolean(errors.modules)}
-          />
-          {errors.modules && <p className="form-error">{errors.modules}</p>}
-        </fieldset>
+        <div className="form-group"><label htmlFor="qualification">Richfield qualification</label><select id="qualification" name="qualification" value={formData.qualification || ""} onChange={onInputChange} required><option value="">Choose your qualification</option>{RICHFIELD_QUALIFICATIONS.map(q => <option key={q} value={q}>{q}</option>)}</select>{errors.qualification && <p className="form-error">{errors.qualification}</p>}</div>
+        <div className="form-group"><label htmlFor="dateOfBirth">Date of birth</label><input id="dateOfBirth" name="dateOfBirth" type="date" autoComplete="bday" max={new Date().toISOString().slice(0,10)} value={formData.dateOfBirth || ""} onChange={onInputChange} required aria-invalid={Boolean(errors.dateOfBirth)} />{errors.dateOfBirth && <p className="form-error">{errors.dateOfBirth}</p>}</div>
+        <div className="form-group"><label htmlFor="yearOfStudy">Year of study</label><select id="yearOfStudy" name="yearOfStudy" value={formData.yearOfStudy || ""} onChange={onInputChange} required><option value="">Choose year</option>{["2026","2027","2028","2029","2030","2031"].map(y => <option key={y} value={y}>{y}</option>)}</select>{errors.yearOfStudy && <p className="form-error">{errors.yearOfStudy}</p>}</div>
+<div className="form-group"><label htmlFor="phoneNumber">Cellphone number (optional)</label><input id="phoneNumber" name="phoneNumber" type="tel" autoComplete="tel" placeholder="+27821234567" value={formData.phoneNumber || ""} onChange={onInputChange} aria-invalid={Boolean(errors.phoneNumber)} /><small>Optional contact detail; it is not used for sign-in or account verification. Use international format, for example +27821234567.</small>{errors.phoneNumber && <p className="form-error">{errors.phoneNumber}</p>}</div>
 
         {/* ACCOUNT TYPE */}
 
@@ -272,31 +210,6 @@ function TypingSignUpForm({
 
         {/* EMAIL */}
 
-        <div className="form-group">
-
-          <label htmlFor="email">
-            Email Address
-          </label>
-
-          <input
-            type="email"
-            id="email"
-            name="email"
-            placeholder="your.student@email.com"
-            value={formData.email}
-            onChange={onInputChange}
-            autoComplete="email"
-            aria-invalid={Boolean(errors.email)}
-          />
-          {errors.email && <p className="form-error">{errors.email}</p>}
-          <p className="signup-password-help">
-            Use your Richfield student email if available. Any valid email
-            address is accepted until the official Richfield email suffix is confirmed.
-          </p>
-
-        </div>
-
-
         {/* PASSWORD */}
 
         <div className="form-group">
@@ -327,13 +240,7 @@ function TypingSignUpForm({
               {showPassword ? "Hide password" : "Show password"}
             </button>
           </div>
-          <p id="signup-password-help" className="signup-password-help">
-            Use at least 8 characters, including uppercase and lowercase letters,
-            a number, and a symbol. For example, Renira@12 meets these rules;
-            choose a unique password for your account.{" "}
-            Use your screen reader, keyboard, or password manager if helpful.
-            Do not speak your password into the microphone.
-          </p>
+          <div id="signup-password-help" className="signup-password-help"><strong>Password requirements</strong><ul>{passwordChecks.map(([label, met]) => <li key={label} style={{ color: met ? "#16803c" : "inherit" }} aria-live="polite">{met ? "✓" : "○"} {label}</li>)}</ul><small>For security, do not dictate your password or read it aloud in a shared space.</small></div>
 
           {errors.password && (
 
@@ -345,66 +252,33 @@ function TypingSignUpForm({
 
         </div>
 
-        <div className="form-group">
-          <label htmlFor="confirmPassword">Confirm password</label>
-          <input
-            type="password"
-            id="confirmPassword"
-            name="confirmPassword"
-            placeholder="Re-enter your password"
-            value={formData.confirmPassword}
-            onChange={onInputChange}
-            autoComplete="new-password"
-            aria-invalid={Boolean(errors.confirmPassword)}
-          />
-          {errors.confirmPassword && <p className="form-error">{errors.confirmPassword}</p>}
-        </div>
-
+        <div className="form-group"><label htmlFor="confirmPassword">Confirm password</label><input id="confirmPassword" name="confirmPassword" type={showPassword ? "text" : "password"} autoComplete="new-password" value={formData.confirmPassword || ""} onChange={onInputChange} required aria-invalid={Boolean(errors.confirmPassword)} />{errors.confirmPassword && <p className="form-error">{errors.confirmPassword}</p>}</div>
       </div>
 
 
       <div className="typing-actions">
 
         <button
-          type="button"
+          type="submit"
+          disabled={isCreating}
 
           className="
             action-button
             primary-action
           "
 
-          onClick={
-            onCreateAccount
-          }
         >
 
-          Create Account
+          {isCreating ? "Creating account…" : "Create Account"}
 
         </button>
 
-
-        <button
-          type="button"
-
-          className="
-            action-button
-            secondary-action
-          "
-
-          onClick={
-            onReturnToVoice
-          }
-        >
-          Return to Voice Mode
-
-        </button>
 
       </div>
 
-    </div>
+    </form>
   );
 }
 
 
 export default TypingSignUpForm;
-

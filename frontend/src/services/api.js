@@ -187,4 +187,103 @@ export const api = {
 
   getUniPalCapabilities: () =>
     request("/unipal/capabilities", {}, false),
+
+  // Staff management
+  getStaff: () => request("/auth/staff"),
+
+  provisionStaff: (email, role) =>
+    request("/auth/staff/provision", {
+      method: "POST",
+      body: JSON.stringify({ email, role }),
+    }),
+
+  setStaffAccess: (uid, isActive) =>
+    request(`/auth/staff/${encodeURIComponent(uid)}/access`, {
+      method: "PATCH",
+      body: JSON.stringify({ isActive }),
+    }),
+
+  // Administration
+  getAdminOverview: () => request("/admin/overview"),
+
+  getAdminUsers: (filters = {}) => {
+    const query = new URLSearchParams(
+      Object.entries(filters).filter(([, value]) => value !== "" && value != null)
+    ).toString();
+
+    return request(`/admin/users${query ? `?${query}` : ""}`);
+  },
+
+  setAdminUserAccess: (uid, isActive) =>
+    request(`/admin/users/${encodeURIComponent(uid)}/access`, {
+      method: "PATCH",
+      body: JSON.stringify({ isActive }),
+    }),
+
+  getAdminDepartments: () => request("/admin/departments"),
+
+  createAdminDepartment: (payload) =>
+    request("/admin/departments", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  updateAdminDepartment: (id, payload) =>
+    request(`/admin/departments/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+
+  getAccessibilityApplications: () =>
+    request("/admin/accessibility-applications"),
+
+  reviewAccessibilityApplication: (id, status, reviewNote = "") =>
+    request(`/admin/accessibility-applications/${encodeURIComponent(id)}/review`, {
+      method: "PATCH",
+      body: JSON.stringify({ status, reviewNote }),
+    }),
+
+  getAccessibilityDocumentLink: (id, index) =>
+    request(`/admin/accessibility-applications/${encodeURIComponent(id)}/documents/${index}`),
+
+  getAdminAnalytics: () => request("/admin/analytics"),
+
+  getAdminSettings: () => request("/admin/settings"),
+
+  updateAdminSettings: (payload) =>
+    request("/admin/settings", {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+
+  downloadAdminReport: async (type) => {
+    const user = getCurrentUser();
+
+    if (!user) {
+      throw new Error("Please sign in before downloading reports.");
+    }
+
+    const token = await user.getIdToken();
+    const response = await fetch(
+      `${API_URL}/admin/reports/${encodeURIComponent(type)}.csv`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(
+        data.error || data.message || `Report download failed (${response.status})`
+      );
+    }
+
+    return response.blob();
+  },
+
+  getAdminAuditLogs: (limit = 100) =>
+    request(`/admin/audit?limit=${encodeURIComponent(limit)}`),
+
 };

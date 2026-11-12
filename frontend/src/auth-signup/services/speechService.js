@@ -1,9 +1,8 @@
-import { speak } from "../../services/speechService";
-
 /* =========================================
    UNIABLE SPEECH SERVICE
    ========================================= */
 
+import { isSpeechPaused } from "../../services/speechService";
 
 /*
   Check whether the current browser
@@ -64,7 +63,6 @@ export async function requestMicrophonePermission() {
 */
 
 export function startSpeechRecognition({
-    language = "en-ZA",
     onStart,
     onResult,
     onEnd,
@@ -95,7 +93,11 @@ export function startSpeechRecognition({
         new SpeechRecognition();
 
 
-    recognition.lang = language;
+    /*
+      South African English.
+    */
+
+    recognition.lang = "en-ZA";
 
 
     /*
@@ -105,7 +107,11 @@ export function startSpeechRecognition({
     recognition.continuous = false;
 
 
-    recognition.interimResults = true;
+    /*
+      Only return the final result.
+    */
+
+    recognition.interimResults = false;
 
 
     recognition.maxAlternatives = 1;
@@ -121,12 +127,13 @@ export function startSpeechRecognition({
 
 
     recognition.onresult = (event) => {
-        for (let index = event.resultIndex || 0; index < event.results.length; index += 1) {
-            const result = event.results[index];
-            const transcript = result?.[0]?.transcript?.trim() || "";
-            if (transcript && onResult) {
-                onResult(transcript, result.isFinal);
-            }
+
+        const transcript =
+            event.results[0][0].transcript.trim();
+
+
+        if (onResult) {
+            onResult(transcript);
         }
 
     };
@@ -210,5 +217,42 @@ export function startSpeechRecognition({
    ========================================= */
 
 export function speakText(text) {
-    return speak(text, { locale: "en-ZA" });
+    if (isSpeechPaused()) return;
+
+    if (!("speechSynthesis" in window)) {
+
+        console.warn(
+            "Text-to-speech is not supported by this browser."
+        );
+
+        return;
+
+    }
+
+
+    /*
+      Stop anything UNIABLE may already
+      be saying.
+    */
+
+    window.speechSynthesis.cancel();
+
+
+    const speech =
+        new SpeechSynthesisUtterance(text);
+
+
+    speech.lang = "en-ZA";
+
+    speech.rate = 0.95;
+
+    speech.pitch = 1;
+
+    speech.volume = 1;
+
+
+    window.speechSynthesis.speak(
+        speech
+    );
+
 }

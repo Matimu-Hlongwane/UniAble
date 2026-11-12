@@ -9,6 +9,7 @@ import unipalRoutes from "./routes/unipal.js";
 import authRoutes from "./routes/auth.js";
 import dashboardRoutes from "./routes/dashboard.js";
 import academicsRoutes from "./routes/academics.js";
+import adminRoutes from "./routes/admin.js";
 
 const app = express();
 app.use(cors());
@@ -23,6 +24,7 @@ app.use("/api/unipal", unipalRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/academics", academicsRoutes);
+app.use("/api/admin", adminRoutes);
 
 const port = process.env.PORT || 4000;
 app.listen(port, ()=>console.log(`UniAble API running on http://localhost:${port}`));

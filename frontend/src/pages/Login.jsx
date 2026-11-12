@@ -22,9 +22,9 @@ const ROLE_DESTINATIONS = {
   security: "/staff/security",
 };
 
-const SIGN_IN_TIMEOUT_MS = 30000;
+const SIGN_IN_TIMEOUT_MS = 40000;
 const SIGN_IN_TIMEOUT_MESSAGE =
-  "Sign-in did not finish within 30 seconds. Check your internet connection and Firebase Authentication configuration, then try again.";
+  "Sign-in did not finish within 40 seconds. Check your internet connection and Firebase Authentication configuration, then try again.";
 
 function withTimeout(promise, milliseconds, message) {
   let timeoutId;
@@ -220,7 +220,11 @@ export default function Login() {
       } else if (
         err.code === "auth/account-not-verified"
       ) {
-        setError(err.message);
+        navigate("/signup", {
+          replace: true,
+          state: { resumeVerification: true, email: email.trim() }
+        });
+        return;
       } else {
         setError(
           err.message || "Unable to sign in. Please try again."
