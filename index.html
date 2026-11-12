@@ -1,0 +1,111 @@
+<!-- Intro: -->
+<!-- Landing Page -->
+<!-- Matimu Hlongwane -->
+
+
+<!DOCTYPE html>
+<!-- Declares this document as HTML5. -->
+<html lang="en">
+<!-- Sets English as the page language. -->
+<head>
+  <!-- Defines the character encoding for accessible text rendering. -->
+  <meta charset="UTF-8">
+  <!-- Makes the layout responsive on phones and tablets. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Describes the UniAble product in search results and previews. -->
+  <meta name="description" content="UniAble makes digital access more inclusive through voice-guided learning, accessible registration and flexible ways to interact.">
+  <!-- Sets the browser tab title. -->
+  <title>UniAble | Inclusion Starts With Access</title>
+  <!-- Preconnects to Google Fonts to improve font loading. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <!-- Preconnects to the font asset host. -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Loads the Inter font used throughout the interface. -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Loads the landing page stylesheet. -->
+  <link rel="stylesheet" href="style.css">
+  <!-- Loads the landing page JavaScript after the HTML is parsed. -->
+  <script src="script.js" defer></script>
+</head>
+<!-- Contains all visible landing page content. -->
+<body>
+  <!-- Provides a keyboard-accessible shortcut to the main content. -->
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <!-- Creates the main page container. -->
+  <main id="main-content" class="welcome-screen">
+    <!-- Groups the brand identity and introductory message. -->
+    <header class="brand">
+      <!-- Shows the UniAble symbol in a decorative purple tile. -->
+      <div class="brand-icon" aria-hidden="true">
+        <!-- Uses a simple inclusive-access symbol. -->
+        <svg viewBox="0 0 48 48" role="img" aria-label="Accessibility symbol">
+          <!-- Draws the accessible person and surrounding support shapes. -->
+          <circle cx="24" cy="9" r="4" fill="currentColor"/>
+          <!-- Draws the person's upper body. -->
+          <path d="M14 17h20M24 17v12M24 22l-9 8M24 22l9 8M24 29l-7 10M24 29l7 10" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+        </svg>
+      </div>
+      <!-- Displays the product name. -->
+      <h1>UniAble</h1>
+      <!-- Communicates the product's inclusive purpose. -->
+      <p class="tagline">UniAble |Voice-Guided Landing Page</p>
+    </header>
+
+    <!-- Presents the main ways users can enter UniAble. -->
+    <section class="entry-actions" aria-label="Choose how to use UniAble">
+      <!-- Starts the voice-guided new-student journey. -->
+      <button class="action-button action-primary" id="voice-signup" type="button">
+        <!-- Adds a microphone icon without repeating its meaning to screen readers. -->
+        <span class="button-icon" aria-hidden="true">♬</span>
+        <!-- Labels the primary registration action. -->
+        <span>Voice Sign-Up (New Student)</span>
+      </button>
+
+      <!-- Provides a separate entry point for returning students. -->
+      <button class="action-button action-outline" id="voice-login" type="button">
+        <!-- Adds a speaker symbol to identify the voice option. -->
+        <span class="button-icon" aria-hidden="true">◖</span>
+        <!-- Labels the returning-student action. -->
+        <span>Voice Login (Returning Student)</span>
+      </button>
+
+      <!-- Provides an alternative login route using email. -->
+      <button class="action-button action-outline" id="email-login" type="button">
+        <!-- Labels the email-based option. -->
+        <span>Login with Email</span>
+      </button>
+
+      <!-- Allows visitors to explore without creating an account. -->
+      <button class="action-button action-guest" id="guest-access" type="button">
+        <!-- Labels the guest-access action. -->
+        <span>Continue as Guest</span>
+      </button>
+    </section>
+
+    <!-- Explains the language and voice accessibility features. -->
+    <aside class="information-card" aria-label="Language accessibility">
+      <!-- Shows a globe symbol beside the language message. -->
+      <span class="info-symbol" aria-hidden="true">◎</span>
+      <!-- Communicates the intended multilingual experience. -->
+      <p>11 South African languages · Fully voice-guided for blind and low-vision students</p>
+    </aside>
+
+    <!-- Explains how users will be able to access the voice assistant. -->
+    <aside class="assistant-card" aria-label="Voice assistant information">
+      <!-- States the intended voice-assistant activation phrase. -->
+      <strong>Say “Hey UniAble” anytime</strong>
+      <!-- Clarifies the intended system-wide behaviour. -->
+      <p>Works system-wide, even before you sign up</p>
+    </aside>
+
+    <!-- Announces feedback from actions to assist screen-reader users. -->
+    <p class="status-message" id="status-message" role="status" aria-live="polite"></p>
+
+    <!-- Clarifies the current prototype's limitations. -->
+    <footer class="page-footer">
+      <!-- Explains that account services will be connected in a later phase. -->
+      <p>Designed for access. Built for everyone.</p>
+    </footer>
+  </main>
+</body>
+</html>
