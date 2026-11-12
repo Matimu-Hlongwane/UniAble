@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import VoiceAssistanceToggle from "../../components/VoiceAssistanceToggle";
 import { api } from "../../services/api";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -13,6 +14,7 @@ import {
     cancelPendingRegistration
 } from "../../services/firebaseAuth";
 import { speak } from "../../services/speechService";
+import { useSettings } from "../../context/settingsContext/SettingsContext";
 
 import "../styles/signup.css";
 
@@ -26,9 +28,7 @@ import TypingSignUpForm from "../components/TypingSignUpForm";
 import SignUpSuccess from "../components/SignUpSuccess";
 import AccountVerification from "../components/AccountVerification";
 
-import {
-    startSpeechRecognition
-} from "../services/speechService";
+import { startSpeechRecognition, speakText } from "../services/speechService";
 import {
     isNative,
     isVoiceRecognitionAvailable,
@@ -78,6 +78,7 @@ function phoneVerificationError(error, fallback) {
 function SignUp() {
     const location = useLocation();
     const navigate = useNavigate();
+    const { voiceAssistanceEnabled, locale } = useSettings();
 
     /* =========================================
        PAGE MODE
@@ -175,7 +176,6 @@ function SignUp() {
 
             yearOfStudy: "",
             dateOfBirth: "",
-            confirmPassword: "",
             accessibility: "",
 
             additionalNeeds: "",
@@ -297,24 +297,24 @@ function SignUp() {
     function handleInputChange(event) {
         const { name, value } = event.target;
 
-        setFormData((previousData) => {
-            const nextData = {
-                ...previousData,
-                [name]: value
-            };
-
-            if (name === "studentNumber") {
-                const previousGenerated = getRichfieldStudentEmail(
-                    previousData.studentNumber
-                );
-                const nextGenerated = getRichfieldStudentEmail(value);
-
         setFormData((previousData) => ({
             ...previousData,
-            [name]: ["fullName", "surname"].includes(name) ? capitalizePersonName(value) : value,
+            [name]: ["fullName", "surname"].includes(name)
+                ? capitalizePersonName(value)
+                : value,
             ...(name === "studentNumber"
-                ? { email: value.trim() ? `${value.trim()}@${STUDENT_EMAIL_DOMAIN}` : "" }
-                : {}),
+                ? {
+                    email: value.trim()
+                        ? `${value.trim()}@${STUDENT_EMAIL_DOMAIN}`
+                        : ""
+                }
+                : {})
+        }));
+
+        setErrors((previousErrors) => ({
+            ...previousErrors,
+            [name]: "",
+            general: ""
         }));
     }
 

@@ -1,4 +1,4 @@
-﻿import { Capacitor } from "@capacitor/core";
+import { Capacitor } from "@capacitor/core";
 import { SpeechRecognition } from "@capacitor-community/speech-recognition";
 
 const isNative = () => Capacitor.isNativePlatform();
@@ -22,25 +22,30 @@ export async function requestVoicePermission() {
   return permission.speechRecognition === "granted";
 }
 
-function startBrowserVoiceRecognition({ language, onResult, onError, onEnd }) {
+function startBrowserVoiceRecognition({
+  language = "en-ZA",
+  onResult,
+  onError,
+  onEnd,
+}) {
   const Recognition =
     window.SpeechRecognition || window.webkitSpeechRecognition;
 
   if (!Recognition) {
     throw new Error(
-      "This browser does not support speech recognition. Try the UniAble Android app or a supported browser."
+      "This browser does not support speech recognition. Try a supported browser or the UniAble mobile app."
     );
   }
 
   const recognition = new Recognition();
-  recognition.lang = language || "en-ZA";
+
+  recognition.lang = language;
   recognition.continuous = false;
   recognition.interimResults = true;
   recognition.maxAlternatives = 5;
 
   let ended = false;
   let finalSent = false;
-  let latestInterim = "";
 
   const finish = () => {
     if (ended) return;
@@ -69,28 +74,22 @@ function startBrowserVoiceRecognition({ language, onResult, onError, onEnd }) {
           });
         }
       }
-
-      if (!result.isFinal && result[0]?.transcript) {
-        latestInterim = String(result[0].transcript).trim();
-      }
     }
 
-    const finalResult = [...candidates].sort(
+    const best = candidates.sort(
       (a, b) => b.confidence - a.confidence
     )[0];
 
-    if (
-      finalResult &&
-      !finalSent &&
-      event.results[event.results.length - 1]?.isFinal
-    ) {
+    const latestResult = event.results[event.results.length - 1];
+
+    if (best && latestResult?.isFinal && !finalSent) {
       finalSent = true;
-      onResult?.(finalResult.transcript, true, {
-        confidence: finalResult.confidence,
-        alternatives: candidates.map((candidate) => candidate.transcript),
+      onResult?.(best.transcript, true, {
+        confidence: best.confidence,
+        alternatives: candidates.map((item) => item.transcript),
       });
-    } else if (latestInterim) {
-      onResult?.(latestInterim, false, { interim: true });
+    } else if (best) {
+      onResult?.(best.transcript, false, { interim: true });
     }
   };
 
@@ -101,7 +100,7 @@ function startBrowserVoiceRecognition({ language, onResult, onError, onEnd }) {
           "Microphone permission is required. Allow microphone access in your browser or device settings, then reload UniAble."
         )
       );
-    } else if (event.error !== "no-speech" && event.error !== "aborted") {
+    } else if (!["no-speech", "aborted"].includes(event.error)) {
       onError?.(new Error(`Voice recognition issue: ${event.error}`));
     }
 
@@ -117,27 +116,10 @@ function startBrowserVoiceRecognition({ language, onResult, onError, onEnd }) {
   recognition.onend = finish;
 
   try {
-    const result = await SpeechRecognition.getSupportedLanguages();
-    const supported = (result.languages || []).map(String);
-
-    if (!supported.length) return preferredLanguage || fallback;
-
-    const exact = supported.find(
-      (item) => item.toLowerCase() === String(preferredLanguage).toLowerCase()
-    );
-
-    if (exact) return exact;
-
-    const base = String(preferredLanguage).split("-")[0].toLowerCase();
-    const sameLanguage = supported.find(
-      (item) => item.split("-")[0].toLowerCase() === base
-    );
-
-    if (sameLanguage) return sameLanguage;
-
-    return supported.find((item) => item.toLowerCase() === fallback.toLowerCase()) || supported[0];
-  } catch {
-    return preferredLanguage || fallback;
+    recognition.start();
+  } catch (error) {
+    finish();
+    throw error;
   }
 
   return async () => {
@@ -153,7 +135,35 @@ function startBrowserVoiceRecognition({ language, onResult, onError, onEnd }) {
   };
 }
 
-// Keep the historical name for compatibility with existing components.
+async function getNativeLanguage(preferredLanguage) {
+  const requested = String(preferredLanguage || "en-ZA");
+
+  try {
+    const result = await SpeechRecognition.getSupportedLanguages();
+    const supported = (result.languages || []).map(String);
+
+    if (!supported.length) return requested;
+
+    const exact = supported.find(
+      (item) => item.toLowerCase() === requested.toLowerCase()
+    );
+
+    if (exact) return exact;
+
+    const base = requested.split("-")[0].toLowerCase();
+
+    return (
+      supported.find(
+        (item) => item.split("-")[0].toLowerCase() === base
+      ) ||
+      supported.find((item) => item.toLowerCase() === "en-za") ||
+      supported[0]
+    );
+  } catch {
+    return requested;
+  }
+}
+
 export async function startNativeVoiceRecognition({
   language = "en-ZA",
   onResult,
@@ -169,123 +179,113 @@ export async function startNativeVoiceRecognition({
     });
   }
 
-  console.info("[UniAble Voice] Checking recognition availability.");
   const available = await isVoiceRecognitionAvailable();
-  console.info("[UniAble Voice] Recognition available:", available);
 
   if (!available) {
     throw new Error("Voice recognition is not available on this device.");
   }
 
-  console.info("[UniAble Voice] Requesting speech permission.");
   const granted = await requestVoicePermission();
-  console.info("[UniAble Voice] Speech permission granted:", granted);
 
   if (!granted) {
-    throw new Error(
-      "Microphone or speech recognition permission was denied."
-    );
+    throw new Error("Microphone or speech recognition permission was denied.");
   }
 
   try {
-    console.info("[UniAble Voice] Checking existing listening session.");
     const state = await SpeechRecognition.isListening();
-    if (state.listening) await SpeechRecognition.stop();
+
+    if (state.listening) {
+      await SpeechRecognition.stop();
+    }
   } catch {
     // No active native recognition session needs stopping.
   }
 
-
   const recognitionLanguage = await getNativeLanguage(language);
+
   let ended = false;
+  let finalSent = false;
   let latestText = "";
   let listeningTimeout;
+  let resultListener;
+  let stateListener;
 
   const removeListeners = async () => {
-    window.clearTimeout(listeningTimeout);
-    await Promise.allSettled([resultListener.remove(), stateListener.remove()]);
+    globalThis.clearTimeout(listeningTimeout);
+
+    await Promise.allSettled(
+      [resultListener, stateListener]
+        .filter(Boolean)
+        .map((listener) => listener.remove())
+    );
   };
 
-  const resultListener = await SpeechRecognition.addListener("partialResults", (data) => {
-    const matches = Array.isArray(data?.matches) ? data.matches : [];
-    const text = String(matches[0] || "").trim();
-    if (!text || ended) return;
-    latestText = text;
-    onResult?.(text, false);
-  });
+  const finish = async (deliverFinal = true) => {
+    if (ended) return;
 
-  const stateListener = await SpeechRecognition.addListener("listeningState", (data) => {
-    if (data?.status === "stopped" && !ended) {
-      ended = true;
-      if (latestText) onResult?.(latestText, true);
-      onEnd?.();
-      void removeListeners();
+    ended = true;
+    globalThis.clearTimeout(listeningTimeout);
+
+    if (deliverFinal && latestText && !finalSent) {
+      finalSent = true;
+      onResult?.(latestText, true);
     }
-  } catch {
-    // There may not be an active recognition session.
-  }
 
-  let recognitionLanguage = language || "en-ZA";
+    onEnd?.();
+    await removeListeners();
+  };
 
   try {
-    console.info("[UniAble Voice] Loading supported languages.");
-    const result = await SpeechRecognition.getSupportedLanguages();
-    console.info("[UniAble Voice] Supported languages:", result?.languages);
-    const supported = (result.languages || []).map(String);
+    resultListener = await SpeechRecognition.addListener(
+      "partialResults",
+      (data) => {
+        const matches = Array.isArray(data?.matches) ? data.matches : [];
+        const text = String(matches[0] || "").trim();
 
-    if (supported.length) {
-      const exact = supported.find(
-        (item) =>
-          item.toLowerCase() === recognitionLanguage.toLowerCase()
+        if (!text || ended) return;
+
+        latestText = text;
+        onResult?.(text, false);
+      }
+    );
+
+    stateListener = await SpeechRecognition.addListener(
+      "listeningState",
+      (data) => {
+        if (data?.status === "stopped") {
+          void finish(true);
+        }
+      }
+    );
+
+    listeningTimeout = globalThis.setTimeout(() => {
+      if (ended) return;
+
+      onError?.(
+        new Error("Voice recognition timed out. Please try again.")
       );
 
-      const base = recognitionLanguage.split("-")[0].toLowerCase();
-
-      recognitionLanguage =
-        exact ||
-        supported.find(
-          (item) => item.split("-")[0].toLowerCase() === base
-        ) ||
-        supported.find((item) => item.toLowerCase() === "en-za") ||
-        supported[0];
-    }
-  } catch {
-    // Continue with the requested locale if language lookup fails.
-  }
-
-  let ended = false;
-
-  const finish = () => {
-    if (ended) return;
-    ended = true;
-    onEnd?.();
-  };
-
-  // In non-partial mode, Android resolves this promise with the final
-  // recognised matches instead of sending partialResults events.
-  let startPromise;
-
-  try {
-    console.info("[UniAble Voice] Calling native SpeechRecognition.start().", recognitionLanguage);
-    startPromise = SpeechRecognition.start({
-      language: recognitionLanguage,
-      maxResults: 5,
-      partialResults: false,
-      popup: false,
-    });
-  } catch (error) {
-    ended = true;
-    await removeListeners();
-    onError?.(error);
-    throw error;
-  }
-
-  if (!ended) {
-    listeningTimeout = window.setTimeout(() => {
-      if (ended) return;
-      onError?.(new Error("Voice recognition timed out. Please try again."));
       void stopRecognition();
     }, 20000);
+
+    const startResult = await SpeechRecognition.start({
+      language: recognitionLanguage,
+      maxResults: 5,
+      partialResults: true,
+      popup: false,
+    });
+
+    const matches = Array.isArray(startResult?.matches)
+      ? startResult.matches
+      : [];
+
+    if (matches.length && !latestText && !ended) {
+      latestText = String(matches[0] || "").trim();
+    }
+  } catch (error) {
+    await finish(false);
+    onError?.(error);
+    throw error;
   }
 
   async function stopRecognition() {
@@ -296,12 +296,7 @@ export async function startNativeVoiceRecognition({
     } catch (error) {
       console.warn("Speech recognition stop failed.", error);
     } finally {
-      if (!ended) {
-        ended = true;
-        if (latestText) onResult?.(latestText, true);
-        onEnd?.();
-      }
-      await removeListeners();
+      await finish(true);
     }
   }
 
@@ -309,4 +304,3 @@ export async function startNativeVoiceRecognition({
 }
 
 export { isNative };
-

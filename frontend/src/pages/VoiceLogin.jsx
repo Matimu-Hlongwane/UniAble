@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useSettings } from "../context/settingsContext/SettingsContext";
+import VoiceAssistanceToggle from "../components/VoiceAssistanceToggle";
 import { Link } from "react-router-dom";
 import { Accessibility, Mic, MicOff, Volume2 } from "lucide-react";
 import { SpeechRecognition } from "@capacitor-community/speech-recognition";
@@ -132,6 +134,7 @@ function nativeRecognizeEmail(onTranscript, setStopListening) {
 }
 
 export default function VoiceLogin() {
+  const { voiceAssistanceEnabled, locale } = useSettings();
   const emailSuffix = `@${STUDENT_EMAIL_DOMAIN}`;
   const [email, setEmail] = useState(emailSuffix);
   const [emailConfirmation, setEmailConfirmation] = useState("");
@@ -146,6 +149,7 @@ export default function VoiceLogin() {
   const manualEditRef = useRef(false);
   const stopListeningRef = useRef(null);
   const cancelCaptureRef = useRef(false);
+  const mountedRef = useRef(false);
 
   const instructionText = "Welcome to UniAble voice sign-in. Activate the microphone and say the student number part of your Richfield email. The email domain is already filled in, so you do not need to say the dots. The recognized number will appear in the email field as you speak, and you can type or correct it while listening. Review and confirm the complete email address before a sign-in link is sent. Open the link in your email on this device, then confirm the same email address on the sign-in page.";
 
@@ -153,8 +157,8 @@ export default function VoiceLogin() {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
-      browserRecognitionRef.current?.abort?.();
-      void nativeStopRef.current?.();
+      void stopListeningRef.current?.();
+      stopListeningRef.current = null;
     };
   }, []);
 
@@ -276,16 +280,18 @@ export default function VoiceLogin() {
   }
 
   async function stopListening() {
-    if (isNative()) {
-      await nativeStopRef.current?.();
-      return;
-    }
-
     try {
-      browserRecognitionRef.current?.stop();
+      const stop = stopListeningRef.current;
+      if (typeof stop === "function") {
+        await stop();
+      } else {
+        setListening(false);
+      }
     } catch (stopError) {
       console.warn("Could not stop email voice recognition:", stopError);
       setListening(false);
+    } finally {
+      stopListeningRef.current = null;
     }
   }
 

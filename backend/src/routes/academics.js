@@ -47,11 +47,6 @@ router.get("/modules", async (req, res) => {
     }
 
     let query = db().collection("modules");
-    if (role === "lecturer") query = query.where("lecturerId", "==", uid);
-    const snapshot = await query.get();
-    let modules = snapshot.docs
-      .map(doc => ({ id: doc.id, ...doc.data() }))
-      .filter(item => isSupportedQualification(item.qualification));
 
     if (role === "lecturer") {
       query = query.where("lecturerId", "==", uid);
@@ -63,12 +58,11 @@ router.get("/modules", async (req, res) => {
 
     const snapshot = await query.get();
 
-    res.json({
-      modules: snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      })),
-    });
+    const modules = snapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(item => isSupportedQualification(item.qualification));
+
+    res.json({ modules });
   } catch (error) {
     console.error("Get modules:", error.message);
     res.status(500).json({ error: "Could not load modules." });
@@ -79,7 +73,14 @@ router.post("/modules", requireRole("admin", "lecturer"), async (req, res) => {
   try {
     const uid = req.firebaseToken.uid;
     const role = req.userRole;
-    const { code, name, description = "", lecturerId = "", studentIds = [] } = req.body;
+    const {
+      code,
+      name,
+      qualification,
+      description = "",
+      lecturerId = "",
+      studentIds = [],
+    } = req.body;
     const assignedLecturerId = role === "lecturer" ? uid : String(lecturerId).trim();
 
     if (!code?.trim() || !name?.trim() || !Array.isArray(studentIds) || !isSupportedQualification(qualification)) {
@@ -91,6 +92,7 @@ router.post("/modules", requireRole("admin", "lecturer"), async (req, res) => {
     const module = {
       code: code.trim().toUpperCase(),
       name: name.trim(),
+      qualification: String(qualification).trim(),
       description: String(description).trim(),
       lecturerId: assignedLecturerId,
       studentIds: [...new Set(studentIds.map(String))],

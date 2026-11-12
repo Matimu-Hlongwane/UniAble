@@ -235,6 +235,8 @@ export async function sendPhoneOtp(phoneNumber, recaptchaContainerId) {
     throw error;
   }
 
+}
+
 export async function verifyPhoneOtp(confirmation, code) {
   if (!confirmation) {
     throw new Error("Please request an OTP first.");
@@ -627,10 +629,10 @@ export async function createAccountWithEmailPassword(
     throw new Error("Firebase is not configured. Check the frontend environment variables.");
   }
 
-  const studentNumber = String(studentProfile.studentNumber || "").trim();
+  const studentNumber = String(studentDetails.studentNumber || "").trim();
   const normalizedEmail = String(email || "").trim().toLowerCase();
   const expectedEmail = `${studentNumber}@${STUDENT_EMAIL_DOMAIN}`;
-  const institutionalEmail = String(studentProfile.institutionalEmail || normalizedEmail).trim().toLowerCase();
+  const institutionalEmail = String(studentDetails.institutionalEmail || normalizedEmail).trim().toLowerCase();
   const selectedAccessibility = accessibility?.trim() || ACCESSIBILITY_NONE;
 
   if (!isValidStudentNumber(studentNumber) || normalizedEmail !== expectedEmail || institutionalEmail !== expectedEmail) {
@@ -652,7 +654,6 @@ export async function createAccountWithEmailPassword(
     });
   }
 
-  const selectedAccessibility = accessibility?.trim() || "None";
 
   const voiceFirstEnabled =
     selectedAccessibility === "Visual Impairment";
