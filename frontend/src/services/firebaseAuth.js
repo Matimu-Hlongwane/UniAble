@@ -34,7 +34,25 @@ import {
   doc,
   setDoc,
   getDoc,
+  collection,
+  getDocs,
+  query,
+  where,
+  updateDoc,
+  arrayUnion,
 } from "firebase/firestore";
+
+import {
+  ACCESSIBILITY_NONE,
+  ACCESSIBILITY_CATEGORIES,
+  normalizeAccessibilityCategory,
+  isSupportedAccessibilityCategory,
+} from "../data/accessibilityCategories";
+
+import {
+  STUDENT_EMAIL_DOMAIN,
+  isValidStudentNumber,
+} from "../auth-signup/utils/validation";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -66,6 +84,10 @@ if (firebaseConfigured) {
 
 export function getCurrentUser() {
   return auth?.currentUser || null;
+}
+
+export function getFirebaseApp() {
+  return app;
 }
 
 export async function getCurrentUserRole(user = auth?.currentUser) {
@@ -990,3 +1012,235 @@ export async function completePasswordlessSignIn(
 }
 
 export { auth };
+
+/* -------------------------------------------------------
+   ACCESSIBILITY APPLICATIONS
+------------------------------------------------------- */
+
+const ACCESSIBILITY_UPLOAD_MAX_BYTES = 10 * 1024 * 1024;
+const ACCESSIBILITY_UPLOAD_TYPES = new Set([
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+]);
+
+function safeUploadName(name) {
+  return String(name || "document")
+    .normalize("NFKD")
+    .replace(/[^a-zA-Z0-9._-]/g, "_")
+    .slice(0, 100) || "document";
+}
+
+function requireFirestore() {
+  requireAuth();
+  if (!db) throw new Error("Firebase Firestore is not configured.");
+}
+
+function requireFirestoreAndStorage() {
+  requireFirestore();
+  if (!storage) {
+    throw new Error("Firebase Storage is not configured before submitting documents.");
+  }
+}
+
+export async function submitAccessibilityApplication({
+  category,
+  description,
+  accommodations = [],
+  files = [],
+}) {
+  const user = requireAuth();
+  requireFirestoreAndStorage();
+
+  const role = await getCurrentUserRole(user);
+  if (role !== "student") {
+    throw new Error("Only student accounts can submit accessibility applications.");
+  }
+
+  if (!ACCESSIBILITY_CATEGORIES.includes(String(category || "").trim())) {
+    throw new Error("Choose one of the supported accessibility categories.");
+  }
+
+  if (!description || String(description).trim().length < 10) {
+    throw new Error("Please describe the support you need using at least 10 characters.");
+  }
+
+  if (!Array.isArray(files) || files.length === 0) {
+    throw new Error("Attach at least one supporting document.");
+  }
+
+  for (const file of files) {
+    if (!ACCESSIBILITY_UPLOAD_TYPES.has(file.type)) {
+      throw new Error(`${file.name} is not supported. Upload a PDF, JPG or PNG file.`);
+    }
+    if (file.size > ACCESSIBILITY_UPLOAD_MAX_BYTES) {
+      throw new Error(`${file.name} is larger than 10 MB.`);
+    }
+  }
+
+  const applicationId = crypto.randomUUID();
+  const documents = [];
+
+  for (const file of files) {
+    const documentId = crypto.randomUUID();
+    const storagePath =
+      `accessibilityApplications/${user.uid}/${applicationId}/${documentId}-${safeUploadName(file.name)}`;
+
+    const fileRef = ref(storage, storagePath);
+    await uploadBytes(fileRef, file, { contentType: file.type });
+
+    documents.push({
+      id: documentId,
+      name: file.name,
+      contentType: file.type,
+      size: file.size,
+      storagePath,
+      uploadedAt: new Date().toISOString(),
+    });
+  }
+
+  const application = {
+    id: applicationId,
+    studentUid: user.uid,
+    studentName: user.displayName || user.email || "Student",
+    studentEmail: user.email || "",
+    category: normalizeAccessibilityCategory(category),
+    description: String(description).trim(),
+    requestedAccommodations: Array.isArray(accommodations) ? accommodations : [],
+    accommodations: [],
+    documents,
+    status: "pending",
+    decisionNote: null,
+    submittedAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  await setDoc(doc(db, "registrations", applicationId), application);
+  return application;
+}
+
+export async function getMyAccessibilityApplications(user = auth?.currentUser) {
+  if (!user) throw new Error("Please sign in to view your applications.");
+
+  requireFirestore();
+
+  const snapshot = await getDocs(query(
+    collection(db, "registrations"),
+    where("studentUid", "==", user.uid)
+  ));
+
+  return snapshot.docs.map((item) => ({
+    id: item.id,
+    ...item.data(),
+    category: normalizeAccessibilityCategory(item.data().category),
+  })).sort((a, b) =>
+    String(b.submittedAt || "").localeCompare(String(a.submittedAt || ""))
+  );
+}
+
+export async function getAccessibilityApplications() {
+  const user = requireAuth();
+  requireFirestore();
+
+  if (await getCurrentUserRole(user) !== "disability_office") {
+    throw new Error("Only the Disability Office can review accessibility applications.");
+  }
+
+  const snapshot = await getDocs(collection(db, "registrations"));
+
+  return snapshot.docs.map((item) => ({
+    id: item.id,
+    ...item.data(),
+    category: normalizeAccessibilityCategory(item.data().category),
+  })).sort((a, b) =>
+    String(b.submittedAt || "").localeCompare(String(a.submittedAt || ""))
+  );
+}
+
+export async function getAccessibilityDocumentUrl(applicationId, storagePath) {
+  const user = requireAuth();
+  requireFirestoreAndStorage();
+
+  const snapshot = await getDoc(doc(db, "registrations", applicationId));
+
+  if (!snapshot.exists()) {
+    throw new Error("The accessibility application could not be found.");
+  }
+
+  const application = snapshot.data();
+  const role = await getCurrentUserRole(user);
+
+  if (role !== "disability_office" && application.studentUid !== user.uid) {
+    throw new Error("You are not permitted to open this supporting document.");
+  }
+
+  const documentRecord = (application.documents || []).find(
+    (item) => item.storagePath === storagePath
+  );
+
+  if (!documentRecord) {
+    throw new Error("The document does not belong to this application.");
+  }
+
+  if (role === "disability_office") {
+    await updateDoc(doc(db, "registrations", applicationId), {
+      documentViewLog: arrayUnion({
+        documentId: documentRecord.id,
+        viewedBy: user.uid,
+        viewedAt: new Date().toISOString(),
+      }),
+    });
+  }
+
+  return getDownloadURL(ref(storage, storagePath));
+}
+
+export async function reviewAccessibilityApplication(
+  applicationId,
+  { decision, note = "", accommodations = [] }
+) {
+  const user = requireAuth();
+  requireFirestore();
+
+  if (await getCurrentUserRole(user) !== "disability_office") {
+    throw new Error("Only the Disability Office can make application decisions.");
+  }
+
+  if (!["approved", "needs_info", "rejected"].includes(decision)) {
+    throw new Error("Choose a valid application decision.");
+  }
+
+  if (["needs_info", "rejected"].includes(decision) && String(note).trim().length < 5) {
+    throw new Error("Add a note of at least five characters for this decision.");
+  }
+
+  const applicationRef = doc(db, "registrations", applicationId);
+  const existing = await getDoc(applicationRef);
+
+  if (!existing.exists()) {
+    throw new Error("This application no longer exists.");
+  }
+
+  if (!["pending", "needs_info"].includes(existing.data().status)) {
+    throw new Error("This application has already been reviewed.");
+  }
+
+  const timestamp = new Date().toISOString();
+
+  await updateDoc(applicationRef, {
+    status: decision,
+    decisionNote: String(note).trim() || null,
+    accommodations: decision === "approved" ? accommodations : [],
+    reviewedBy: user.uid,
+    reviewedAt: timestamp,
+    reviewHistory: arrayUnion({
+      decision,
+      note: String(note).trim() || null,
+      reviewerUid: user.uid,
+      reviewedAt: timestamp,
+    }),
+    updatedAt: timestamp,
+  });
+
+  return { ok: true };
+}

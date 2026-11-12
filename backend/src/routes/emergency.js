@@ -2,6 +2,7 @@
 import crypto from "node:crypto";
 import { getAdminDb } from "../services/firebase.js";
 import { requireFirebaseUser, requireRole } from "../middleware/authMiddleware.js";
+import { sendEmergencyNotifications } from "../services/emergencyNotifications.js";
 
 const router = Router();
 router.use(requireFirebaseUser);
@@ -35,10 +36,30 @@ router.post("/sos", requireRole("student"), async (req, res) => {
     await ref.set(alert);
     console.log("SOS alert stored:", ref.id);
 
+    let delivery = {
+      status: "failed",
+      targetUsers: 0,
+      registeredDevices: 0,
+      sent: 0,
+      failed: 0
+    };
+
+    try {
+      const studentSnapshot = await getAdminDb().collection("users").doc(uid).get();
+      const studentProfile = studentSnapshot.exists ? studentSnapshot.data() : {};
+      delivery = await sendEmergencyNotifications({
+        alertId: ref.id,
+        alert,
+        studentProfile
+      });
+    } catch (notificationError) {
+      console.error("SOS notification dispatch failed:", notificationError.message);
+    }
+
     return res.status(201).json({
-      message: "SOS alert recorded and available in the UniAble admin dashboard. No push notification was sent.",
+      message: "SOS alert recorded. Notification delivery status is included.",
       alert: { id: ref.id, ...alert },
-      notified: []
+      delivery
     });
   } catch (error) {
     console.error("Create SOS failed:", error.message);

@@ -68,7 +68,7 @@
   position: absolute;
   z-index: -2;
   inset: 0;
-  background-image: url("https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=1400&q=70");
+  background-image: url("https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=2200&q=85");
   background-position: center 48%;
   background-size: cover;
   content: "";
@@ -676,7 +676,7 @@
 @media (max-width: 640px) {
   .landing-hero {
     min-height: auto;
-    padding: env(safe-area-inset-top) 20px 0;
+    padding: 0 20px;
   }
 
   .landing-hero::before {
@@ -770,10 +770,6 @@
     min-height: 48px;
     padding: 11px 9px;
     font-size: 12px;
-  }
-
-  .landing-action-primary {
-    grid-column: 1 / -1;
   }
 
   .landing-hero-note {

@@ -230,6 +230,36 @@ export function getSpeechDiagnostics() {
 
 let session = null;
 let speechRequestId = 0;
+const speechPausedStorageKey = "uniableSpeechPausedForSession";
+
+function readSpeechPausedState() {
+  try {
+    return typeof window !== "undefined" &&
+      window.sessionStorage.getItem(speechPausedStorageKey) === "true";
+  } catch {
+    return false;
+  }
+}
+
+let speechPaused = readSpeechPausedState();
+
+export function isSpeechPaused() {
+  return speechPaused;
+}
+
+export function setSpeechPaused(paused) {
+  speechPaused = Boolean(paused);
+  try {
+    window.sessionStorage.setItem(speechPausedStorageKey, String(speechPaused));
+  } catch (error) {
+    console.warn("Could not save the temporary spoken-output preference:", error);
+  }
+  if (speechPaused) stopSpeaking();
+  window.dispatchEvent(new CustomEvent("uniable-speech-pause-change", {
+    detail: { paused: speechPaused },
+  }));
+  return speechPaused;
+}
 
 function endSession(target, error) {
   if (!target || target.ended) return;
@@ -261,10 +291,6 @@ export function stopSpeaking() {
   }
 }
 
-export function isSpeechPaused() {
-  return typeof window !== "undefined" &&
-    Boolean(window.speechSynthesis?.paused);
-}
 
 export function pauseSpeaking() {
   if (!session || session.engine !== "web") return false;
@@ -296,7 +322,8 @@ export function resumeSpeaking() {
  * unavailable, in which case nothing was spoken and the UI should show text only.
  * onStart / onEnd / onError are optional callbacks; onEnd fires on finish or stop.
  */
-export async function speak(text, { locale = "en-ZA", pitch = 1, onStart, onEnd, onError } = {}) {
+export async function speak(text, { locale = "en-ZA", pitch = 1, onStart, onEnd, onError, force = false } = {}) {
+  if (speechPaused && !force) return { started: false, reason: "paused" };
   stopSpeaking();
   const requestId = ++speechRequestId;
 

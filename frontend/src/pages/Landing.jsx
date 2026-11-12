@@ -1,33 +1,27 @@
-import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Accessibility,
   Mic,
+  Keyboard,
   Volume2,
   Mail,
   Eye,
   Ear,
   Accessibility as MobilityIcon,
   MessageCircle,
-  Palette,
   Brain,
+
   Users,
   Globe,
+
   MapPin,
   CalendarDays,
+
   Menu,
   X,
 } from "lucide-react";
-import {
-  speak,
-} from "../services/speechService";
-import { useSettings } from "../context/settingsContext/SettingsContext";
-import VoiceCommandButton from "../components/VoiceCommandButton";
-import VoiceAssistanceToggle from "../components/VoiceAssistanceToggle";
 import "./LandingPrototype.css";
-
-const LANDING_WELCOME =
-  "Welcome to UniAble. Choose voice sign-up, voice login, or email login to get started. Touch or press a key to pause; I will continue after three seconds of inactivity.";
 
 const dashboardTypes = [
   {
@@ -59,54 +53,13 @@ const dashboardTypes = [
     features: ["Voice alternatives", "Quick responses", "Communication tools"],
   },
   {
-    title: "Colour vision",
-    description: "For students with colour-vision deficiencies: use strong contrast, readable labels and clear visual indicators so information is not communicated through colour alone.",
-    icon: Palette,
-    className: "colour",
-    features: ["Colour filters", "Contrast options", "Clear visual labels"],
-  },
-  {
     title: "Neurodiverse",
-    description: "For students with dyslexia, ADHD, autism and Down syndrome: access reading support, text-to-speech, structured tasks, predictable navigation, clear instructions and adjustable layouts.",
+    description: "For students with neurodiverse access needs: use reading support, text-to-speech, structured tasks, predictable navigation, clear instructions and adjustable layouts.",
     icon: Brain,
     className: "neuro",
     features: ["Reduced distractions", "Reading support", "Personalised layout"],
   },
-  {
-    title: "Dyslexia",
-    description: "Support reading and understanding with text-to-speech, read-aloud content, clear text presentation, adjustable reading options and AI-generated summaries.",
-    icon: Brain,
-    className: "dyslexia",
-    features: ["Text-to-speech", "Readable content options", "AI summaries"],
-  },
-  {
-    title: "ADHD",
-    description: "Help students organise their studies with structured tasks, reminders, clear priorities, manageable information and progress tracking.",
-    icon: Brain,
-    className: "adhd",
-    features: ["Task organisation", "Study reminders", "Progress tracking"],
-  },
-  {
-    title: "Autism",
-    description: "Offer a predictable and customisable experience through consistent navigation, clear instructions, reduced visual distractions and personal settings.",
-    icon: Brain,
-    className: "autism",
-    features: ["Consistent layouts", "Clear instructions", "Reduced distractions"],
-  },
-  {
-    title: "Down syndrome",
-    description: "Make learning and campus tasks easier to follow with simple navigation, step-by-step guidance, visual information and read-aloud support.",
-    icon: Brain,
-    className: "down-syndrome",
-    features: ["Step-by-step guidance", "Visual support", "Read-aloud tools"],
-  },
-  {
-    title: "Multiple disabilities",
-    description: "Allow students with more than one disability to combine accessibility tools and personalise settings to suit their individual requirements.",
-    icon: Brain,
-    className: "multiple",
-    features: ["Combined accessibility tools", "Personalised settings", "Flexible support"],
-  },];
+];
 
 function DashboardPreview({ item }) {
   const Icon = item.icon;
@@ -132,82 +85,6 @@ function DashboardPreview({ item }) {
 }
 export default function Landing() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [voiceStatus, setVoiceStatus] = useState("");
-  const { voiceAssistanceEnabled, locale } = useSettings();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    let active = true;
-
-    async function playWelcome() {
-      try {
-        const result = await speak(LANDING_WELCOME, {
-          locale: locale || "en-ZA",
-          onStart: () => {
-            if (active) setVoiceStatus("Welcome message is playing.");
-          },
-          onEnd: () => {
-            if (active) setVoiceStatus("");
-          },
-        });
-
-        if (active && !result.started) {
-          setVoiceStatus(
-            "Spoken welcome is unavailable. Use the Hear welcome button or your screen reader."
-          );
-        }
-      } catch (error) {
-        console.error("Landing page voice welcome failed:", error);
-        if (active) {
-          setVoiceStatus(
-            "Spoken welcome could not start. Use the Hear welcome button or your screen reader."
-          );
-        }
-      }
-    }
-
-    if (!voiceAssistanceEnabled) return undefined;
-    const startTimer = window.setTimeout(playWelcome, 100);
-
-    return () => {
-      active = false;
-      window.clearTimeout(startTimer);
-    };
-  }, [voiceAssistanceEnabled, locale]);
-
-  function handleLandingVoiceCommand(spokenText) {
-    const command = String(spokenText || "").toLowerCase();
-    if (command.includes("sign up") || command.includes("signup") || command.includes("register")) {
-      navigate("/signup");
-    } else if (command.includes("voice login")) {
-      navigate("/voice-login");
-    } else if (command.includes("login") || command.includes("sign in")) {
-      navigate("/login");
-    } else if (command.includes("campus") || command.includes("navigation") || command.includes("map")) {
-      navigate("/campus");
-    } else if (command.includes("schedule") || command.includes("timetable") || command.includes("classes")) {
-      navigate("/schedule");
-    } else if (command.includes("unipal") || command.includes("uni pal")) {
-      navigate("/unipal");
-    } else if (command.includes("peer assistance") || command.includes("peers")) {
-      navigate("/peer-assistance");
-    } else if (command.includes("emergency")) {
-      navigate("/emergency");
-    } else if (command.includes("accessibility")) {
-      navigate("/accessibility");
-    } else if (command.includes("settings")) {
-      navigate("/settings");
-    } else if (command.includes("dashboard") || command.includes("disability")) {
-      navigate("/dashboard");
-    } else if (command.includes("about")) {
-      document.getElementById("about")?.scrollIntoView({ behavior: "smooth" });
-    } else {
-      void speak(
-        "I did not recognize that destination. Say sign up, login, dashboard, campus navigation, schedule, UniPal, peer assistance, emergency, accessibility, settings, or about.",
-        { locale: locale || "en-ZA" }
-      );
-    }
-  }
 
   return (
     <main className="landing-page" id="main-content">
@@ -269,30 +146,29 @@ export default function Landing() {
             id="landing-actions"
             aria-label="Choose how to access UniAble"
           >
-            <VoiceAssistanceToggle />
-
             <Link className="landing-action-button landing-action-primary" to="/signup">
               <Mic size={19} aria-hidden="true" />
               Voice sign-up
             </Link>
 
+            <Link className="landing-action-button landing-action-outline" to="/signup?mode=text">
+              <Keyboard size={19} aria-hidden="true" />
+              Type sign-up
+            </Link>
+
             <Link className="landing-action-button landing-action-outline" to="/voice-login">
               <Volume2 size={19} aria-hidden="true" />
-              Voice login
+              Voice sign-in
             </Link>
 
             <Link className="landing-action-button landing-action-outline" to="/login">
               <Mail size={19} aria-hidden="true" />
-              Email login
+              Email / password sign-in
             </Link>
           </div>
-          {voiceAssistanceEnabled && (
-            <VoiceCommandButton onCommand={handleLandingVoiceCommand} />
-          )}
 
           <p className="landing-hero-note">
-            {voiceStatus ||
-              "Accessible tools. Personalised support. One campus community."}
+            Accessible tools. Personalised support. One campus community.
           </p>
         </div>
 
@@ -351,7 +227,7 @@ export default function Landing() {
             It brings together accessible communication, campus navigation, peer
             assistance, emergency support and personalised learning tools in one place.
             The platform supports students with visual, hearing, mobility, speech,
-            colour-vision and neurodiverse accessibility needs. Students can use
+            and neurodiverse accessibility needs. Students can use
             accessible features to communicate their needs, access information,
             navigate campus services and request assistance more independently.
             UniAble also aims to connect students with lecturers, disability support
@@ -395,4 +271,6 @@ export default function Landing() {
     </main>
   );
 }
+
+
 

@@ -1,10 +1,11 @@
-﻿import React from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import {
   Accessibility,
   ShieldCheck,
   GraduationCap,
   HeartHandshake,
+
   Users,
 } from "lucide-react";
 import "./StaffLanding.css";
@@ -107,9 +108,10 @@ export default function StaffLanding() {
       </section>
 
       <footer className="staff-footer">
-        UniAble Â· Accessible education through inclusive support.
+        UniAble · Accessible education through inclusive support.
       </footer>
     </main>
   );
 }
+
 

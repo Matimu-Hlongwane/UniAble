@@ -13,6 +13,7 @@ export default function Emergency() {
   const [sending, setSending] = useState(false);
   const [locationShared, setLocationShared] = useState(false);
   const [error, setError] = useState("");
+  const [delivery, setDelivery] = useState(null);
   const { t } = useSettings();
 
   function getCurrentLocation() {
@@ -47,7 +48,8 @@ export default function Emergency() {
     setSending(true);
     try {
       const location = await getCurrentLocation();
-      await api.createSOS({ location, source: "button" });
+      const result = await api.createSOS({ location, source: "button" });
+      setDelivery(result?.delivery || null);
       setLocationShared(Boolean(location));
       setSent(true);
     } catch (err) {
@@ -57,11 +59,6 @@ export default function Emergency() {
       setSending(false);
     }
   }
-
-  const acceptedCount = Number(delivery?.sent || 0);
-  const deliveryMessage = acceptedCount > 0
-    ? `UniAble submitted push notifications to Firebase Cloud Messaging for ${acceptedCount} responder device(s). This does not confirm that a person has seen or acknowledged the alert.`
-    : "Your SOS has been recorded, but no responder device confirmed notification submission. Contact campus security directly if you need immediate help.";
 
   return (
     <section className="page narrow">
@@ -77,6 +74,13 @@ export default function Emergency() {
         <button className="sos-button" onClick={sendSOS} disabled={sent || sending} type="button">
           {sending ? t("connecting") : sent ? t("sosSent") : t("sendEmergency")}
         </button>
+        {sent && (
+          <p role="status" aria-live="polite">
+            {delivery?.sent > 0
+              ? `Alert recorded. Notification submitted to ${delivery.sent} responder device(s). This does not confirm that anyone has acknowledged it.`
+              : "Alert recorded, but no responder notification was confirmed. Contact campus security directly if you need immediate help."}
+          </p>
+        )}
         <div className="sos-details">
           <span>
             <MapPin size={17}/>

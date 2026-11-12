@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import VoiceAssistanceToggle from "../../components/VoiceAssistanceToggle";
 import { api } from "../../services/api";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
     createAccountWithEmailPassword,
     startAccountVerification,
@@ -11,6 +11,9 @@ import {
     subscribeToAuth,
     sendEmailOtp,
     verifyEmailOtp,
+    sendPhoneOtp,
+    verifyPhoneOtp,
+    completePhoneVerification,
     cancelPendingRegistration
 } from "../../services/firebaseAuth";
 import { speak } from "../../services/speechService";
@@ -40,14 +43,11 @@ import {
 } from "../utils/accessibilityDetector";
 
 import {
-    normalizeSpokenEmail
-} from "../utils/emailUtils";
-
-import {
     isValidStudentNumber,
     STUDENT_EMAIL_DOMAIN,
     capitalizePersonName,
-    validateSignUpForm
+    validateSignUpForm,
+    normalizeSouthAfricanMobile
 } from "../utils/validation";
 
 function phoneVerificationError(error, fallback) {
@@ -76,7 +76,6 @@ function phoneVerificationError(error, fallback) {
 
 
 function SignUp() {
-    const location = useLocation();
     const navigate = useNavigate();
     const { voiceAssistanceEnabled, locale } = useSettings();
 
@@ -100,6 +99,7 @@ function SignUp() {
     const [phoneConfirmation, setPhoneConfirmation] = useState(null);
     const [phoneVerifier, setPhoneVerifier] = useState(null);
     const [verificationBusy, setVerificationBusy] = useState(false);
+    const [creationBusy, setCreationBusy] = useState(false);
     const [cancelBusy, setCancelBusy] = useState(false);
     const [verificationError, setVerificationError] = useState("");
 
@@ -341,6 +341,7 @@ function SignUp() {
         const validationErrors = validateSignUpForm(formData);
         if (Object.keys(validationErrors).length > 0) { setErrors(validationErrors); return; }
         setErrors({});
+        setCreationBusy(true);
         try {
             const createdUser = await createAccountWithEmailPassword(
                 formData.email,
@@ -348,7 +349,7 @@ function SignUp() {
                 `${formData.fullName.trim()} ${formData.surname.trim()}`,
                 formData.accessibility,
                 formData.accountType,
-                { surname: registrationData.surname, studentNumber: registrationData.studentNumber, institutionalEmail: registrationData.email, qualification: registrationData.qualification, yearOfStudy: registrationData.yearOfStudy, dateOfBirth: registrationData.dateOfBirth, modules: [] }
+                { surname: formData.surname, studentNumber: formData.studentNumber, institutionalEmail: formData.email, qualification: formData.qualification, yearOfStudy: formData.yearOfStudy, dateOfBirth: formData.dateOfBirth, modules: formData.modules || [] }
             );
 
             if (formData.accountType === "volunteer") {
@@ -387,6 +388,8 @@ function SignUp() {
             else if (error.code === "auth/invalid-email") message = "Please enter a valid email address.";
             else if (error.code === "auth/operation-not-allowed") message = "Email and password sign-in is not enabled in your Firebase project.";
             setErrors({ general: message });
+        } finally {
+            setCreationBusy(false);
         }
     }
 
@@ -657,19 +660,15 @@ function handleModuleChange(event) {
 
 
             /*
-              Valid email detected.
+              Generate the institutional email from the validated student number.
             */
+            const normalizedEmail = `${studentNumber}@${STUDENT_EMAIL_DOMAIN}`;
 
-            setFormData(
-                (previousData) => ({
-
-                    ...previousData,
-
-                    email:
-                        normalizedEmail
-
-                })
-            );
+            setFormData((previousData) => ({
+                ...previousData,
+                studentNumber,
+                email: normalizedEmail
+            }));
 
 
             const response =

@@ -3,17 +3,17 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { speak, stopSpeaking } from "../services/speechService";
 import { startNativeVoiceRecognition, isNative } from "../services/platformVoice";
 import { getCurrentUser, getVoiceFirstPreference } from "../services/firebaseAuth";
-import { capitalizePersonName, isValidPersonName, isValidStudentNumber, STUDENT_EMAIL_DOMAIN } from "../auth-signup/utils/validation";
-import { normalizeSpokenEmail as normaliseEmail } from "../auth-signup/utils/emailUtils";
+import { isValidStudentNumber, STUDENT_EMAIL_DOMAIN } from "../auth-signup/utils/validation";
 import SpokenOutputToggle from "./SpokenOutputToggle";
 
 const FIELD_STEPS = [
   ["fullName", "first name or names", "Please say your first name or names."],
   ["surname", "surname", "Please say your surname."],
   ["studentNumber", "student number", "Please say your student number, digit by digit."],
-  ["qualification", "Richfield qualification", "Please say BSc IT or BCOM."],
+  ["qualification", "Richfield qualification", "Please say the exact name of your Richfield qualification."],
   ["dateOfBirth", "date of birth", "Please say your date of birth, for example, 15 March 2002."],
-  ["yearOfStudy", "year of study", "Please say 1st year, 2nd year or 3rd year."],
+  ["yearOfStudy", "year of study", "Please say your year of study, for example 2026."],
+  ["phoneNumber", "optional cellphone number", "Say your cellphone number, including the country code, or say skip."],
   ["accountType", "account type", "Your account type is Student. I will select Student for you."],
   ["accessibility", "accessibility needs", "Please say visual, hearing, mobility, speech, neurodiverse, or no accessibility needs."],
   ["additionalNeeds", "additional support information", "Would you like to add any other information about the support you need? Say skip if not."],
@@ -36,6 +36,14 @@ function setReactField(element, value) {
   element.dispatchEvent(new Event("change", { bubbles: true }));
   element.dispatchEvent(new Event("blur", { bubbles: true }));
   return true;
+}
+
+function normaliseEmail(value) {
+  return String(value || "").toLowerCase().trim()
+    .replace(/\bat\s+the\s+rate\b|\bat\s+sign\b|\bat\b/g, "@")
+    .replace(/\bdot\b/g, ".")
+    .replace(/\s+/g, "")
+    .replace(/[.,!?;:]+$/g, "");
 }
 
 function spokenDigits(value) {
@@ -589,7 +597,7 @@ export default function PublicVoiceGuide() {
       }
       if (reviewRef.current) {
         if (/^(yes|change something|i want to change)$/.test(command)) {
-          await say("Which field would you like to change? Say change name, change surname, change student number, change qualification, change date of birth, change year of study, change accessibility, or change additional information.");
+          await say("Which field would you like to change? Say change name, change surname, change student number, change qualification, change date of birth, change year of study, change cellphone number, change accessibility, or change additional information.");
           return;
         }
         if (/^(continue|no|no changes|everything is correct|correct)$/.test(command)) {
@@ -597,9 +605,9 @@ export default function PublicVoiceGuide() {
           await say("Your information is confirmed. For account security, please enter your password and confirm password in the password fields. Do not speak your password aloud. When both fields are complete, say create account.");
           return;
         }
-        const change = command.match(/(?:change|edit)\s+(first name|name|surname|student number|qualification|date of birth|year of study|accessibility|additional information)/);
+        const change = command.match(/(?:change|edit)\s+(first name|name|surname|student number|qualification|date of birth|year of study|cellphone|phone number|accessibility|additional information)/);
         if (change) {
-          const key = ({ "first name": "fullName", name: "fullName", surname: "surname", "student number": "studentNumber", qualification: "qualification", "date of birth": "dateOfBirth", "year of study": "yearOfStudy", accessibility: "accessibility", "additional information": "additionalNeeds" })[change[1]];
+          const key = ({ "first name": "fullName", name: "fullName", surname: "surname", "student number": "studentNumber", qualification: "qualification", "date of birth": "dateOfBirth", "year of study": "yearOfStudy", cellphone: "phoneNumber", "phone number": "phoneNumber", accessibility: "accessibility", "additional information": "additionalNeeds" })[change[1]];
           const index = FIELD_STEPS.findIndex(([field]) => field === key);
           if (index >= 0) { reviewRef.current = false; await promptSignupField(index); }
           return;
@@ -622,22 +630,16 @@ export default function PublicVoiceGuide() {
       const element = document.querySelector(`[name="${name}"]`);
       if (!element) { await beginSignup(); return; }
       let value = transcript.trim().replace(/[.,!?;:]+$/g, "");
-      if (/^(skip|none|no|not applicable)$/.test(command) && name === "additionalNeeds") value = "";
+      if (/^(skip|none|no|not applicable)$/.test(command) && ["additionalNeeds", "phoneNumber"].includes(name)) value = "";
       if (name === "email") value = normaliseEmail(value);
       if (name === "studentNumber") value = spokenDigits(value);
-      if (name === "dateOfBirth") value = spokenDate(value);
-      if (name === "yearOfStudy") {
-        if (/^(first|1st)( year)?$/.test(command)) value = "1st";
-        else if (/^(second|2nd)( year)?$/.test(command)) value = "2nd";
-        else if (/^(third|3rd)( year)?$/.test(command)) value = "3rd";
+      if (name === "phoneNumber") {
+        const digits = spokenDigits(value);
+        value = digits.startsWith("0") ? `+27${digits.slice(1)}` : (value.trim().startsWith("+") ? value.replace(/[\s()-]/g, "") : `+${digits}`);
       }
+      if (name === "dateOfBirth") value = spokenDate(value);
       if (element instanceof HTMLSelectElement) {
         let selectCommand = command;
-        if (name === "yearOfStudy") {
-          if (/^(first|1st)( year)?$/.test(command)) selectCommand = "1st";
-          else if (/^(second|2nd)( year)?$/.test(command)) selectCommand = "2nd";
-          else if (/^(third|3rd)( year)?$/.test(command)) selectCommand = "3rd";
-        }
         if (name === "accessibility") {
           if (/blind|low vision|visually impaired|visual|colour|color/.test(command)) selectCommand = "visual";
           else if (/deaf|hard of hearing|hearing loss|hearing/.test(command)) selectCommand = "hearing";
@@ -658,11 +660,8 @@ export default function PublicVoiceGuide() {
       }
       if (name === "dateOfBirth" && !value) { await say("I could not understand that date. Please say the day, month and year, for example 15 March 2002."); return; }
 
-      if (["fullName", "surname"].includes(name)) {
-        if (!isValidPersonName(value)) { await say("Use letters and spaces only. Please say your name again."); return; }
-        value = capitalizePersonName(value);
-      }
-      if (name === "studentNumber" && !isValidStudentNumber(value)) { await say("The student number must be exactly nine digits and begin with 401 through 405. Please say it again, digit by digit."); return; }
+      if (name === "studentNumber" && !isValidStudentNumber(value)) { await say("The student number must be exactly nine digits and begin with 401, 402 or 403. Please say it again, digit by digit."); return; }
+      if (name === "phoneNumber" && value && !/^\+?[1-9]\d{7,14}$/.test(value)) { await say("I could not confirm that cellphone number. Please say the full number with its country code, or say skip."); return; }
       if (name === "accountType") value = "student";
       const display = element instanceof HTMLSelectElement ? Array.from(element.options).find((option) => option.value === value)?.textContent || value : value || "no additional information";
       if (name !== "accountType") setReactField(element, value);
@@ -697,16 +696,8 @@ export default function PublicVoiceGuide() {
     }
 
     if (path === "/login" || path === "/voice-login") {
-      const emailField = document.querySelector('input[type="email"], #voice-login-email');
+      const emailField = document.querySelector('input[type="email"]');
       const passwordField = document.querySelector('input[type="password"]');
-      const hasEmail = () => {
-        if (path !== "/voice-login") return Boolean(emailField?.value);
-        const value = emailField?.value || "";
-        if (value.endsWith(`@${STUDENT_EMAIL_DOMAIN}`)) {
-          return isValidStudentNumber(value.slice(0, -(STUDENT_EMAIL_DOMAIN.length + 1)));
-        }
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-      };
       if (/^(voice login|open voice login)$/.test(command)) { navigate("/voice-login"); return; }
       if (/^(forgot password|reset password|password help)$/.test(command)) { navigate("/forgot-password"); return; }
       if (/^(email login|password login)$/.test(command) && path !== "/login") { navigate("/login"); return; }
@@ -716,61 +707,15 @@ export default function PublicVoiceGuide() {
         await say("Email sign-in link has been selected. Say your email address, then say send link.");
         return;
       }
-      if (/^(send sign in link|send email link|email me a sign in link)$/.test(command) && path === "/voice-login") {
-        if (!hasEmail()) { await say("Please say or enter the student number part of your email address first."); return; }
-        if (document.querySelector("[data-voice-confirm-email]")) {
-          await say(`Please confirm that ${emailField.value} is the correct email address. Say confirm email to send the link, or say change email.`);
-          return;
-        }
-        document.querySelector("form button[type='submit']")?.click();
-        await say(`Please confirm that ${emailField.value} is the correct email address before I send the link. Say confirm email to send it, or say change email.`);
-        return;
-      }
-      if (/^(confirm email|yes confirm|confirm and send|send it)$/.test(command) && path === "/voice-login") {
-        const confirmButton = document.querySelector("[data-voice-confirm-email]");
-        if (!confirmButton) { await say("First say send sign-in link to review the email address."); return; }
-        confirmButton.click();
-        await say(`Confirmed. The sign-in link request for ${emailField?.value || "your email address"} is being processed.`);
-        return;
-      }
-      if (/^(change email|edit email|change the email)$/.test(command) && path === "/voice-login") {
-        const changeButton = document.querySelector("[data-voice-change-email]");
-        if (changeButton) {
-          changeButton.click();
-          await say("You can now speak or type the correct email address.");
-        } else {
-          await say("The email field is ready. Speak or type the correct email address.");
-          emailField?.focus();
-        }
-        return;
-      }
-      const spokenEmail = normaliseEmail(transcript);
-      const spokenStudentNumber = spokenEmail.split("@")[0];
-      const spokeEmail = command.includes("@") || command.includes(" at ") || command.includes(" dot ");
-      const spokeStudentNumber = path === "/voice-login" && /^40[1-5]\d{6}$/.test(spokenStudentNumber);
-      if (!hasEmail() && (spokeEmail || spokeStudentNumber)) {
-        const email = path === "/voice-login"
-          ? `${spokenStudentNumber}@${STUDENT_EMAIL_DOMAIN}`
-          : spokenEmail;
+      if (!emailField?.value && (command.includes("@") || command.includes(" at ") || command.includes(" dot "))) {
+        const email = normaliseEmail(transcript);
         if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
           setReactField(emailField, email);
-          await say(path === "/voice-login"
-            ? `I entered ${email}. Review it, then say send sign-in link and confirm email before I send the link.`
-            : `I heard ${email}. Your email address has been entered. Passwords are private. Please enter your password using your secure keyboard or password manager, then say sign in.`);
+          await say(`I heard ${email}. Your email address has been entered. Passwords are private. Please enter your password using your secure keyboard or password manager, then say sign in.`);
         } else await say("I could not confirm that email address. Please say it again.");
         return;
       }
       if (/^(sign in|log in|login|submit)$/.test(command)) {
-        if (!hasEmail()) { await say("Please say or enter the student number part of your email address first."); return; }
-        if (path === "/voice-login") {
-          if (document.querySelector("[data-voice-confirm-email]")) {
-            await say(`Please confirm that ${emailField.value} is the correct email address. Say confirm email to send the link, or say change email.`);
-          } else {
-            document.querySelector('form button[type="submit"]')?.click();
-            await say(`Please confirm that ${emailField.value} is the correct email address before I send the link. Say confirm email to send it, or say change email.`);
-          }
-          return;
-        }
         if (path === "/login" && document.querySelector('button[type="submit"]')) {
           if (document.querySelector('button[type="submit"]')?.textContent?.toLowerCase().includes("email me")) {
             document.querySelector('button[type="submit"]')?.click();
@@ -783,9 +728,7 @@ export default function PublicVoiceGuide() {
         await say("Your sign-in request is being processed. I will announce when your dashboard opens.");
         return;
       }
-      if (emailField?.value && path === "/voice-login") await say("I am ready. Say send sign-in link to receive a secure link by email.");
-      else if (emailField?.value) await say("I am ready. You can say sign in after entering your password privately, or say email sign-in link to use a secure email link.");
-      else if (path === "/voice-login") await say("Please say your email address. I will repeat it for confirmation.");
+      if (emailField?.value) await say("I am ready. You can say sign in after entering your password privately, or say email sign-in link to use a secure email link.");
       else await say("Please say your email address. I will repeat it for confirmation. Your password must be entered privately.");
       return;
     }
@@ -855,7 +798,7 @@ export default function PublicVoiceGuide() {
         }
       } else if (path === "/voice-login") {
         try { window.sessionStorage.setItem("uniable-voice-onboarding-active", "1"); } catch { /* optional */ }
-        await say("The voice sign-in page is open. Say your email address; it will appear in the field while you speak and can be edited. Say send sign-in link to review it, then say confirm email to send the link. Open the link from your email on this device and confirm the same email again.");
+        await say("The voice sign-in page is open. I can capture your email address by voice. For your security, enter your password privately, then say sign in. You can also return to the landing page.");
       } else if (path === "/login") {
         try { if (window.sessionStorage.getItem("uniable-voice-onboarding-active") === "1") window.sessionStorage.setItem("uniable-public-voice-guide", "1"); } catch { /* optional */ }
         await say("The email and password sign-in page is open. You can also request a secure email sign-in link. Say your email address to enter it by voice. Passwords are never spoken or recorded. Enter your password privately, then say sign in, or say email sign-in link. You can also say forgot password.");
