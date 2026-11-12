@@ -91,6 +91,7 @@ export default function RoleDashboard() {
   const [error, setError] = useState("");
   const [actionError, setActionError] = useState("");
   const [workingId, setWorkingId] = useState("");
+  const [securityAlertTab, setSecurityAlertTab] = useState("active");
 
   const loadDashboard = useCallback(async () => {
     setLoading(true);
@@ -317,31 +318,87 @@ export default function RoleDashboard() {
       {actionError && <div className="dashboard-integration-notice" role="alert">{actionError}</div>}
 
       {!loading && !error && normalRole === "security" && (
-        <RecordList items={alerts} emptyMessage="No emergency alerts have been recorded.">
-          {(alert) => <>
-            <span className="dashboard-module-status pending">{alert.status}</span>
-            <h3>SOS emergency alert</h3>
-            <p>Student: {alert.student || alert.studentId || "Not supplied"}</p>
-            <p>Location: {alert.location?.lat ?? "—"}, {alert.location?.lng ?? "—"}</p>
-            <p>Received: {formatDate(alert.createdAt)}</p>
-            {alert.status === "active" && (
-              <button className="dashboard-text-button"
-                disabled={workingId === alert.id}
-                onClick={() => performAction(alert.id,
-                  () => api.updateSOS(alert.id, "acknowledged"))}>
-                Acknowledge alert
-              </button>
-            )}
-            {alert.status !== "resolved" && (
-              <button className="dashboard-text-button"
-                disabled={workingId === alert.id}
-                onClick={() => performAction(alert.id,
-                  () => api.updateSOS(alert.id, "resolved"))}>
-                Resolve alert
-              </button>
-            )}
-          </>}
-        </RecordList>
+        <section className="security-alert-workspace" aria-label="Security SOS alerts">
+          <div className="security-alert-tabs" role="tablist" aria-label="SOS alert views">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={securityAlertTab === "active"}
+              className={securityAlertTab === "active" ? "security-alert-tab is-active" : "security-alert-tab"}
+              onClick={() => setSecurityAlertTab("active")}
+            >
+              Active alerts <span>{alerts.filter((item) => ["active", "acknowledged"].includes(item.status)).length}</span>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={securityAlertTab === "history"}
+              className={securityAlertTab === "history" ? "security-alert-tab is-active" : "security-alert-tab"}
+              onClick={() => setSecurityAlertTab("history")}
+            >
+              Resolved history <span>{alerts.filter((item) => item.status === "resolved").length}</span>
+            </button>
+          </div>
+
+          {securityAlertTab === "active" ? (
+            <RecordList
+              items={alerts.filter((item) => ["active", "acknowledged"].includes(item.status))}
+              emptyMessage="No active SOS alerts. New alerts will appear here."
+            >
+              {(alert) => <>
+                <span className="dashboard-module-status pending">
+                  {alert.status === "acknowledged" ? "Acknowledged" : "Active"}
+                </span>
+                <h3>SOS emergency alert</h3>
+                <p>Student: {alert.student || alert.studentId || "Not supplied"}</p>
+                <p>Location: {alert.location?.lat ?? "—"}, {alert.location?.lng ?? "—"}</p>
+                <p>Received: {formatDate(alert.createdAt)}</p>
+                {alert.acknowledgedBy && (
+                  <p>Acknowledged by: {alert.acknowledgedBy}</p>
+                )}
+                {alert.status === "active" && (
+                  <button
+                    type="button"
+                    className="dashboard-text-button"
+                    disabled={workingId === alert.id}
+                    onClick={() => performAction(alert.id,
+                      () => api.updateSOS(alert.id, "acknowledged"))}
+                  >
+                    {workingId === alert.id ? "Updating..." : "Acknowledge alert"}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="dashboard-text-button"
+                  disabled={workingId === alert.id}
+                  onClick={() => performAction(alert.id,
+                    () => api.updateSOS(alert.id, "resolved"))}
+                >
+                  {workingId === alert.id ? "Updating..." : "Resolve alert"}
+                </button>
+              </>}
+            </RecordList>
+          ) : (
+            <>
+              <p className="security-alert-history-note">
+                Recently resolved SOS alerts. This view uses the 100 most recent records available to this dashboard.
+              </p>
+              <RecordList
+                items={alerts.filter((item) => item.status === "resolved")}
+                emptyMessage="No resolved SOS alerts are available in recent records."
+              >
+                {(alert) => <>
+                  <span className="dashboard-module-status available">Resolved</span>
+                  <h3>SOS emergency alert</h3>
+                  <p>Student: {alert.student || alert.studentId || "Not supplied"}</p>
+                  <p>Location: {alert.location?.lat ?? "—"}, {alert.location?.lng ?? "—"}</p>
+                  <p>Received: {formatDate(alert.createdAt)}</p>
+                  <p>Resolved: {formatDate(alert.resolvedAt)}</p>
+                </>}
+              </RecordList>
+            </>
+          )}
+        </section>
       )}
 
       {!loading && !error && normalRole !== "security" && (

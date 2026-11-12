@@ -271,7 +271,7 @@ function SignUp() {
             window.clearTimeout(timer);
         };
 
-    }, [mode, registrationValidated, speakText, voiceAssistanceEnabled]);
+    }, [mode, registrationValidated, voiceAssistanceEnabled]);
     /* =========================================
        SWITCH INPUT MODES
        ========================================= */

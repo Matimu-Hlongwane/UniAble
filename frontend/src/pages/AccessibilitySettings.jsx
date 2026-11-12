@@ -61,6 +61,7 @@ export default function AccessibilitySettings() {
   const [saveState, setSaveState] = useState("loading");
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [voicePreferenceSaving, setVoicePreferenceSaving] = useState(false);
+  const [voicePreferenceStatus, setVoicePreferenceStatus] = useState("");
   const [speechSupport, setSpeechSupport] = useState({});
   const [speechSupportLoading, setSpeechSupportLoading] = useState(true);
 
@@ -178,11 +179,16 @@ export default function AccessibilitySettings() {
     const enabled = event.target.checked;
     setVoiceAssistanceEnabled(enabled);
     setVoicePreferenceSaving(true);
+    setVoicePreferenceStatus("");
     try {
       await setVoiceFirstPreference(enabled);
+      setVoicePreferenceStatus(enabled
+        ? "Spoken guidance is enabled."
+        : "Spoken guidance is disabled.");
     } catch (error) {
       console.error("Could not save voice-first preference:", error);
       setVoiceAssistanceEnabled(!enabled);
+      setVoicePreferenceStatus("Could not save this preference. Please try again.");
     } finally {
       setVoicePreferenceSaving(false);
     }
@@ -301,18 +307,6 @@ export default function AccessibilitySettings() {
         </div>
       </section>
 
-      <div className="settings-intro" style={{ marginTop: 16 }}>
-        <Volume2 size={28} aria-hidden="true" />
-        <div style={{ flex: 1 }}>
-          <strong>Voice-first spoken guidance</strong>
-          <p>Read out page guidance and show a microphone control for voice navigation. The microphone only listens when you activate it.</p>
-          <label style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12 }}>
-            <input type="checkbox" checked={voiceAssistanceEnabled} onChange={handleVoiceFirstToggle} disabled={voicePreferenceSaving} />
-            {voicePreferenceSaving ? "Saving preference…" : voiceAssistanceEnabled ? "Enabled" : "Disabled"}
-          </label>
-        </div>
-      </div>
-
       <p role="status" aria-live="polite" className="muted">
         {statusText}
       </p>
@@ -335,7 +329,7 @@ export default function AccessibilitySettings() {
               <input
                 type="checkbox"
                 role="switch"
-                checked={voiceFirstEnabled}
+                checked={voiceAssistanceEnabled}
                 onChange={handleVoiceFirstToggle}
                 disabled={voicePreferenceSaving || !profileLoaded}
                 aria-describedby="screen-reader-status"
@@ -344,14 +338,14 @@ export default function AccessibilitySettings() {
             </label>
           </div>
           <div className="screen-reader-card-footer">
-            <span className={`screen-reader-state${voiceFirstEnabled ? " is-enabled" : ""}`}>
+            <span className={`screen-reader-state${voiceAssistanceEnabled ? " is-enabled" : ""}`}>
               <span aria-hidden="true" />
-              {voiceFirstEnabled ? "On" : "Off"}
+              {voiceAssistanceEnabled ? "On" : "Off"}
             </span>
             <p id="screen-reader-status" className="screen-reader-status" role="status" aria-live="polite">
               {voicePreferenceSaving
                 ? "Saving preference…"
-                : voicePreferenceStatus || (voiceFirstEnabled ? "Spoken guidance is enabled." : "Spoken guidance is disabled.")}
+                : voicePreferenceStatus || (voiceAssistanceEnabled ? "Spoken guidance is enabled." : "Spoken guidance is disabled.")}
             </p>
           </div>
         </div>

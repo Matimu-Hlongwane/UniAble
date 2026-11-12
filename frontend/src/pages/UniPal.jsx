@@ -144,7 +144,7 @@ export default function UniPal() {
     return false;
   };
 
-  const sendMessage = async (rawText, { voiceInput = false } = {}) => {
+  const sendMessage = async (rawText) => {
     const text = String(rawText || "").trim();
     if (!text || busy) return;
     if (text.length > 1000) {

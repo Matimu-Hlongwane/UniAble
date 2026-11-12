@@ -4,7 +4,7 @@ import VoiceAssistanceToggle from "../components/VoiceAssistanceToggle";
 import { Link } from "react-router-dom";
 import { Accessibility, Mic, MicOff, Volume2 } from "lucide-react";
 import { SpeechRecognition } from "@capacitor-community/speech-recognition";
-import { sendPasswordlessSignInLink, getVoiceFirstPreference } from "../services/firebaseAuth";
+import { sendPasswordlessSignInLink } from "../services/firebaseAuth";
 import { speak } from "../services/speechService";
 import { STUDENT_EMAIL_DOMAIN, validateInstitutionalStudentEmail } from "../auth-signup/utils/validation";
 import { normalizeSpokenEmail } from "../auth-signup/utils/emailUtils";
@@ -195,6 +195,7 @@ export default function VoiceLogin() {
     emailRef.current = emailSuffix;
     setEmail(emailSuffix);
     setEmailConfirmation("");
+    setRecordingTranscript("");
     setListening(true);
     setError("");
     setNotice("");
@@ -206,6 +207,7 @@ export default function VoiceLogin() {
       let transcript = "";
       const updateTranscript = (spokenText) => {
         if (manualEditRef.current) return;
+        setRecordingTranscript(spokenText);
         const partialEmail = emailFromSpokenStudentNumber(spokenText);
         emailRef.current = partialEmail;
         setEmail(partialEmail);
@@ -242,7 +244,6 @@ export default function VoiceLogin() {
         transcript = await browserRecognizeEmail(updateTranscript, (stop) => {
           stopListeningRef.current = stop;
         });
-        return;
       }
 
       const cleaned = validateInstitutionalStudentEmail(
@@ -263,19 +264,6 @@ export default function VoiceLogin() {
         setMessage("Voice input did not complete.");
         setListening(false);
       }
-    }
-  }
-
-  function applySpokenEmail(transcript) {
-    const cleaned = cleanSpokenEmail(String(transcript || ""));
-    if (!cleaned || !mountedRef.current) return;
-
-    setEmail(cleaned);
-    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleaned)) {
-      setError("");
-      setMessage(`Email captured: ${cleaned}. Check it before signing in.`);
-    } else {
-      setMessage(`I heard "${cleaned}". Edit it or type the complete email address.`);
     }
   }
 

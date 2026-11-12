@@ -5,8 +5,11 @@ import {
   Megaphone, MessageSquare, RefreshCw, Users, LogOut
 } from "lucide-react";
 import { api } from "../services/api";
+import VoiceNavigationControls from "../components/VoiceNavigationControls";
+import { useSettings } from "../context/settingsContext/SettingsContext";
+import { speak } from "../services/speechService";
 import { RICHFIELD_QUALIFICATIONS, getQualificationLabel } from "../data/qualifications";
-import { getCurrentUser, signOutAccount } from "../services/firebaseAuth";
+import { getCurrentUser } from "../services/firebaseAuth";
 import "./LecturerDashboard.css";
 
 const sections = [

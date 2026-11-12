@@ -1,450 +1,362 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Accessibility,
-  ArrowRight,
-  BookOpen,
-  Brain,
-  Megaphone,
-  CalendarDays,
-  Clock3,
-  Ear,
-  Footprints,
-  MapPin,
-  MessageCircle,
-  MessageSquareText,
-  Mic,
-  Palette,
-  ShieldAlert,
-  Volume2,
+  Accessibility, ArrowRight, BookOpen, CalendarDays, CheckCircle2,
+  Clock3, GraduationCap, LayoutDashboard, MapPin, Megaphone, Menu,
+  MessageCircle, Settings, ShieldAlert, Users, Volume2, Bell, X
 } from "lucide-react";
 import { useSettings } from "../context/settingsContext/SettingsContext";
 import { api } from "../services/api";
 import { getUserAccessibilityProfile, subscribeToAuth } from "../services/firebaseAuth";
-import "./Dashboards.css";
+import "./StudentDashboard.css";
 
-const classes = [];
+const navigation = [
+  ["Overview", LayoutDashboard, "/dashboard"],
+  ["My schedule", CalendarDays, "/schedule"],
+  ["Campus navigation", MapPin, "/campus"],
+  ["Peer assistance", Users, "/peer-assistance"],
+  ["UniPal", MessageCircle, "/unipal"],
+];
 
-const profileViews = {
+const profiles = {
   "Visual Impairment": {
-    eyebrow: "ACCESSIBILITY VIEW",
     title: "Your voice-first workspace",
-    description:
-      "A clear route to spoken guidance, accessible campus directions and the support tools you use most.",
-    guidance:
-      "Use spoken page guidance, read-aloud controls and accessible campus directions. Voice controls only listen when you activate them.",
+    description: "Your essential student tools, accessible guidance and campus support in one place.",
+    guidance: "Use your available spoken guidance and accessibility preferences.",
     icon: Volume2,
     tools: [
-      { title: "Voice and screen-reader support", description: "Review spoken guidance and accessibility preferences.", path: "/accessibility", icon: Mic },
-      { title: "Accessible campus routes", description: "Open campus navigation and route guidance.", path: "/campus", icon: MapPin },
-      { title: "Ask UniPal", description: "Get help with student information.", path: "/unipal", icon: MessageCircle },
+      ["Voice and accessibility settings", "Review your accessibility preferences.", "/accessibility", Accessibility],
+      ["Campus directions", "Find campus destinations and routes.", "/campus", MapPin],
+      ["Ask UniPal", "Get help with student information.", "/unipal", MessageCircle],
     ],
   },
   "Hearing Impairment": {
-    eyebrow: "ACCESSIBILITY VIEW",
     title: "Your visual communication workspace",
-    description:
-      "Keep important information visible and reach written student support without relying on audio.",
-    guidance:
-      "Use written instructions, visible notifications and text-based peer assistance for campus communication.",
-    icon: Ear,
+    description: "Keep important information visible and access written student support.",
+    guidance: "Use written instructions, visible notifications and text-based peer assistance.",
+    icon: MessageCircle,
     tools: [
-      { title: "Text-based peer assistance", description: "Request support and communicate in writing.", path: "/peer-assistance", icon: MessageSquareText },
-      { title: "UniPal", description: "Access student information through text interaction.", path: "/unipal", icon: MessageCircle },
-      { title: "My schedule", description: "Review classes and timetable information.", path: "/schedule", icon: CalendarDays },
+      ["Text-based peer assistance", "Request support using written details.", "/peer-assistance", MessageCircle],
+      ["UniPal", "Access student information through text.", "/unipal", MessageCircle],
+      ["My schedule", "Review your timetable and classes.", "/schedule", CalendarDays],
     ],
   },
   "Mobility Support": {
-    eyebrow: "ACCESSIBILITY VIEW",
     title: "Your accessible campus workspace",
-    description:
-      "Keep campus directions, assistance and emergency support within easy reach.",
-    guidance:
-      "Prioritise step-free routes where available and request peer assistance when you need help moving around campus.",
-    icon: Footprints,
+    description: "Keep campus directions, assistance and emergency support within easy reach.",
+    guidance: "Use campus navigation and request peer assistance when you need support.",
+    icon: MapPin,
     tools: [
-      { title: "Campus navigation", description: "Explore campus destinations and route guidance.", path: "/campus", icon: MapPin },
-      { title: "Request peer assistance", description: "Ask for campus or mobility support.", path: "/peer-assistance", icon: MessageCircle },
-      { title: "Emergency support", description: "Open the emergency support page.", path: "/emergency", icon: ShieldAlert },
+      ["Campus navigation", "Explore campus destinations.", "/campus", MapPin],
+      ["Request peer assistance", "Ask for campus or mobility support.", "/peer-assistance", Users],
+      ["Emergency support", "Open emergency support options.", "/emergency", ShieldAlert],
     ],
   },
   "Speech Support": {
-    eyebrow: "ACCESSIBILITY VIEW",
     title: "Your communication workspace",
-    description:
-      "Reach text-based communication, student assistance and emergency options from one place.",
-    guidance:
-      "Use written interaction and available text-to-speech tools when speaking is difficult or unavailable.",
-    icon: MessageSquareText,
+    description: "Reach text-based communication, student assistance and emergency options.",
+    guidance: "Use written interaction and available text-to-speech tools when speaking is difficult.",
+    icon: MessageCircle,
     tools: [
-      { title: "Peer assistance", description: "Connect with peers using written details.", path: "/peer-assistance", icon: MessageCircle },
-      { title: "UniPal", description: "Use text interaction for student information.", path: "/unipal", icon: MessageSquareText },
-      { title: "Emergency support", description: "Review available emergency options.", path: "/emergency", icon: ShieldAlert },
+      ["Peer assistance", "Connect with peers using written details.", "/peer-assistance", Users],
+      ["UniPal", "Use text interaction for student information.", "/unipal", MessageCircle],
+      ["Emergency support", "Review available emergency options.", "/emergency", ShieldAlert],
     ],
   },
   "Colour Vision": {
-    eyebrow: "ACCESSIBILITY VIEW",
     title: "Your clarity-first workspace",
-    description:
-      "Find key information through readable labels, clear contrast and consistent page structure.",
-    guidance:
-      "Important information should be identified by text and clear labels, never by colour alone.",
-    icon: Palette,
+    description: "Find key information through readable labels and consistent page structure.",
+    guidance: "Important information should be identified by text and clear labels, never by colour alone.",
+    icon: Accessibility,
     tools: [
-      { title: "Accessibility settings", description: "Review display and accessibility preferences.", path: "/accessibility", icon: Accessibility },
-      { title: "Campus navigation", description: "Open campus directions and navigation support.", path: "/campus", icon: MapPin },
-      { title: "My schedule", description: "Review your classes and timetable.", path: "/schedule", icon: CalendarDays },
+      ["Accessibility settings", "Review your display preferences.", "/accessibility", Accessibility],
+      ["Campus navigation", "Open campus directions.", "/campus", MapPin],
+      ["My schedule", "Review your classes and timetable.", "/schedule", CalendarDays],
     ],
   },
   "Neurodiverse Support": {
-    eyebrow: "ACCESSIBILITY VIEW",
     title: "Your focused study workspace",
-    description:
-      "A predictable starting point for your timetable, study support and personal accessibility settings.",
-    guidance:
-      "Use your schedule, straightforward campus directions and study tools at a pace that works for you.",
-    icon: Brain,
-    tools: [
-      { title: "My schedule", description: "Keep track of classes and daily activities.", path: "/schedule", icon: CalendarDays },
-      { title: "Study with UniPal", description: "Get help with student questions and study topics.", path: "/unipal", icon: BookOpen },
-      { title: "Accessibility settings", description: "Review the support settings available to you.", path: "/accessibility", icon: Accessibility },
-    ],
-  },
-  Other: {
-    eyebrow: "PERSONALISED VIEW",
-    title: "Your student workspace",
-    description: "A straightforward starting point for campus services and student support.",
-    guidance: "Review your accessibility settings and choose the tools that best support your day.",
-    icon: Accessibility,
-    tools: [
-      { title: "Accessibility settings", description: "Review the support options available to you.", path: "/accessibility", icon: Accessibility },
-      { title: "Peer assistance", description: "Connect with peers for support.", path: "/peer-assistance", icon: MessageCircle },
-      { title: "UniPal", description: "Get help with student information.", path: "/unipal", icon: MessageCircle },
-    ],
-  },
-  None: {
-    eyebrow: "STUDENT OVERVIEW",
-    title: "Your student workspace",
-    description: "Your classes, campus services and student support in one organised place.",
-    guidance: "Use the links below to review your schedule, navigate campus or access student support.",
+    description: "A predictable starting point for your timetable, study support and accessibility settings.",
+    guidance: "Use your schedule, campus directions and study tools at a pace that works for you.",
     icon: BookOpen,
     tools: [
-      { title: "Campus navigation", description: "Find campus destinations and route guidance.", path: "/campus", icon: MapPin },
-      { title: "My schedule", description: "Review your classes and timetable.", path: "/schedule", icon: CalendarDays },
-      { title: "Accessibility settings", description: "Choose or update your support preferences.", path: "/accessibility", icon: Accessibility },
+      ["My schedule", "Keep track of classes and activities.", "/schedule", CalendarDays],
+      ["Study with UniPal", "Get help with questions and study topics.", "/unipal", BookOpen],
+      ["Accessibility settings", "Review your available support settings.", "/accessibility", Accessibility],
     ],
   },
 };
 
-function formatToday(locale) {
-  return new Intl.DateTimeFormat(locale || "en-ZA", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(new Date());
+const neuroGuidance = {
+  dyslexia: ["Break reading into manageable sections", "Use read-aloud tools where available", "Keep study tasks clearly organised"],
+  adhd: ["Break larger tasks into smaller steps", "Use your schedule to plan study periods", "Keep important tasks visible"],
+  autism: ["Review your schedule before travelling", "Use clear written instructions", "Keep useful support options easy to find"],
+  down: ["Follow activities one step at a time", "Use visual and written guidance", "Reach out to student support when needed"],
+};
+
+function arraysFrom(response, keys) {
+  if (Array.isArray(response)) return response;
+  for (const key of keys) if (Array.isArray(response?.[key])) return response[key];
+  return [];
+}
+
+function dateKey(date = new Date()) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function displayTime(value) {
+  if (!value) return "Time TBC";
+  const match = String(value).match(/^(\d{1,2}):(\d{2})/);
+  if (match) return `${match[1].padStart(2, "0")}:${match[2]}`;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? String(value) : parsed.toLocaleTimeString("en-ZA", { hour: "2-digit", minute: "2-digit" });
 }
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
   const { locale } = useSettings();
   const [studentName, setStudentName] = useState("");
-  const [accessibilityProfile, setAccessibilityProfile] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [classes, setClasses] = useState([]);
+  const [classesLoading, setClassesLoading] = useState(true);
+  const [classesError, setClassesError] = useState("");
   const [announcements, setAnnouncements] = useState([]);
-  const [announcementError, setAnnouncementError] = useState("");
   const [announcementsLoading, setAnnouncementsLoading] = useState(true);
+  const [announcementsError, setAnnouncementsError] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  useEffect(() => {
-    return subscribeToAuth((user) => {
-      const name = user?.displayName?.trim() || "";
-      setStudentName(name ? name.split(/\s+/)[0] : "");
-    });
-  }, []);
+  useEffect(() => subscribeToAuth((user) => {
+    const name = user?.displayName?.trim() || "";
+    setStudentName(name ? name.split(/\s+/)[0] : "");
+  }), []);
 
   useEffect(() => {
     let active = true;
     getUserAccessibilityProfile()
-      .then((profile) => {
-        if (active) setAccessibilityProfile(profile);
-      })
-      .catch((error) => {
-        console.error("Unable to load accessibility profile:", error);
-      });
+      .then((value) => { if (active) setProfile(value); })
+      .catch((error) => console.error("Unable to load accessibility profile:", error));
+    return () => { active = false; };
+  }, []);
 
-    return () => {
-      active = false;
-    };
+  useEffect(() => {
+    let active = true;
+    Promise.all([api.getAcademicTimetable(), api.getAcademicModules()])
+      .then(([timetableResponse, modulesResponse]) => {
+        if (!active) return;
+        const entries = arraysFrom(timetableResponse, ["timetable", "entries", "classes"]);
+        const modules = arraysFrom(modulesResponse, ["modules"]);
+        const names = new Map(modules.map((module) => [String(module.id), module.name || module.title || "Class"]));
+        const today = dateKey();
+        const todaysClasses = entries
+          .filter((entry) => String(entry.date || "").slice(0, 10) === today)
+          .map((entry) => ({
+            id: entry.id || `${entry.startTime || ""}-${entry.moduleId || entry.title || ""}`,
+            time: displayTime(entry.startTime),
+            title: entry.title || names.get(String(entry.moduleId)) || "Class",
+            venue: String(entry.venue || entry.location || entry.room || "").trim() || "Venue not specified",
+            sortTime: String(entry.startTime || ""),
+          }))
+          .sort((a, b) => a.sortTime.localeCompare(b.sortTime));
+        setClasses(todaysClasses);
+      })
+      .catch((error) => { if (active) setClassesError(error.message || "Your timetable could not be loaded."); })
+      .finally(() => { if (active) setClassesLoading(false); });
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {
     let active = true;
     api.getAcademicAnnouncements()
-    .then((response) => {
-      if (active) {
-        setAnnouncements(Array.isArray(response?.announcements) ? response.announcements : []);
-      }
-    })
-    .catch((error) => {
-      if (active) setAnnouncementError(error.message || "Could not load announcements.");
-    })
-    .finally(() => {
-      if (active) setAnnouncementsLoading(false);
-    });
-
-    return () => {
-    active = false;
-    };
+      .then((response) => { if (active) setAnnouncements(arraysFrom(response, ["announcements"])); })
+      .catch((error) => { if (active) setAnnouncementsError(error.message || "Announcements could not be loaded."); })
+      .finally(() => { if (active) setAnnouncementsLoading(false); });
+    return () => { active = false; };
   }, []);
 
-  const selectedAccessibility = accessibilityProfile?.accessibility || "None";
-  const accessibilityProfileId = String(
-    accessibilityProfile?.accessibilityProfile?.id || ""
-  ).toLowerCase();
+  const selected = profile?.accessibility || "None";
+  const profileId = String(profile?.accessibilityProfile?.id || "").toLowerCase();
+  const view = useMemo(() => profiles[selected] || {
+    title: "Your student workspace",
+    description: "Your classes, campus services and student support in one organised place.",
+    guidance: "Choose the tools that best support your day.",
+    icon: GraduationCap,
+    tools: [
+      ["Campus navigation", "Find campus destinations and routes.", "/campus", MapPin],
+      ["My schedule", "Review your classes and timetable.", "/schedule", CalendarDays],
+      ["Accessibility settings", "Choose or update your preferences.", "/accessibility", Accessibility],
+    ],
+  }, [selected]);
 
-  const neuroProfileContent = {
-    dyslexia: {
-      title: "Reading and learning support",
-      description: "Use clear study steps, accessible reading tools and organised learning resources.",
-      tips: ["Break reading into manageable sections", "Use read-aloud tools where available", "Keep instructions and study tasks clearly organised"],
-    },
-    adhd: {
-      title: "Focus and study organisation",
-      description: "Use structured routines and manageable tasks to support planning and concentration.",
-      tips: ["Break larger tasks into smaller steps", "Use your schedule to plan study periods", "Keep important tasks visible"],
-    },
-    autism: {
-      title: "Structured and predictable study support",
-      description: "Use clear information, consistent routines and accessible campus guidance.",
-      tips: ["Review your schedule before travelling", "Use clear written instructions", "Keep useful support options easy to find"],
-    },
-    down: {
-      title: "Accessible learning and daily support",
-      description: "Use clear instructions, organised activities and accessible student support.",
-      tips: ["Follow activities one step at a time", "Use visual and written guidance", "Reach out to student support when needed"],
-    },
-  };
-
-  const neuroProfile = neuroProfileContent[accessibilityProfileId];
-  const view = useMemo(
-    () => profileViews[selectedAccessibility] || profileViews.Other,
-    [selectedAccessibility]
-  );
+  const neuroTips = neuroGuidance[profileId];
   const ViewIcon = view.icon;
+  const today = new Intl.DateTimeFormat(locale || "en-ZA", {
+    weekday: "long", day: "numeric", month: "long", year: "numeric",
+  }).format(new Date());
+
+  const go = (path) => { setMenuOpen(false); navigate(path); };
 
   return (
-    <section className={`page dashboard-page student-dashboard student-dashboard-${String(selectedAccessibility).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")} student-dashboard-detail-${accessibilityProfileId || "standard"}`}>
-<div className="dashboard-page-heading">
-        <div>
-          <p className="dashboard-eyebrow">STUDENT PORTAL</p>
-          <h1>{studentName ? `Welcome back, ${studentName}` : "Student dashboard"}</h1>
-          <p className="dashboard-date">{formatToday(locale)}</p>
-        </div>
-        <button
-          type="button"
-          className="dashboard-outline-button"
-          onClick={() => navigate("/accessibility")}
-        >
-          <Accessibility size={17} />
-          Accessibility settings
-        </button>
-      </div>
+    <main className="student-hub">
+      <a className="student-hub-skip" href="#student-hub-main">Skip to dashboard content</a>
 
-      <section className="dashboard-welcome-panel" aria-labelledby="dashboard-view-title">
-        <div className="dashboard-welcome-copy">
-          <p className="dashboard-eyebrow">{view.eyebrow}</p>
-          <h2 id="dashboard-view-title">{view.title}</h2>
-          <p>{view.description}</p>
-          <div className="dashboard-welcome-actions">
-            <button type="button" className="dashboard-primary-button" onClick={() => navigate("/schedule")}>
-              View my schedule <ArrowRight size={17} />
+      <aside className={`student-hub-sidebar ${menuOpen ? "is-open" : ""}`}>
+        <div className="student-hub-brand">
+          <div className="student-hub-brand-mark"><GraduationCap size={25} /></div>
+          <div><strong>UniAble</strong><span>STUDENT PORTAL</span></div>
+          <button className="student-hub-close" onClick={() => setMenuOpen(false)} aria-label="Close menu"><X size={20} /></button>
+        </div>
+        <div className="student-hub-nav-label">WORKSPACE</div>
+        <nav className="student-hub-nav" aria-label="Student navigation">
+          {navigation.map(([label, Icon, path], index) => (
+            <button key={path} className={`student-hub-nav-item ${index === 0 ? "active" : ""}`} onClick={() => go(path)} aria-current={index === 0 ? "page" : undefined}>
+              <Icon size={19} /><span>{label}</span>{index === 0 && <span className="student-hub-active-dot" />}
             </button>
-            <button type="button" className="dashboard-text-button" onClick={() => navigate("/campus")}>
-              Campus navigation
-            </button>
+          ))}
+        </nav>
+        <div className="student-hub-sidebar-spacer" />
+        <div className="student-hub-help-card">
+          <div className="student-hub-help-icon"><ShieldAlert size={20} /></div>
+          <strong>Need urgent help?</strong>
+          <p>Access emergency support whenever you need it.</p>
+          <button onClick={() => go("/emergency")}>Emergency support <ArrowRight size={15} /></button>
+        </div>
+        <button className="student-hub-settings" onClick={() => go("/accessibility")}><Settings size={18} /> Accessibility preferences</button>
+        <div className="student-hub-sidebar-footer">UniAble · Student experience</div>
+      </aside>
+
+      {menuOpen && <button className="student-hub-backdrop" onClick={() => setMenuOpen(false)} aria-label="Close navigation" />}
+
+      <div className="student-hub-main" id="student-hub-main">
+        <header className="student-hub-topbar">
+          <button className="student-hub-menu-button" onClick={() => setMenuOpen(true)} aria-label="Open menu"><Menu size={22} /></button>
+          <div className="student-hub-breadcrumb">Workspace <span>/</span> Overview</div>
+          <div className="student-hub-topbar-right">
+            <span className="student-hub-date">{today}</span>
+            <button className="student-hub-icon-button" onClick={() => go("/accessibility")} aria-label="Accessibility settings"><Bell size={19} /></button>
+            <div className="student-hub-avatar" aria-label="Student account">{(studentName || "S").charAt(0).toUpperCase()}</div>
           </div>
-        </div>
-        <div className="dashboard-welcome-mark" aria-hidden="true">
-          <ViewIcon size={34} strokeWidth={1.6} />
-        </div>
-      </section>
+        </header>
 
-      <div className="dashboard-summary-grid" aria-label="Student services">
-        <button type="button" className="dashboard-summary-item" onClick={() => navigate("/schedule")}>
-          <span className="dashboard-summary-icon"><CalendarDays size={20} /></span>
-          <span className="dashboard-summary-label">Today&apos;s classes</span>
-          <strong>{classes.length}</strong>
-          <span className="dashboard-summary-foot">Scheduled classes</span>
-        </button>
-        <button type="button" className="dashboard-summary-item" onClick={() => navigate("/campus")}>
-          <span className="dashboard-summary-icon"><MapPin size={20} /></span>
-          <span className="dashboard-summary-label">Campus services</span>
-          <strong>Navigation</strong>
-          <span className="dashboard-summary-foot">Open campus directions</span>
-        </button>
-        <button type="button" className="dashboard-summary-item" onClick={() => navigate("/peer-assistance")}>
-          <span className="dashboard-summary-icon"><MessageCircle size={20} /></span>
-          <span className="dashboard-summary-label">Student support</span>
-          <strong>Peer assistance</strong>
-          <span className="dashboard-summary-foot">Request or view available support</span>
-        </button>
-        <button type="button" className="dashboard-summary-item dashboard-summary-emergency" onClick={() => navigate("/emergency")}>
-          <span className="dashboard-summary-icon"><ShieldAlert size={20} /></span>
-          <span className="dashboard-summary-label">Urgent help</span>
-          <strong>Emergency support</strong>
-          <span className="dashboard-summary-foot">Open emergency options</span>
-        </button>
-      </div>
-
-      <div className="dashboard-content-grid">
-        <section className="dashboard-section-panel" aria-labelledby="dashboard-classes-title">
-          <div className="dashboard-section-heading">
+        <div className="student-hub-content">
+          <section className="student-hub-heading">
             <div>
-              <p className="dashboard-eyebrow">ACADEMIC PLANNER</p>
-              <h2 id="dashboard-classes-title">Today&apos;s classes</h2>
+              <p className="student-hub-eyebrow">YOUR CAMPUS, YOUR WAY</p>
+              <h1>{studentName ? `Welcome back, ${studentName}` : "Welcome to UniAble"}</h1>
+              <p>Here&apos;s what&apos;s happening in your student workspace today.</p>
             </div>
-            <button type="button" className="dashboard-text-button" onClick={() => navigate("/schedule")}>
-              Full timetable <ArrowRight size={16} />
-            </button>
-          </div>
-          <div className="dashboard-class-list">
-            {classes.length === 0 ? (
-      <p className="dashboard-data-note">Your timetable will appear here when class information is available.</p>
-    ) : classes.map(([time, name, room]) => (
-              <button
-                type="button"
-                className="dashboard-class-row"
-                key={`${time}-${name}`}
-                onClick={() => navigate("/schedule")}
-                aria-label={`${name}, ${room}, ${time}`}
-              >
-                <span className="dashboard-class-time"><Clock3 size={15} />{time}</span>
-                <span className="dashboard-class-details">
-                  <strong>{name}</strong>
-                  <small>{room}</small>
-                </span>
-                <ArrowRight size={17} className="dashboard-row-arrow" />
-              </button>
-            ))}
-          </div>
+            <button className="student-hub-outline-button" onClick={() => go("/accessibility")}><Accessibility size={17} /> Accessibility settings</button>
+          </section>
 
-        </section>
-
-        {selectedAccessibility === "Hearing Impairment" && (
-          <section className="dashboard-section-panel hearing-support-panel" aria-labelledby="hearing-support-title">
-            <div className="dashboard-section-heading">
-              <div>
-                <p className="dashboard-eyebrow">HEARING ACCESSIBILITY</p>
-                <h2 id="hearing-support-title">Visual communication tools</h2>
+          <section className="student-hub-hero">
+            <div className="student-hub-hero-copy">
+              <span className="student-hub-hero-tag">YOUR PERSONAL WORKSPACE</span>
+              <h2>{view.title}</h2>
+              <p>{view.description}</p>
+              <div className="student-hub-hero-actions">
+                <button className="student-hub-primary-button" onClick={() => go("/schedule")}>View my schedule <ArrowRight size={17} /></button>
+                <button className="student-hub-hero-link" onClick={() => go("/campus")}>Explore campus</button>
               </div>
-              <span className="dashboard-profile-tag">Hearing support</span>
             </div>
-
-            <div className="hearing-support-grid">
-
-              <article className="hearing-support-card">
-                <h3>Text Chat</h3>
-                <p>Communicate with available peer assistance using written messages.</p>
-                <button type="button" className="hearing-support-action" onClick={() => navigate("/peer-assistance")}>
-                  Open text assistance
-                </button>
-              </article>
+            <div className="student-hub-hero-art" aria-hidden="true">
+              <div className="student-hub-hero-orbit orbit-one" />
+              <div className="student-hub-hero-orbit orbit-two" />
+              <div className="student-hub-hero-icon"><ViewIcon size={48} strokeWidth={1.5} /></div>
             </div>
           </section>
-        )}
 
-        {neuroProfile && (
-          <section className="dashboard-section-panel neuro-profile-panel" aria-labelledby="neuro-profile-title">
-            <div className="dashboard-section-heading">
-              <div>
-                <p className="dashboard-eyebrow">PERSONALISED STUDY GUIDANCE</p>
-                <h2 id="neuro-profile-title">{neuroProfile.title}</h2>
+          <section className="student-hub-stats" aria-label="Student quick links">
+            <button className="student-hub-stat" onClick={() => go("/schedule")}>
+              <span className="student-hub-stat-icon purple"><CalendarDays size={21} /></span>
+              <span className="student-hub-stat-label">TODAY&apos;S CLASSES</span>
+              <strong>{classesLoading ? "—" : classes.length}</strong><small>{classes.length === 1 ? "Class scheduled" : "Classes scheduled"}</small>
+            </button>
+            <button className="student-hub-stat" onClick={() => go("/campus")}>
+              <span className="student-hub-stat-icon blue"><MapPin size={21} /></span>
+              <span className="student-hub-stat-label">CAMPUS SERVICES</span><strong>Explore</strong><small>Directions and destinations</small>
+            </button>
+            <button className="student-hub-stat" onClick={() => go("/peer-assistance")}>
+              <span className="student-hub-stat-icon green"><Users size={21} /></span>
+              <span className="student-hub-stat-label">STUDENT SUPPORT</span><strong>Peer help</strong><small>Request or offer assistance</small>
+            </button>
+            <button className="student-hub-stat" onClick={() => go("/emergency")}>
+              <span className="student-hub-stat-icon orange"><ShieldAlert size={21} /></span>
+              <span className="student-hub-stat-label">URGENT HELP</span><strong>Emergency</strong><small>Access emergency options</small>
+            </button>
+          </section>
+
+          <div className="student-hub-columns">
+            <section className="student-hub-panel">
+              <div className="student-hub-panel-heading">
+                <div><p className="student-hub-eyebrow">YOUR ACADEMICS</p><h2>Today&apos;s classes</h2></div>
+                <button className="student-hub-view-link" onClick={() => go("/schedule")}>Full timetable <ArrowRight size={15} /></button>
               </div>
-              <span className="dashboard-profile-tag">{selectedAccessibility}</span>
-            </div>
-
-            <p className="dashboard-support-guidance">{neuroProfile.description}</p>
-
-            <ul className="neuro-profile-tips">
-              {neuroProfile.tips.map((tip) => (
-                <li key={tip}>{tip}</li>
+              {classesLoading && <p className="student-hub-message" role="status">Loading your timetable...</p>}
+              {classesError && <p className="student-hub-message error" role="alert">{classesError}</p>}
+              {!classesLoading && !classesError && classes.length === 0 && (
+                <div className="student-hub-empty"><CalendarDays size={27} /><strong>No classes scheduled today</strong><span>Your timetable will appear here when classes are scheduled.</span></div>
+              )}
+              {!classesLoading && !classesError && classes.map((item) => (
+                <button className="student-hub-class" key={item.id} onClick={() => go("/schedule")}>
+                  <span className="student-hub-class-time"><Clock3 size={15} />{item.time}</span>
+                  <span className="student-hub-class-info"><strong>{item.title}</strong><small><MapPin size={13} />{item.venue}</small></span>
+                  <ArrowRight size={17} className="student-hub-row-arrow" />
+                </button>
               ))}
-            </ul>
-          </section>
-        )}
-        <section className="dashboard-section-panel" aria-labelledby="dashboard-support-title">
-          <div className="dashboard-section-heading">
-            <div>
-              <p className="dashboard-eyebrow">YOUR SUPPORT</p>
-              <h2 id="dashboard-support-title">Recommended tools</h2>
-            </div>
-            <span className="dashboard-profile-tag">{selectedAccessibility}</span>
-          </div>
-          <p className="dashboard-support-guidance">{view.guidance}</p>
-          <div className="dashboard-tool-list">
-            {view.tools.map((tool) => {
-              const ToolIcon = tool.icon;
-              return (
-                <button
-                  type="button"
-                  className="dashboard-tool-row"
-                  key={tool.title}
-                  onClick={() => navigate(tool.path)}
-                >
-                  <span className="dashboard-tool-icon"><ToolIcon size={19} /></span>
-                  <span className="dashboard-tool-copy">
-                    <strong>{tool.title}</strong>
-                    <small>{tool.description}</small>
-                  </span>
-                  <ArrowRight size={16} className="dashboard-row-arrow" />
-                </button>
-              );
-            })}
-          </div>
-          <button type="button" className="dashboard-secondary-button dashboard-full-button" onClick={() => navigate("/accessibility")}>
-            Review support preferences
-          </button>
-        </section>
-      </div>
+            </section>
 
-      <section aria-labelledby="student-announcements-title">
-        <div className="dashboard-section-heading">
-          <div>
-            <p className="dashboard-eyebrow">MODULE UPDATES</p>
-            <h2 id="student-announcements-title">Announcements</h2>
+            <section className="student-hub-panel student-hub-tools-panel">
+              <div className="student-hub-panel-heading">
+                <div><p className="student-hub-eyebrow">BUILT AROUND YOU</p><h2>Recommended tools</h2></div>
+                <span className="student-hub-profile-label">{selected}</span>
+              </div>
+              <p className="student-hub-guidance">{view.guidance}</p>
+              <div className="student-hub-tools">
+                {view.tools.map(([title, description, path, Icon]) => (
+                  <button className="student-hub-tool" key={title} onClick={() => go(path)}>
+                    <span className="student-hub-tool-icon"><Icon size={19} /></span>
+                    <span><strong>{title}</strong><small>{description}</small></span>
+                    <ArrowRight size={16} className="student-hub-row-arrow" />
+                  </button>
+                ))}
+              </div>
+            </section>
           </div>
-        </div>
-        {announcementsLoading && <p role="status">Loading announcements...</p>}
-        {announcementError && <p className="dashboard-data-note" role="alert">{announcementError}</p>}
-        {!announcementsLoading && !announcementError && !announcements.length && (
-          <section className="dashboard-announcement">
-            <div className="dashboard-announcement-icon"><Megaphone size={20} /></div>
-            <div>
-              <p className="dashboard-eyebrow">NO NEW UPDATES</p>
-              <h2>You&apos;re all caught up</h2>
-              <p>Announcements from your enrolled modules will appear here.</p>
+
+          {neuroTips && (
+            <section className="student-hub-panel student-hub-study-panel">
+              <div className="student-hub-panel-heading">
+                <div><p className="student-hub-eyebrow">PERSONALISED STUDY GUIDANCE</p><h2>Study support ideas</h2></div>
+                <span className="student-hub-profile-label">{selected}</span>
+              </div>
+              <ul>{neuroTips.map((tip) => <li key={tip}>{tip}</li>)}</ul>
+            </section>
+          )}
+
+          <section className="student-hub-announcements">
+            <div className="student-hub-panel-heading">
+              <div><p className="student-hub-eyebrow">STAY INFORMED</p><h2>Latest announcements</h2></div>
+              <span className="student-hub-announcement-icon"><Megaphone size={20} /></span>
             </div>
+            {announcementsLoading && <p className="student-hub-message" role="status">Loading announcements...</p>}
+            {announcementsError && <p className="student-hub-message error" role="alert">{announcementsError}</p>}
+            {!announcementsLoading && !announcementsError && announcements.length === 0 && (
+              <div className="student-hub-empty announcement-empty"><CheckCircle2 size={26} /><strong>You&apos;re all caught up</strong><span>Announcements from your enrolled modules will appear here.</span></div>
+            )}
+            {announcements.map((item) => (
+              <article className={`student-hub-announcement ${item.importance === "important" ? "important" : ""}`} key={item.id}>
+                <div className="student-hub-announcement-mark"><Megaphone size={18} /></div>
+                <div>
+                  <p className="student-hub-announcement-meta">{item.importance === "important" ? "IMPORTANT UPDATE" : "MODULE ANNOUNCEMENT"}{item.moduleName ? ` · ${item.moduleName}` : ""}</p>
+                  <h3>{item.title}</h3><p>{item.message}</p>
+                  {item.createdAt && <small>{new Date(item.createdAt).toLocaleString(locale || "en-ZA")}</small>}
+                </div>
+              </article>
+            ))}
           </section>
-        )}
-        {announcements.map((item) => (
-          <article
-            className={`dashboard-announcement ${item.importance === "important" ? "dashboard-announcement-important" : ""}`}
-            key={item.id}
-          >
-            <div className="dashboard-announcement-icon"><Megaphone size={20} /></div>
-            <div>
-              <p className="dashboard-eyebrow">
-                {item.importance === "important" ? "IMPORTANT" : "MODULE ANNOUNCEMENT"}
-                {item.moduleName ? ` · ${item.moduleName}` : ""}
-              </p>
-              <h2>{item.title}</h2>
-              <p>{item.message}</p>
-              <p className="dashboard-announcement-date">
-                {item.createdAt ? new Date(item.createdAt).toLocaleString(locale || "en-ZA") : ""}
-              </p>
-            </div>
-          </article>
-        ))}
-      </section>
-    </section>
+
+          <footer className="student-hub-footer"><span>UniAble Student Portal</span><button onClick={() => go("/accessibility")}>Accessibility and support</button></footer>
+        </div>
+      </div>
+    </main>
   );
 }

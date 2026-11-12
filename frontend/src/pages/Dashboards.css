@@ -1648,3 +1648,71 @@ html[data-theme="dark"] .dashboard-module-status.pending {
     padding: 20px 14px 36px;
   }
 }
+
+
+/* Security SOS active/history views */
+.security-alert-workspace {
+  display: grid;
+  gap: 14px;
+}
+
+.security-alert-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-bottom: 1px solid var(--uni-border, #dce2ea);
+  padding-bottom: 10px;
+}
+
+.security-alert-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid var(--uni-border, #dce2ea);
+  border-radius: 10px;
+  padding: 10px 14px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.security-alert-tab span {
+  display: inline-grid;
+  min-width: 22px;
+  min-height: 22px;
+  place-items: center;
+  border-radius: 999px;
+  padding: 0 6px;
+  background: var(--uni-border, #e7eaf0);
+  font-size: 12px;
+}
+
+.security-alert-tab.is-active {
+  border-color: var(--uni-purple, #6554c0);
+  background: var(--uni-purple, #6554c0);
+  color: #fff;
+}
+
+.security-alert-tab.is-active span {
+  background: rgb(255 255 255 / 20%);
+  color: #fff;
+}
+
+.security-alert-history-note {
+  margin: 0;
+  color: var(--uni-muted, #687386);
+  font-size: 13px;
+}
+
+@media (max-width: 520px) {
+  .security-alert-tabs {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .security-alert-tab {
+    justify-content: space-between;
+  }
+}

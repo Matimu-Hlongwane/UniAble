@@ -59,7 +59,7 @@ export default function LearningMaterials() {
               </li>
             ))}
           </ul>
-          <p className="muted">Your lecturer's published resources are listed here. Direct file opening will be enabled when authenticated download links are provided by the storage service.</p>
+          <p className="muted">Your lecturer&apos;s published resources are listed here. Direct file opening will be enabled when authenticated download links are provided by the storage service.</p>
         </div>
       )}
     </section>

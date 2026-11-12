@@ -82,8 +82,18 @@ export default function HandsFreeUniPal({ enabled = false }) {
   const browserRef = useRef(null);
   const nativeStopRef = useRef(null);
   const restartTimerRef = useRef(null);
+  const startListeningRef = useRef(null);
   const pendingRef = useRef(null);
   const conversationRef = useRef([]);
+
+  const scheduleRestart = useCallback((delay = 500) => {
+    if (!activeRef.current) return;
+    if (restartTimerRef.current) window.clearTimeout(restartTimerRef.current);
+    restartTimerRef.current = window.setTimeout(() => {
+      restartTimerRef.current = null;
+      void startListeningRef.current?.();
+    }, delay);
+  }, []);
 
   const stopRecognition = useCallback(async () => {
     if (restartTimerRef.current) window.clearTimeout(restartTimerRef.current);
@@ -165,9 +175,10 @@ export default function HandsFreeUniPal({ enabled = false }) {
       setProblem(error?.message || "Voice recognition could not start.");
       setStatus("Voice access unavailable");
     }
-  // startListening intentionally calls a ref for the latest command handler.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locale, stopRecognition]);
+  // Command handling and listening restarts use refs to avoid stale callbacks.
+  }, [locale, scheduleRestart]);
+
+  startListeningRef.current = startListening;
 
   const say = useCallback(async (text) => {
     const message = String(text || "").trim();
@@ -206,16 +217,7 @@ export default function HandsFreeUniPal({ enabled = false }) {
       setProblem(error?.message || "UniPal could not speak this response.");
       resume();
     }
-  }, [locale, stopRecognition]);
-
-  function scheduleRestart(delay = 500) {
-    if (!activeRef.current) return;
-    if (restartTimerRef.current) window.clearTimeout(restartTimerRef.current);
-    restartTimerRef.current = window.setTimeout(() => {
-      restartTimerRef.current = null;
-      void startListening();
-    }, delay);
-  }
+  }, [locale, stopRecognition, scheduleRestart]);
 
   const readTimetable = useCallback(async (mode = "full") => {
     setStatus("Loading your timetable");
@@ -475,7 +477,7 @@ export default function HandsFreeUniPal({ enabled = false }) {
       processingRef.current = false;
       if (activeRef.current && !speakingRef.current) scheduleRestart(500);
     }
-  }, [disableHandsFree, executeSOS, language, locale, navigate, readMaterials, readTimetable, say, theme, fontSize, lastReply]);
+  }, [disableHandsFree, executeSOS, language, locale, navigate, readMaterials, readTimetable, say, theme, fontSize, lastReply, scheduleRestart]);
 
   const handleUtteranceRef = useRef(handleUtterance);
   useEffect(() => { handleUtteranceRef.current = handleUtterance; }, [handleUtterance]);
@@ -535,7 +537,7 @@ export default function HandsFreeUniPal({ enabled = false }) {
       stopSpeaking();
       speakingRef.current = false;
     };
-  }, [enabled, say, startListening, stopRecognition]);
+  }, [enabled, say, startListening, stopRecognition, scheduleRestart]);
 
 
   if (!enabled) return null;

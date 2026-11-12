@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Search, RefreshCw, Plus, Download, CheckCircle2, XCircle,
   Clock3, FileText, ExternalLink, Building2,
@@ -98,7 +98,7 @@ function UsersWorkspace({ search, onError }) {
   const [status, setStatus] = useState("");
   const [message, setMessage] = useState("");
 
-  async function load() {
+  const load = useCallback(async () => {
     try {
       setLoading(true);
       onError("");
@@ -109,9 +109,9 @@ function UsersWorkspace({ search, onError }) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [role, status, search, onError]);
 
-  useEffect(() => { load(); }, [role, status, search]);
+  useEffect(() => { void load(); }, [load]);
 
   async function changeAccess(user) {
     const action = user.isActive ? "disable" : "enable";
@@ -191,7 +191,7 @@ function DepartmentsWorkspace({ search, onError }) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
 
-  async function load() {
+  const load = useCallback(async () => {
     try {
       setLoading(true);
       const result = await api.getAdminDepartments();
@@ -201,9 +201,9 @@ function DepartmentsWorkspace({ search, onError }) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [onError]);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { void load(); }, [load]);
 
   const filtered = useMemo(() => departments.filter((item) =>
     `${item.name || ""} ${item.description || ""}`.toLowerCase().includes(search.toLowerCase())
@@ -296,7 +296,7 @@ function ApprovalsWorkspace({ search, onError }) {
   const [notes, setNotes] = useState({});
   const [message, setMessage] = useState("");
 
-  async function load() {
+  const load = useCallback(async () => {
     try {
       setLoading(true);
       const result = await api.getAccessibilityApplications();
@@ -306,9 +306,9 @@ function ApprovalsWorkspace({ search, onError }) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [onError]);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { void load(); }, [load]);
 
   const filtered = useMemo(() => applications.filter((item) =>
     `${item.studentName || ""} ${item.studentEmail || ""} ${item.accessibility || ""} ${item.status || ""}`.toLowerCase().includes(search.toLowerCase())
@@ -422,7 +422,7 @@ function AnalyticsWorkspace({ onError }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  async function load() {
+  const load = useCallback(async () => {
     try {
       setLoading(true);
       const result = await api.getAdminAnalytics();
@@ -432,9 +432,9 @@ function AnalyticsWorkspace({ onError }) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [onError]);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { void load(); }, [load]);
 
   if (loading) return <Loading />;
   if (!data) return <Empty>Analytics could not be loaded.</Empty>;
@@ -478,7 +478,7 @@ function SettingsWorkspace({ onError }) {
       .then((result) => setSettings((old) => ({ ...old, ...(result.settings || {}) })))
       .catch((error) => onError(error.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [onError]);
 
   async function save() {
     try {
@@ -528,7 +528,7 @@ function AuditWorkspace({ search, onError }) {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  async function load() {
+  const load = useCallback(async () => {
     try {
       setLoading(true);
       const result = await api.getAdminAuditLogs(200);
@@ -538,9 +538,9 @@ function AuditWorkspace({ search, onError }) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [onError]);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { void load(); }, [load]);
 
   const filtered = logs.filter((item) =>
     `${item.actorEmail || ""} ${item.actorId || ""} ${item.action || ""} ${item.targetType || ""} ${item.targetId || ""}`.toLowerCase().includes(search.toLowerCase())
@@ -566,7 +566,9 @@ function AuditWorkspace({ search, onError }) {
   );
 }
 
-export default function AdminWorkspace({ section, search = "", onError = () => {} }) {
+const noop = () => {};
+
+export default function AdminWorkspace({ section, search = "", onError = noop }) {
   if (section === "users") return <UsersWorkspace search={search} onError={onError} />;
   if (section === "departments") return <DepartmentsWorkspace search={search} onError={onError} />;
   if (section === "approvals") return <ApprovalsWorkspace search={search} onError={onError} />;

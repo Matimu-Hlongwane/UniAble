@@ -73,6 +73,8 @@ export function SettingsProvider({ children }) {
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
 }
 
+// This file intentionally exports its provider and matching context hook.
+// eslint-disable-next-line react-refresh/only-export-components
 export function useSettings() {
   const context = useContext(SettingsContext);
   if (!context) throw new Error("useSettings must be used inside SettingsProvider");

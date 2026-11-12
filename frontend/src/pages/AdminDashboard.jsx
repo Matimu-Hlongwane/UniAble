@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import "./AdminDashboard.css";
 import { api } from "../services/api";
+import { signOutAccount } from "../services/firebaseAuth";
 import StaffManagement from "./StaffManagement";
 import AdminWorkspace from "./AdminWorkspace";
 import VoiceNavigationControls from "../components/VoiceNavigationControls";
@@ -55,6 +56,7 @@ export default function AdminDashboard({ staffRole = "admin" }) {
     setDashboardError("");
 
     try {
+      await signOutAccount();
       sessionStorage.setItem("uniableStaffLogout", "1");
       navigate("/staff", { replace: true });
     } catch (error) {
