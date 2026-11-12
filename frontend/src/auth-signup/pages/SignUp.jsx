@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { api } from "../../services/api";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
     createAccountWithEmailPassword,
     startAccountVerification,
@@ -9,7 +9,8 @@ import {
     getVoiceFirstPreference,
     subscribeToAuth,
     sendEmailOtp,
-    verifyEmailOtp
+    verifyEmailOtp,
+    cancelPendingRegistration
 } from "../../services/firebaseAuth";
 
 import "../styles/signup.css";
@@ -39,12 +40,14 @@ import { isNative, startNativeVoiceRecognition } from "../../services/platformVo
 import {
     isValidStudentNumber,
     STUDENT_EMAIL_DOMAIN,
+    capitalizePersonName,
     validateSignUpForm
 } from "../utils/validation";
 
 
 function SignUp() {
     const location = useLocation();
+    const navigate = useNavigate();
 
     /* =========================================
        PAGE MODE
@@ -62,6 +65,7 @@ function SignUp() {
     const [verificationStage, setVerificationStage] = useState(null);
     const [verificationCode, setVerificationCode] = useState("");
     const [verificationBusy, setVerificationBusy] = useState(false);
+    const [cancelBusy, setCancelBusy] = useState(false);
     const [verificationError, setVerificationError] = useState("");
     const [creationBusy, setCreationBusy] = useState(false);
 
@@ -131,7 +135,6 @@ function SignUp() {
             qualification: "",
             yearOfStudy: "",
             dateOfBirth: "",
-            phoneNumber: "",
             confirmPassword: "",
             accessibility: "",
 
@@ -225,7 +228,7 @@ function SignUp() {
 
         setFormData((previousData) => ({
             ...previousData,
-            [name]: value,
+            [name]: ["fullName", "surname"].includes(name) ? capitalizePersonName(value) : value,
             ...(name === "studentNumber"
                 ? { email: value.trim() ? `${value.trim()}@${STUDENT_EMAIL_DOMAIN}` : "" }
                 : {}),
@@ -271,7 +274,7 @@ function SignUp() {
                 formData.fullName,
                 formData.accessibility,
                 formData.accountType,
-                { surname: registrationData.surname, studentNumber: registrationData.studentNumber, institutionalEmail: registrationData.email, qualification: registrationData.qualification, yearOfStudy: registrationData.yearOfStudy, dateOfBirth: registrationData.dateOfBirth, modules: [], phoneNumber: registrationData.phoneNumber }
+                { surname: registrationData.surname, studentNumber: registrationData.studentNumber, institutionalEmail: registrationData.email, qualification: registrationData.qualification, yearOfStudy: registrationData.yearOfStudy, dateOfBirth: registrationData.dateOfBirth, modules: [] }
             );
 
             if (formData.accountType === "volunteer") {
@@ -335,6 +338,33 @@ function SignUp() {
 
     async function handleResendCode() {
         return handleSendEmailCode();
+    }
+
+    async function handleCancelRegistration(action) {
+        if (cancelBusy) return;
+        setCancelBusy(true);
+        setVerificationError("");
+        try {
+            await cancelPendingRegistration();
+            setVerificationStage(null);
+            setVerificationCode("");
+            setVerificationError("");
+            setErrors({});
+            setRegistrationValidated(false);
+            if (action === "edit") {
+                setFormData((previous) => ({ ...previous, password: "", confirmPassword: "" }));
+                setMode("typing");
+                setMessages([{ speaker: "UNIABLE", text: "Your unverified account was removed. You can now edit your details and start sign-up again." }]);
+                window.requestAnimationFrame(() => document.getElementById("fullName")?.focus());
+            } else {
+                navigate("/", { replace: true });
+            }
+        } catch (error) {
+            console.error("Could not cancel pending UniAble sign-up:", error);
+            setVerificationError(error.message || "Could not cancel this unverified account. Please try again.");
+        } finally {
+            setCancelBusy(false);
+        }
     }
 
     /* =========================================
@@ -494,7 +524,7 @@ function SignUp() {
             const digitWords = { zero: "0", oh: "0", one: "1", two: "2", three: "3", four: "4", five: "5", six: "6", seven: "7", eight: "8", nine: "9" };
             const studentNumber = String(transcript || "").toLowerCase().split(/\s+/).map((part) => digitWords[part] ?? part).join("").replace(/[^0-9]/g, "");
             if (!isValidStudentNumber(studentNumber)) {
-                const response = "A Richfield student number must be exactly nine digits and begin with 401, 402 or 403. Please say the digits again, one at a time.";
+                const response = "A Richfield student number must be exactly nine digits and begin with 401 through 405. Please say the digits again, one at a time.";
                 addMessage("UNIABLE", response);
                 setVoiceQuestion("Please repeat your student number");
                 speakText(response);
@@ -774,12 +804,16 @@ function SignUp() {
                             code={verificationCode}
                             setCode={setVerificationCode}
                             busy={verificationBusy}
+                            setupBusy={creationBusy}
+                            cancelBusy={cancelBusy}
+                            cancelDisabled={cancelBusy || creationBusy || verificationBusy}
                             error={verificationError}
                             email={formData.email || getCurrentUser()?.email || ""}
                             onSendEmail={handleSendEmailCode}
                             onVerify={handleVerifyCode}
                             onResend={handleResendCode}
                             onBack={() => { setVerificationStage("choose"); setVerificationCode(""); setVerificationError(""); }}
+                            onCancel={handleCancelRegistration}
                         />
                     ) : mode === "voice" ? (
 

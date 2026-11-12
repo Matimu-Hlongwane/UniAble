@@ -2,7 +2,45 @@
    UNIABLE FORM VALIDATION
    ========================================= */
 
+import { RICHFIELD_QUALIFICATIONS } from "../../data/qualifications.js";
+
 export const STUDENT_EMAIL_DOMAIN = "my.richfield.ac.za";
+export const YEARS_OF_STUDY = ["1st", "2nd", "3rd"];
+
+export function getLatestEligibleDateOfBirth(now = new Date()) {
+    const cutoff = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    cutoff.setFullYear(cutoff.getFullYear() - 16);
+    cutoff.setDate(cutoff.getDate() - 1);
+    const year = cutoff.getFullYear();
+    const month = String(cutoff.getMonth() + 1).padStart(2, "0");
+    const day = String(cutoff.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
+
+function isOlderThan16(dateOfBirth) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(dateOfBirth || ""))) return false;
+    const parsedDate = new Date(`${dateOfBirth}T00:00:00.000Z`);
+    if (Number.isNaN(parsedDate.getTime()) || parsedDate.toISOString().slice(0, 10) !== dateOfBirth) return false;
+    return dateOfBirth <= getLatestEligibleDateOfBirth();
+}
+
+export function isValidPersonName(value) {
+    const name = String(value || "").trim();
+    return /^\p{L}[\p{L}\p{M}]*(?: +\p{L}[\p{L}\p{M}]*)*$/u.test(name);
+}
+
+export function capitalizePersonName(value) {
+    return String(value || "").replace(/^(\s*)(\p{L})/u, (_, spacing, letter) =>
+        `${spacing}${letter.toLocaleUpperCase()}`
+    );
+}
+
+export function startsWithCapital(value) {
+    const firstLetter = Array.from(String(value || "").trim())[0];
+    if (!firstLetter) return false;
+    return firstLetter.toLocaleLowerCase() === firstLetter.toLocaleUpperCase() ||
+        /^\p{Lu}$/u.test(firstLetter);
+}
 
 export function isValidEmail(email) {
     const emailPattern =
@@ -12,7 +50,7 @@ export function isValidEmail(email) {
 }
 
 export function isValidStudentNumber(studentNumber) {
-    return /^40[123]\d{6}$/.test(String(studentNumber || "").trim());
+    return /^40[1-5]\d{6}$/.test(String(studentNumber || "").trim());
 }
 
 export function isValidStudentEmail(email) {
@@ -26,7 +64,7 @@ export function validateInstitutionalStudentEmail(email) {
         normalizedEmail.endsWith(`@${STUDENT_EMAIL_DOMAIN}`) &&
         !isValidStudentEmail(normalizedEmail)
     ) {
-        throw new Error("Richfield student email must use a nine-digit student number beginning with 401, 402 or 403.");
+        throw new Error("Richfield student email must use a nine-digit student number beginning with 401 through 405.");
     }
     return normalizedEmail;
 }
@@ -39,27 +77,16 @@ export function validateSignUpForm(formData) {
 
     /* FULL NAME */
 
-    if (!formData.fullName.trim()) {
-
-        errors.fullName =
-            "Please enter your full name.";
-
-    }
-
-    else if (formData.fullName.trim().length < 2) {
-
-        errors.fullName =
-            "Please enter a valid full name.";
-
-    }
-
-
+    if (!formData.fullName?.trim()) errors.fullName = "Please enter your first name(s).";
+    else if (!isValidPersonName(formData.fullName)) errors.fullName = "Use letters and spaces only for your first name(s).";
+    else if (!startsWithCapital(formData.fullName)) errors.fullName = "Start your first name(s) with a capital letter.";
     if (!formData.surname?.trim()) errors.surname = "Please enter your surname.";
-    if (!isValidStudentNumber(formData.studentNumber)) errors.studentNumber = "Enter a nine-digit student number beginning with 401, 402 or 403.";
-    if (!formData.qualification) errors.qualification = "Choose your Richfield qualification.";
-    if (!formData.yearOfStudy || !/^20\d{2}$/.test(String(formData.yearOfStudy))) errors.yearOfStudy = "Choose a valid year of study.";
-    if (!formData.dateOfBirth || Number.isNaN(Date.parse(formData.dateOfBirth)) || new Date(formData.dateOfBirth) >= new Date()) errors.dateOfBirth = "Enter a valid date of birth in the past.";
-    if (formData.phoneNumber?.trim() && !/^\+?[1-9]\d{7,14}$/.test(String(formData.phoneNumber).replace(/[\s()-]/g, ""))) errors.phoneNumber = "Enter a valid international cellphone number, e.g. +27821234567 (do not add the leading 0).";
+    else if (!isValidPersonName(formData.surname)) errors.surname = "Use letters and spaces only for your surname.";
+    else if (!startsWithCapital(formData.surname)) errors.surname = "Start your surname with a capital letter.";
+    if (!isValidStudentNumber(formData.studentNumber)) errors.studentNumber = "Enter a nine-digit student number beginning with 401 through 405.";
+    if (!RICHFIELD_QUALIFICATIONS.includes(formData.qualification)) errors.qualification = "Choose BSc IT or BCOM.";
+    if (!YEARS_OF_STUDY.includes(formData.yearOfStudy)) errors.yearOfStudy = "Choose 1st, 2nd or 3rd year.";
+    if (!isOlderThan16(formData.dateOfBirth)) errors.dateOfBirth = "You must be older than 16 to create an account.";
     const expectedStudentEmail = `${String(formData.studentNumber || "").trim()}@${STUDENT_EMAIL_DOMAIN}`;
     if (!formData.email?.trim() || formData.email.trim().toLowerCase() !== expectedStudentEmail.toLowerCase()) errors.email = "Your student email must be generated from your student number.";
     if (!formData.confirmPassword) errors.confirmPassword = "Please confirm your password.";
